@@ -1,0 +1,32 @@
+{
+  "recordedDate": "2026-10-26",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "scope": "Recorded local GĐ 0 results, preserved before temporary-file cleanup; not a new test run",
+  "environment": {
+    "node": "24.12.0",
+    "supabaseCli": "2.120.0",
+    "postgresql": "17.11",
+    "gotrue": "2.197.0",
+    "mailpit": "1.31.3"
+  },
+  "integration": { "total": 26, "passed": 26, "failed": 0 },
+  "quickSuite": { "total": 38, "passed": 35, "failed": 3, "skipped": 0, "cancelled": 0 },
+  "remainingFailures": [
+    "Admin-generated recovery token concurrent POST verification",
+    "Mailed recovery link concurrent GET verification",
+    "Mailed recovery token concurrent POST verification"
+  ],
+  "emailRecoveryReportGeneratedAt": "2026-10-26T15:22:29.678Z",
+  "emailRecoveryTrials": [
+    { "path": "GET-email-link", "verified": 2, "passwordUpdates": 2, "distinctSessions": 2 },
+    { "path": "GET-email-link", "verified": 2, "passwordUpdates": 2, "distinctSessions": 2 },
+    { "path": "GET-email-link", "verified": 2, "passwordUpdates": 2, "distinctSessions": 2 },
+    { "path": "POST-email-token", "verified": 2, "passwordUpdates": 2, "distinctSessions": 2 },
+    { "path": "POST-email-token", "verified": 2, "passwordUpdates": 2, "distinctSessions": 2 },
+    { "path": "POST-email-token", "verified": 2, "passwordUpdates": 2, "distinctSessions": 2 }
+  ],
+  "previousRealClockExpiryTest": { "passed": true, "durationSeconds": 301.309 },
+  "lastRecordedTypecheckExitCode": 0,
+  "hostedTested": false,
+  "phaseTransition": "GĐ 0 work closed by user decision; outstanding acceptance gates carried forward to GĐ 1"
+}

@@ -10,7 +10,7 @@
 
 **Spec:** [Đặc tả nghiệp vụ](../../developer/plans.md), [tech stack và ranh giới hệ thống](../../developer/techstack-va-chi-phi.md), [ERD](../../diagrams/architecture.drawio) và [giải thích mô hình](../../diagrams/README.md).
 
-Ngày lập: **26/10/2026**. Đây là **lộ trình theo giai đoạn và cấu trúc đề xuất**; chưa khởi tạo source ứng dụng, cài dependency hoặc triển khai hạ tầng. Checkbox dưới đây đều là công việc tương lai. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
+Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 1.** Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa khởi tạo ứng dụng đầy đủ hoặc triển khai production. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
 
 ## Global Constraints — Ràng buộc xuyên suốt
 
@@ -185,8 +185,8 @@ DTO tương ứng đặt trong `packages/contracts/src/profile.ts`; route/servic
 
 | Giai đoạn | Kết quả chính | Phụ thuộc |
 | --- | --- | --- |
-| 0 | Chứng minh khả thi Auth/audit, avatar và Excel cực đại | Đặc tả + ERD |
-| 1 | Workspace, môi trường, CI và nền DB/RLS/audit/outbox | Kết quả GĐ 0 |
+| 0 — Đã đóng đợt thử nghiệm | Kết quả local Auth/audit và hồ sơ bàn giao; các gate còn lại được liệt kê riêng | Đặc tả + ERD; xem biên bản chốt |
+| 1 — Hiện hành | Workspace, môi trường, CI và nền DB/RLS/audit/outbox | Kết quả GĐ 0 + công việc chuyển tiếp G1-01–05 |
 | 2 | Tài khoản, phiên, hồ sơ cá nhân và avatar end-to-end | GĐ 1; gate Auth ở GĐ 0 |
 | 3 | Danh mục, học sinh, lớp, phân công và khoảng tham gia | GĐ 1–2 |
 | 4 | Lịch thực tế, phòng và điểm danh | GĐ 3 |
@@ -201,6 +201,12 @@ GĐ 4 và 5 có thể triển khai độc lập sau khi mô hình lớp/phân c�
 
 ### Giai đoạn 0 — Kiểm chứng các rủi ro nền tảng
 
+**Trạng thái: đóng đợt thử nghiệm ngày 26/10/2026 theo quyết định chuyển giai đoạn.**
+Giữ các checkbox nghiệm thu chưa đạt/chưa thử bên dưới để không làm mất việc;
+[G1-01–05](decisions/gd0-closeout.md) ghi rõ nơi xử lý và điều kiện trước khi
+nghiệm thu Auth/avatar hoặc chốt parser/migration. Nhóm tích hợp local đạt 26/26;
+toàn bộ test nhanh đạt 35/38, ba gate recovery native còn đỏ.
+
 **Đầu ra:** Biên bản thử nghiệm và quyết định kỹ thuật, chưa phải chức năng production. Nơi lưu dự kiến: `docs/developer/decisions/auth-audit.md`, `avatar-storage.md`, `excel-benchmark.md`.
 
 - [ ] Thử AUTH-01–08 trên môi trường giả lập/staging: mật khẩu tạm, reset 5 phút/một lần, cấp lại vô hiệu link cũ, token cũ sau khóa/đổi quyền/đăng xuất, tài khoản xóa mềm và email giữ lại.
@@ -212,6 +218,10 @@ GĐ 4 và 5 có thể triển khai độc lập sau khi mô hình lớp/phân c�
 **Gate:** Có số đo và bằng chứng cho từng thử nghiệm; điểm chưa đạt có phạm vi và quyết định xử lý. Không đánh dấu Auth đạt chỉ vì đăng nhập thành công hoặc Excel đạt vì file nhỏ chạy được.
 
 ### Giai đoạn 1 — Nền dự án, môi trường và kiểm thử
+
+**Trạng thái: giai đoạn hiện hành, bắt đầu từ nền workspace/local/CI.** Theo dõi
+đồng thời G1-01–05 trong biên bản chốt GĐ 0. Chỉ tái sử dụng phần đã được review;
+schema `spike_private` và API chạy Node local chưa thay cho schema/runtime chính thức.
 
 **Tệp đầu vào triển khai:** package/config ở gốc, `apps/web/src/main.ts`, `apps/api/src/index.ts`, `packages/contracts/src/common.ts`, `supabase/config.toml`, migration nền và `.github/workflows/ci.yml`.
 

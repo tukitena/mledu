@@ -106,5 +106,15 @@ Thumbs.db:encryptable
 Desktop.ini
 $RECYCLE.BIN/
 
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+
 # Keep docs, source assets, Excel fixtures and lockfiles.
 # Do not add broad rules such as *.xlsx, *.sql, *.png or *.svg.
