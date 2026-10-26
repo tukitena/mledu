@@ -1,0 +1,110 @@
+# Reference UI only; never part of the application or deployment.
+/template/
+
+# Local agent skills and configuration.
+/.agents/
+
+# Node.js dependencies and package-manager caches (keep lockfiles).
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Vue / Vite / TypeScript builds and tooling caches.
+dist/
+dist-ssr/
+.vite/
+.vite-temp/
+.cache/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.prettiercache
+.sass-cache/
+
+# Local environment and Cloudflare secrets; keep shareable examples.
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.*.sample
+!.env.template
+!.env.*.template
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+!.dev.vars.*.example
+!.dev.vars.sample
+!.dev.vars.*.sample
+!.dev.vars.template
+!.dev.vars.*.template
+.wrangler/
+
+# Supabase CLI local state; keep config.toml, migrations and seed SQL.
+supabase/.temp/
+supabase/.branches/
+
+# Test reports and coverage.
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Runtime files, private uploads and local backups (root directories only).
+logs/
+*.log
+*.pid
+*.pid.lock
+/tmp/
+/temp/
+/uploads/
+/backups/
+/secrets/
+/.aws/
+/.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python caches and virtual environments used by agent/diagram tools.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# draw.io recovery files; keep .drawio sources and intended exports.
+*.drawio.bkp
+*.drawio.dtmp
+
+# Local editor state (extension recommendations may be shared).
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.vs/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# OS metadata.
+.DS_Store
+._*
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+$RECYCLE.BIN/
+
+# Keep docs, source assets, Excel fixtures and lockfiles.
+# Do not add broad rules such as *.xlsx, *.sql, *.png or *.svg.
