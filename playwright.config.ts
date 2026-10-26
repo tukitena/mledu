@@ -1,0 +1,41 @@
+import { defineConfig, devices } from '@playwright/test'
+
+// Runs the SPA and the Worker locally; the Worker needs Supabase local
+// (`supabase start` + `npm run local:env`). Never point this at production.
+const API_PORT = 8797
+const WEB_PORT = 5183
+const WEB_ORIGIN = `http://127.0.0.1:${WEB_PORT}`
+
+export default defineConfig({
+  testDir: 'tests/e2e',
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  use: {
+    baseURL: WEB_ORIGIN,
+    trace: 'retain-on-failure',
+  },
+  projects: [
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+  ],
+  // Dedicated ports, never reusing a running server, so e2e cannot hit another
+  // local API (for example the GĐ 0 spike on 8787) by accident.
+  webServer: [
+    {
+      command: `npx wrangler dev --port ${API_PORT} --var ALLOWED_ORIGINS:${WEB_ORIGIN}`,
+      cwd: 'apps/api',
+      url: `http://127.0.0.1:${API_PORT}/v1/health`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      command: `npx vite --host 127.0.0.1 --port ${WEB_PORT} --strictPort`,
+      cwd: 'apps/web',
+      env: { VITE_API_BASE_URL: `http://127.0.0.1:${API_PORT}` },
+      url: WEB_ORIGIN,
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+  ],
+})

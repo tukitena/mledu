@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, unit tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # template/ is reference-only and ignored by Git; the build must not need it.
+      - name: Confirm the checkout has no template/
+        run: test ! -e template
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run build
+      - name: Check build artifacts for secrets
+        run: npm run check:artifacts
+
+  database:
+    name: Database, integration and e2e (Supabase local)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      - run: npm ci
+
+      # Local stack only; tests never run against staging or production.
+      - name: Start Supabase local (migrations + seed)
+        run: supabase start -x studio,imgproxy,mailpit,postgres-meta,vector,logflare,supavisor,edge-runtime
+
+      - name: pgTAP (privileges, request context, command atomicity)
+        run: npm run test:db
+
+      - name: Generated database types are up to date
+        run: |
+          npm run db:types
+          git diff --exit-code -- apps/api/src/generated/database.types.ts
+
+      - run: npm run local:env
+      - run: npm run test:integration
+
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

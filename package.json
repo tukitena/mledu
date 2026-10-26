@@ -1,0 +1,45 @@
+{
+  "name": "mledu",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": ">=24.12.0 <25"
+  },
+  "workspaces": [
+    "packages/contracts",
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @mledu/api",
+    "dev:web": "npm run dev -w @mledu/web",
+    "local:env": "node scripts/dev/supabase-env.mjs",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset --local",
+    "db:types": "supabase gen types typescript --local --schema api > apps/api/src/generated/database.types.ts && prettier --write apps/api/src/generated/database.types.ts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test:db": "supabase test db",
+    "test:integration": "npm run test:integration -w @mledu/api",
+    "test:e2e": "playwright test",
+    "build": "npm run build -w @mledu/web && npm run build -w @mledu/api",
+    "check:artifacts": "node scripts/dev/check-artifacts.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-vue": "10.12.0",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vue-eslint-parser": "10.4.1"
+  }
+}

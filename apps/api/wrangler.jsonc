@@ -1,0 +1,38 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "mledu-api",
+  "main": "src/index.ts",
+  // Keep at or below the workerd version bundled with @cloudflare/vitest-plugin.
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  // Local development. Secrets and keys come from .dev.vars (see .dev.vars.example).
+  "vars": {
+    "APP_ENV": "local",
+    "APP_VERSION": "dev",
+    "ALLOWED_ORIGINS": "http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:4173",
+  },
+  "env": {
+    // Deployed manually with `npm run deploy:staging -w @mledu/api`; CI does not deploy.
+    // SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY / SUPABASE_SECRET_KEY are set with
+    // `wrangler secret put <NAME> --env staging`, never committed.
+    "staging": {
+      "name": "mledu-api-staging",
+      "workers_dev": true,
+      "vars": {
+        "APP_ENV": "staging",
+        "APP_VERSION": "staging",
+        "ALLOWED_ORIGINS": "",
+      },
+    },
+    // Production deploys stay disabled until GĐ 10 release approval.
+    "production": {
+      "name": "mledu-api-production",
+      "workers_dev": false,
+      "vars": {
+        "APP_ENV": "production",
+        "APP_VERSION": "production",
+        "ALLOWED_ORIGINS": "",
+      },
+    },
+  },
+}

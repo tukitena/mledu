@@ -1,0 +1,12 @@
+# Documents and diagrams are reviewed as written; do not reflow them.
+docs/
+*.md
+*.drawio
+package-lock.json
+dist/
+coverage/
+playwright-report/
+test-results/
+supabase/
+/template/
+/.agents/

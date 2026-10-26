@@ -1,0 +1,8 @@
+# Keep LF in the repository and working tree so SQL, shell and YAML behave the
+# same on Windows and CI.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.xlsx binary
+*.drawio text eol=lf
