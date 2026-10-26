@@ -1,0 +1,23 @@
+{
+  // GĐ 0 Auth spike (Node 24 runs the .ts files directly; see docs/developer/decisions/auth-audit.md).
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/spike-app.ts",
+    "src/auth-bridge.ts",
+    "src/local.ts",
+    "tests/*.ts",
+    "tests/slow/*.ts",
+    "../../scripts/auth-spike/*.ts"
+  ]
+}

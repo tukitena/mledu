@@ -27,7 +27,13 @@
     "test:integration": "npm run test:integration -w @mledu/api",
     "test:e2e": "playwright test",
     "build": "npm run build -w @mledu/web && npm run build -w @mledu/api",
-    "check:artifacts": "node scripts/dev/check-artifacts.mjs"
+    "check:artifacts": "node scripts/dev/check-artifacts.mjs",
+    "spike:db": "node scripts/auth-spike/apply-schema.ts",
+    "dev:auth-spike": "node apps/api/src/local.ts",
+    "test:auth-spike": "node --test --test-concurrency=1 apps/api/tests/*.test.ts",
+    "test:auth:integration": "node --test --test-concurrency=1 apps/api/tests/auth.test.ts apps/api/tests/auth-atomicity.test.ts",
+    "test:auth:recovery": "node --test apps/api/tests/recovery-concurrency.test.ts",
+    "test:auth:expiry": "node --test apps/api/tests/slow/recovery-expiry.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

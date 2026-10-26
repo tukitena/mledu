@@ -25,6 +25,37 @@ Chọn bản mới nhất tương thích lẫn nhau tại ngày ghi nhận; khô
 
 `npm audit`: 0 lỗ hổng tại thời điểm cài.
 
+### Dependency cài sẵn cho các giai đoạn sau (27/10/2026)
+
+Đã cài và khóa phiên bản chính xác nhưng **chưa dùng trong mã**; bundle không chứa
+chúng cho tới khi được import. Phiên bản/wrapper vẫn phải qua kiểm tra tích hợp khi
+giai đoạn tương ứng bắt đầu (techstack §3).
+
+| Gói (`apps/web`) | Phiên bản | Giai đoạn | Ghi chú |
+| --- | --- | --- | --- |
+| `vue-i18n` | 11.4.16 | GĐ 2 (UX-01) | Việt/Anh |
+| `@supabase/supabase-js` | 2.118.0 | GĐ 2, 9 | Auth SDK và Realtime ở trình duyệt; nghiệp vụ vẫn qua Worker |
+| `@fullcalendar/vue3` + `temporal-polyfill` | 7.1.3 + 1.0.6 | GĐ 4 | FullCalendar v7: plugin dayGrid/timeGrid/interaction lấy từ subpath `@fullcalendar/vue3/*`; không cài các gói `@fullcalendar/*` v6 |
+| `tabulator-tables` (+ `@types/tabulator-tables` 6.3.6) | 6.7.1 | GĐ 3+ | Bảng phức tạp |
+| `tom-select` | 2.6.2 | GĐ 3+ | Tìm/chọn; Apache-2.0 |
+| `sweetalert2` | 11.26.25 | GĐ 3+ | Hộp xác nhận |
+
+Chưa cài: parser XLSX (chờ benchmark G1-03 quyết định nơi parse) và thư viện biểu đồ
+(Chart.js/ApexCharts chưa chốt, ApexCharts cần đối chiếu giấy phép).
+
+### Mã thử nghiệm GĐ 0 trong repository
+
+Mã spike Auth/audit được giữ và commit cùng cấu hình chính thức, tách khỏi mã Worker:
+`apps/api/src/spike-app.ts` (app spike cũ, trước là `app.ts`), `auth-bridge.ts`,
+`local.ts`, `apps/api/tests/*.ts`, `scripts/auth-spike/`. Typecheck riêng bằng
+`apps/api/tsconfig.spike.json`; Prettier bỏ qua để giữ nguyên làm bằng chứng.
+`scripts/auth-spike/config.ts` (đã mất khi dọn GĐ 0) được tạo lại, đọc `supabase status`
+và chỉ chấp nhận DB local. Schema spike được xuất chỉ đọc từ stack `mledu` ra
+`supabase/spike/gd0-auth-spike.sql` — **không phải migration**; `npm run spike:db` áp
+vào DB local khi cần chạy lại. Ngày 27/10/2026 `npm run test:auth:integration` chạy lại
+trên stack `mledu` hiện có: 26/26 đạt. Phụ thuộc chỉ dùng cho spike (`pg`, `@types/pg`,
+`@hono/node-server`) là devDependency của `apps/api`.
+
 ## Quyết định thiết kế
 
 **Workspace.** `packages/contracts` xuất thẳng mã TypeScript (`@mledu/contracts/common`),

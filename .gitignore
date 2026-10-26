@@ -3,6 +3,7 @@
 
 # Local agent skills and configuration.
 /.agents/
+.claude
 
 # Node.js dependencies and package-manager caches (keep lockfiles).
 node_modules/

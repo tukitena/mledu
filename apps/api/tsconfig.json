@@ -4,5 +4,7 @@
     "lib": ["ES2023"],
     "types": ["@cloudflare/workers-types", "@cloudflare/vitest-plugin/types"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests/integration"],
+  // GĐ 0 Auth spike: Node runtime, checked by tsconfig.spike.json.
+  "exclude": ["src/spike-app.ts", "src/auth-bridge.ts", "src/local.ts"]
 }

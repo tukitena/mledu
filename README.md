@@ -70,5 +70,8 @@ mật khẩu `mledu-local-only`.
 | `npm run check:artifacts` | Chặn secret và đường dẫn `template/` trong bản build |
 | `npm run db:reset` / `npm run db:types` | Dựng lại DB local / sinh lại kiểu `api` |
 
+Mã thử nghiệm Auth GĐ 0 (chỉ local): `npm run spike:db`, `npm run dev:auth-spike`,
+`npm run test:auth:integration` — điều kiện chạy ghi trong `supabase/spike/gd0-auth-spike.sql`.
+
 Không trỏ test tự động hoặc `db reset` vào staging/production. Deploy staging thủ công:
 `npm run deploy:staging -w @mledu/api` sau khi đặt secret bằng `wrangler secret put`.
