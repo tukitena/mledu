@@ -25,7 +25,7 @@ Tài liệu này ghi lại lựa chọn kỹ thuật đã được chấp nhận
 
 Lựa chọn backend chính là **Workers + Supabase**. Supabase Edge Functions là phương án thay thế lớp API để so sánh, không triển khai song song mặc định. Hono hỗ trợ [Workers](https://hono.dev/docs/getting-started/cloudflare-workers); Supabase cung cấp [database functions/RPC](https://supabase.com/docs/guides/database/functions).
 
-Lộ trình và cấu trúc thư mục đề xuất được mô tả tại [kế hoạch triển khai MLedu](../superpowers/plans/2026-10-26-trien-khai-mledu.md). Đây là đề xuất tổ chức triển khai; repository hiện chưa có source ứng dụng hoặc migration đã chạy.
+Lộ trình và cấu trúc thư mục đề xuất được mô tả tại [kế hoạch triển khai MLedu](Implementation-plan.md). Đây là đề xuất tổ chức triển khai; repository hiện chưa có source ứng dụng hoặc migration đã chạy.
 
 ### 1.1. Ranh giới giao tiếp frontend
 
@@ -147,7 +147,7 @@ Các mục dưới đây là tiêu chí kỹ thuật còn phải chứng minh, k
 6. Kiểm tra bản build không có template, không chứa secret; route con SPA, màn hình nhỏ và in A4/A5 hoạt động đúng.
 7. Tách môi trường local/staging/production và kiểm tra khôi phục dữ liệu. Backup database của Supabase không bao gồm nội dung file trong Storage, nên cần kế hoạch sao lưu file riêng. [Nguồn backup](https://supabase.com/docs/guides/platform/backups)
 
-Phiên bản patch, parser XLSX cuối cùng, thư viện biểu đồ, nhà cung cấp SMTP và gói compute mua thực tế chưa được chốt bởi tài liệu này. Cấu trúc source có phương án đề xuất trong [kế hoạch triển khai](../superpowers/plans/2026-10-26-trien-khai-mledu.md), cần kiểm chứng khi khởi tạo dự án.
+Phiên bản patch, parser XLSX cuối cùng, thư viện biểu đồ, nhà cung cấp SMTP và gói compute mua thực tế chưa được chốt bởi tài liệu này. Cấu trúc source có phương án đề xuất trong [kế hoạch triển khai](Implementation-plan.md), cần kiểm chứng khi khởi tạo dự án.
 
 ## 7. So sánh chi phí ở quy mô MLedu
 

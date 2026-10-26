@@ -10,11 +10,11 @@
 
 Codex có thể nhận skill từ lượt trao đổi tiếp theo. Gọi đích danh `$drawio-skill` khi cần tạo hoặc sửa sơ đồ, ví dụ:
 
-> Dùng $drawio-skill vẽ kiến trúc MLedu từ docs/developer/techstack-va-chi-phi.md, đối chiếu quy tắc nghiệp vụ trong docs/developer/plans.md. Lưu bản chỉnh sửa được vào docs/diagrams/architecture.drawio.
+> Dùng $drawio-skill vẽ kiến trúc MLedu từ docs/developer/techstack.md, đối chiếu quy tắc nghiệp vụ trong docs/developer/plans.md. Lưu bản chỉnh sửa được vào docs/diagrams/architecture.drawio.
 
 ## Quy ước áp dụng
 
-- [plans.md](plans.md) là nguồn nghiệp vụ; [techstack-va-chi-phi.md](techstack-va-chi-phi.md) là nguồn kiến trúc đã chốt. Ghi rõ sơ đồ mô tả thiết kế dự kiến khi ứng dụng chưa được triển khai.
+- [plans.md](plans.md) là nguồn nghiệp vụ; [techstack.md](techstack.md) là nguồn kiến trúc đã chốt. Ghi rõ sơ đồ mô tả thiết kế dự kiến khi ứng dụng chưa được triển khai.
 - Lưu sơ đồ chính thức trong `docs/diagrams/`, giữ nguồn `.drawio` để chỉnh sửa và review. Chỉ tạo bản PNG/SVG/PDF khi cần chia sẻ.
 - Không lấy kiến trúc, dependency hoặc cấu hình từ `template/` làm kiến trúc MLedu.
 - Không đưa khóa, token, mật khẩu hoặc dữ liệu học sinh/phụ huynh thật vào sơ đồ và metadata.

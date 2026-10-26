@@ -8,9 +8,9 @@
 
 **Tech Stack:** Vue 3, TypeScript, Vite, Vue Router, Bootstrap 5/SCSS; Cloudflare Workers/Hono; Supabase Auth, PostgreSQL, Storage, Realtime và Cron. Đề xuất npm workspaces để quản lý frontend, API và contracts trong một repository.
 
-**Spec:** [Đặc tả nghiệp vụ](../../developer/plans.md), [tech stack và ranh giới hệ thống](../../developer/techstack-va-chi-phi.md), [ERD](../../diagrams/architecture.drawio) và [giải thích mô hình](../../diagrams/README.md).
+**Spec:** [Đặc tả nghiệp vụ](plans.md), [tech stack và ranh giới hệ thống](techstack.md), [ERD](../diagrams/architecture.drawio) và [giải thích mô hình](../diagrams/README.md).
 
-Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 1.** Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa khởi tạo ứng dụng đầy đủ hoặc triển khai production. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
+Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 1 — nền local đã xong ([biên bản](decisions/gd1-foundation.md)), chờ CI chạy trên GitHub trước khi sang GĐ 2.** Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa khởi tạo ứng dụng đầy đủ hoặc triển khai production. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
 
 ## Global Constraints — Ràng buộc xuyên suốt
 
@@ -133,9 +133,9 @@ mledu/
 │   ├── dev/                             # Công cụ phục vụ phát triển
 │   └── ops/                             # Quản trị Admin có kiểm soát/audit, vận hành
 ├── docs/
-│   ├── developer/                       # plans.md, tech stack, hướng dẫn hiện có
+│   ├── developer/                       # plans.md, tech stack, lộ trình này, hướng dẫn hiện có
+│   │   └── decisions/                   # Biên bản thử nghiệm/quyết định theo giai đoạn
 │   ├── diagrams/                        # ERD và giải thích mô hình
-│   ├── superpowers/plans/               # Lộ trình này và kế hoạch triển khai chi tiết
 │   └── operations/                      # Runbook deploy, backup/restore, xử lý lỗi
 ├── .github/workflows/                   # CI, staging và production
 ├── .agents/                             # Cục bộ, bị ignore
@@ -186,7 +186,7 @@ DTO tương ứng đặt trong `packages/contracts/src/profile.ts`; route/servic
 | Giai đoạn | Kết quả chính | Phụ thuộc |
 | --- | --- | --- |
 | 0 — Đã đóng đợt thử nghiệm | Kết quả local Auth/audit và hồ sơ bàn giao; các gate còn lại được liệt kê riêng | Đặc tả + ERD; xem biên bản chốt |
-| 1 — Hiện hành | Workspace, môi trường, CI và nền DB/RLS/audit/outbox | Kết quả GĐ 0 + công việc chuyển tiếp G1-01–05 |
+| 1 — Nền local xong | Workspace, môi trường, CI và nền DB/RLS/audit/outbox | Kết quả GĐ 0 + công việc chuyển tiếp G1-01–05 |
 | 2 | Tài khoản, phiên, hồ sơ cá nhân và avatar end-to-end | GĐ 1; gate Auth ở GĐ 0 |
 | 3 | Danh mục, học sinh, lớp, phân công và khoảng tham gia | GĐ 1–2 |
 | 4 | Lịch thực tế, phòng và điểm danh | GĐ 3 |
@@ -219,19 +219,20 @@ toàn bộ test nhanh đạt 35/38, ba gate recovery native còn đỏ.
 
 ### Giai đoạn 1 — Nền dự án, môi trường và kiểm thử
 
-**Trạng thái: giai đoạn hiện hành, bắt đầu từ nền workspace/local/CI.** Theo dõi
-đồng thời G1-01–05 trong biên bản chốt GĐ 0. Chỉ tái sử dụng phần đã được review;
-schema `spike_private` và API chạy Node local chưa thay cho schema/runtime chính thức.
+**Trạng thái: hoàn thành nền local ngày 26/10/2026** — xem [biên bản GĐ 1](decisions/gd1-foundation.md).
+CI đã viết nhưng chưa chạy trên GitHub (repository chưa có remote). G1-01–05 trong
+biên bản chốt GĐ 0 vẫn mở. Schema `spike_private` và API Node của GĐ 0 không được
+đưa vào source chính thức.
 
 **Tệp đầu vào triển khai:** package/config ở gốc, `apps/web/src/main.ts`, `apps/api/src/index.ts`, `packages/contracts/src/common.ts`, `supabase/config.toml`, migration nền và `.github/workflows/ci.yml`.
 
-- [ ] Khởi tạo npm workspaces, khóa phiên bản runtime/dependency đã kiểm tra tương thích, TypeScript, lint/format và scripts chung. Không dùng package/config của template.
-- [ ] Chạy được Vue và Worker cục bộ, kết nối Supabase local; có API health check không trả secret, request ID và lỗi HTTP nhất quán.
-- [ ] Thiết kế schema/quyền được expose, client theo JWT và helper quyền hạn chế. Tạo nền version/lịch sử, audit và outbox trước khi viết lệnh nghiệp vụ đầu tiên.
-- [ ] Viết phép thử RPC mẫu: cập nhật + audit + yêu cầu thông báo cùng thành công; audit/outbox lỗi thì rollback tất cả. Tạo dữ liệu giả có đủ ba loại tài khoản.
-- [ ] Thiết lập CI build/typecheck/test; build thử khi không có `template/`. Tạo cấu hình staging/production riêng, chưa bật deploy production tự động.
+- [x] Khởi tạo npm workspaces, khóa phiên bản runtime/dependency đã kiểm tra tương thích, TypeScript, lint/format và scripts chung. Không dùng package/config của template.
+- [x] Chạy được Vue và Worker cục bộ, kết nối Supabase local; có API health check không trả secret, request ID và lỗi HTTP nhất quán.
+- [x] Thiết kế schema/quyền được expose, client theo JWT và helper quyền hạn chế. Tạo nền version/lịch sử, audit và outbox trước khi viết lệnh nghiệp vụ đầu tiên.
+- [x] Viết phép thử RPC mẫu: cập nhật + audit + yêu cầu thông báo cùng thành công; audit/outbox lỗi thì rollback tất cả. Tạo dữ liệu giả có đủ ba loại tài khoản.
+- [x] Thiết lập CI build/typecheck/test; build thử khi không có `template/`. Tạo cấu hình staging/production riêng, chưa bật deploy production tự động. *(CI chưa chạy trên GitHub; build từ clone sạch đã thử local.)*
 
-**Kiểm chứng dự kiến:** `apps/api/tests/integration/health.test.ts`, `supabase/tests/database/command_atomicity.test.sql`; Vue/Worker build thành công từ checkout sạch và đúng artifact.
+**Kiểm chứng:** `apps/api/tests/integration/health.test.ts`, `session.test.ts`; `supabase/tests/database/command_atomicity.test.sql`, `foundation_privileges.test.sql`, `request_context.test.sql`; `tests/e2e/smoke.spec.ts`; clone sạch → `npm ci` → build → `npm run check:artifacts`. `npm run test:performance` chưa tạo — thuộc G1-03.
 
 ### Giai đoạn 2 — Xác thực, phân quyền, hồ sơ và avatar
 
