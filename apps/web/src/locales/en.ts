@@ -79,7 +79,7 @@ export const en: typeof vi = {
         'Restore the original class as Closed. Students need a new participation to continue; existing dates and events are retained.',
     },
   },
-  app: { name: 'MLedu', tagline: 'Miss Lien Edu — centre management' },
+  app: { name: 'MLedu', tagline: 'Havent think about English slogan yet' },
   common: {
     save: 'Save',
     cancel: 'Cancel',

@@ -8,10 +8,6 @@ defineProps<{ title: string; subtitle?: string }>()
   <div class="auth-layout">
     <main class="auth-main">
       <div class="auth-topbar">
-        <RouterLink class="auth-brand" to="/">
-          <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
-          <span>{{ $t('app.name') }}</span>
-        </RouterLink>
         <PreferenceControls />
       </div>
       <div class="auth-body">
@@ -22,10 +18,6 @@ defineProps<{ title: string; subtitle?: string }>()
         <slot />
       </div>
     </main>
-    <aside class="auth-aside" aria-hidden="true">
-      <div class="auth-aside-inner">
-        <p class="auth-quote">{{ $t('app.tagline') }}</p>
-      </div>
-    </aside>
+    <aside class="auth-aside" aria-hidden="true"></aside>
   </div>
 </template>

@@ -73,7 +73,7 @@ export const vi = {
         'Khôi phục lớp gốc về trạng thái Đóng. Học sinh muốn học tiếp cần lần tham gia mới; các ngày và sự kiện cũ được giữ.',
     },
   },
-  app: { name: 'MLedu', tagline: 'Miss Lien Edu — quản lý trung tâm' },
+  app: { name: 'MLedu', tagline: 'Vững kiến thức Sáng tương lai' },
   common: {
     save: 'Lưu',
     cancel: 'Hủy',

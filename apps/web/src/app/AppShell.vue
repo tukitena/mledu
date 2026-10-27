@@ -10,6 +10,9 @@ import { profile, signOut, workspace, workspaces } from './session'
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const secondaryLogoSrc = computed(() =>
+  appliedTheme.value === 'dark' ? '/secondary-dark.png' : '/secondary.png',
+)
 const sidebarOpen = ref(false)
 const menuOpen = ref(false)
 const sidebarCollapsed = ref(false)
@@ -108,8 +111,8 @@ async function onSignOut() {
 <template>
   <div v-if="profile" class="app-shell" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
     <header class="app-header">
-      <RouterLink class="app-brand" :to="{ name: 'dashboard' }">
-        <span class="brand-mark" aria-hidden="true">M</span>
+      <RouterLink class="app-brand" :to="{ name: 'dashboard' }" :aria-label="t('app.name')">
+        <img class="brand-mark" :src="secondaryLogoSrc" alt="" width="32" height="32" />
         <span>{{ t('app.name') }}</span>
       </RouterLink>
       <button
@@ -264,7 +267,13 @@ async function onSignOut() {
         </li>
       </ul>
       <div class="sidebar-footer">
-        <i class="bi bi-mortarboard" aria-hidden="true"></i>
+        <img
+          class="brand-mark"
+          :src="secondaryLogoSrc"
+          :alt="t('app.name')"
+          width="32"
+          height="32"
+        />
         <span>{{ t('app.tagline') }}</span>
       </div>
     </nav>
