@@ -1,31 +1,10 @@
 import { cloudflareTest } from '@cloudflare/vitest-plugin'
-import { existsSync, readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
+import { readTestEnvironment, TEST_WORKER_CONFIG } from '../../scripts/testing/environment.ts'
 
-const wrangler = { configPath: './wrangler.jsonc' }
-
-/** Local Supabase connection for integration tests: env vars first, then .dev.vars. */
+/** Tests never read development secrets or fall back to the development database. */
 function supabaseBindings() {
-  const fromFile: Record<string, string> = {}
-  const file = new URL('./.dev.vars', import.meta.url)
-  if (existsSync(file)) {
-    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-      const match = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim())
-      if (match) fromFile[match[1]!] = match[2]!
-    }
-  }
-  const SUPABASE_URL = process.env.SUPABASE_URL ?? fromFile.SUPABASE_URL
-  const SUPABASE_PUBLISHABLE_KEY =
-    process.env.SUPABASE_PUBLISHABLE_KEY ?? fromFile.SUPABASE_PUBLISHABLE_KEY
-  const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY ?? fromFile.SUPABASE_SECRET_KEY
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !SUPABASE_SECRET_KEY) {
-    throw new Error(
-      'Integration tests need Supabase local: run `supabase start` and `npm run local:env`.',
-    )
-  }
-  if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(SUPABASE_URL)) {
-    throw new Error('Integration tests only run against a local Supabase stack.')
-  }
+  const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY } = readTestEnvironment()
   return { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY }
 }
 
@@ -35,11 +14,13 @@ export default defineConfig({
       {
         plugins: [
           cloudflareTest({
-            wrangler,
             miniflare: {
+              compatibilityDate: '2026-10-01',
               // Unit tests never reach a database.
               bindings: {
                 APP_ENV: 'test',
+                APP_VERSION: 'test',
+                ALLOWED_ORIGINS: 'http://127.0.0.1:5173',
                 SUPABASE_URL: 'http://127.0.0.1:9',
                 SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_unit_test',
               },
@@ -51,7 +32,7 @@ export default defineConfig({
       {
         plugins: [
           cloudflareTest(() => ({
-            wrangler,
+            wrangler: { configPath: TEST_WORKER_CONFIG },
             miniflare: { bindings: { APP_ENV: 'test', ...supabaseBindings() } },
           })),
         ],

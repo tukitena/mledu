@@ -51,6 +51,39 @@ export const ErrorCode = z.enum([
   'invalid_state',
   /** Uploaded avatar missing, not a JPG/PNG/WebP image or too large (AUTH-08). */
   'avatar_invalid',
+  /** Name (lookup key) already used by an active record of the same catalog. */
+  'duplicate_name',
+  /** Name matches an archived record; restore that record instead (CAT-01, SCHED-05). */
+  'archived_duplicate',
+  /** Rooms cannot be created in, moved to or restored into an archived site (SCHED-05). */
+  'site_archived',
+  /**
+   * Same name key and a shared parent phone as an existing student (STU-04).
+   * `details` lists the other students as {path: 'student', message: code}.
+   */
+  'duplicate_student',
+  /** As duplicate_student, but every match is archived: restore it instead (STU-04). */
+  'duplicate_student_archived',
+  /** Another student has the same name key; at least one parent phone is needed (STU-04). */
+  'parent_phone_required',
+  /** CLASS-03: after the class has activity its opening date is locked and its end date stays ≥ today. */
+  'class_dates_locked',
+  /** CLASS-01: assignment dates must lie within the class dates. */
+  'outside_class_dates',
+  /** CLASS-01: only enabled, non-deleted User/Admin accounts can be assigned. */
+  'account_not_assignable',
+  /** CLASS-01/02: the person already has an assignment in this class for part of that period. */
+  'assignment_overlap',
+  /** CLASS-01: a started assignment keeps its role and start date; its end date stays ≥ today. */
+  'assignment_locked',
+  /** AUTH-04/07: an assignment is in effect; `details` lists the classes ({path: 'class'}). */
+  'assignment_in_effect',
+  'participation_overlap',
+  'participation_dates_locked',
+  'participations_outside_dates',
+  'student_deleted',
+  'class_closed',
+  'class_ended',
   'not_found',
   'method_not_allowed',
   'version_conflict',

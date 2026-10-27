@@ -1,16 +1,18 @@
-# Documents and diagrams are reviewed as written; do not reflow them.
+# Prose, diagrams and SQL are maintained without reflowing existing documents.
 docs/
 *.md
 *.drawio
+supabase/
+tests/fixtures/
 package-lock.json
 dist/
 coverage/
 playwright-report/
 test-results/
-supabase/
+tmp/
 /template/
 /.agents/
-# GĐ 0 Auth spike kept verbatim as test evidence.
+# Preserve the historical GĐ0 spike's formatting.
 apps/api/src/spike-app.ts
 apps/api/src/auth-bridge.ts
 apps/api/src/local.ts

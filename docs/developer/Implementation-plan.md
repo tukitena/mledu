@@ -237,8 +237,8 @@ biên bản chốt GĐ 0 vẫn mở. Schema `spike_private` và API Node của G
 ### Giai đoạn 2 — Xác thực, phân quyền, hồ sơ và avatar
 
 **Trạng thái: triển khai local ngày 27/10/2026** — xem [biên bản GĐ 2](decisions/gd2-auth-profile.md).
-Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của AUTH-04/07 chờ dữ liệu
-phân công ở GĐ 3; báo lỗi email cho Admin và dọn file/lệnh hết hạn thuộc GĐ 9.
+Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của AUTH-04/07 đã bổ sung ở GĐ 3
+(tính năng lớp và phân công); báo lỗi email cho Admin và dọn file/lệnh hết hạn thuộc GĐ 9.
 
 **Phạm vi:** AUTH-01–08, phần nền UX-01. Tệp chính: `apps/web/src/features/auth/`, `apps/web/src/features/profile/`, `apps/api/src/modules/auth/`, `apps/api/src/modules/profile/`, `packages/contracts/src/profile.ts`, migration tài khoản/quyền và Storage policy.
 
@@ -255,12 +255,14 @@ phân công ở GĐ 3; báo lỗi email cho Admin và dọn file/lệnh hết h�
 
 **Phạm vi:** STU-01–04, CLASS-01–04, CAT-01; nền trạng thái/lịch sử cho CLASS-05, SCHED-03/05. Tệp theo các module `catalogs/`, `students/`, `classes/` và migration tương ứng.
 
-- [ ] Tạo danh mục môn/khối/địa điểm/phòng; chuẩn hóa và kiểm tra duy nhất kể cả bản lưu trữ. Phòng chỉ có tên và địa điểm theo nghiệp vụ.
-- [ ] Tạo hồ sơ học sinh, nhiều số liên hệ, chuẩn hóa tên/SĐT và chống trùng đồng thời theo STU-04; mã học sinh giữ ổn định qua xuất/nhập và khôi phục.
-- [ ] Tạo lớp, phân công theo thời hạn và hồ sơ học sinh–lớp chứa nhiều lần tham gia. Kiểm tra không chồng khoảng, khóa ngày đã lưu và cắt khoảng bằng sự kiện.
-- [ ] Thực hiện chuyển lớp trong một RPC, phân biệt học lại trong hồ sơ cũ với xóa rồi thêm hồ sơ mới. Chuẩn bị hợp đồng vòng đời lớp để lịch/phí đăng ký xử lý nguyên khối ở GĐ 4/6/9.
+- [x] Tạo danh mục môn/khối/địa điểm/phòng; chuẩn hóa và kiểm tra duy nhất kể cả bản lưu trữ. Phòng chỉ có tên và địa điểm theo nghiệp vụ.
+- [x] Tạo hồ sơ học sinh, nhiều số liên hệ, chuẩn hóa tên/SĐT và chống trùng đồng thời theo STU-04; mã học sinh giữ ổn định qua xuất/nhập và khôi phục.
+- [x] Tạo lớp, phân công theo thời hạn và hồ sơ học sinh–lớp chứa nhiều lần tham gia. Kiểm tra không chồng khoảng, khóa ngày đã lưu và cắt khoảng bằng sự kiện.
+- [x] Thực hiện chuyển lớp trong một RPC, phân biệt học lại trong hồ sơ cũ với xóa rồi thêm hồ sơ mới. Chuẩn bị hợp đồng vòng đời lớp để lịch/phí đăng ký xử lý nguyên khối ở GĐ 4/6/9.
 
-**Gate:** `student-identity.test.sql`, `participation-periods.test.sql`, `class-assignment.test.sql`, `class-transfer.test.ts` kiểm tra tên trùng/SĐT chung, kết thúc giữa ngày, phân công chồng, gia hạn sau khi đã nghỉ và rollback chuyển lớp. Chưa nghiệm thu toàn bộ CLASS-05 trước khi hoàn tất xử lý liên miền ở GĐ 9.
+**Gate:** `student_identity.test.sql`, `participation_periods.test.sql`, `class_assignment.test.sql`, `class-transfer.test.ts` kiểm tra tên trùng/SĐT chung, kết thúc giữa ngày, phân công chồng, gia hạn sau khi đã nghỉ và rollback chuyển lớp. Chưa nghiệm thu toàn bộ CLASS-05 trước khi hoàn tất xử lý liên miền ở GĐ 9.
+
+**Bằng chứng local (27/10/2026):** 350 pgTAP, 47 integration, 1 kiểm thử khóa DB đồng thời và 32 E2E desktop/mobile đạt; lint, format, typecheck, unit, build khi thiếu `template/` và kiểm tra artifacts đạt. Xem [quyết định GĐ3](decisions/gd3-enrollments.md) cho phạm vi và giới hạn. Mã học sinh đã ổn định ở tầng dữ liệu/API; round-trip file Excel thuộc GĐ8. CI/hosted của thay đổi này chưa được kiểm chứng.
 
 ### Giai đoạn 4 — Lịch, phòng, nghỉ lễ và chuyên cần
 

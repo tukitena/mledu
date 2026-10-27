@@ -111,7 +111,7 @@ export const workspace = computed<Workspace | null>({
 
 // --- Keeping the profile current while the app is open. ---
 
-const SYNC_INTERVAL_MS = 30_000
+const SYNC_INTERVAL_MS = 5 * 60_000
 let syncTimer: ReturnType<typeof setInterval> | undefined
 
 export function startProfileSync() {
@@ -120,8 +120,6 @@ export function startProfileSync() {
       void loadProfile().catch(() => undefined)
   }
   syncTimer ??= setInterval(sync, SYNC_INTERVAL_MS)
-  window.addEventListener('focus', sync)
-  document.addEventListener('visibilitychange', sync)
   auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') profile.value = null
   })

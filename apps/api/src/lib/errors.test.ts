@@ -33,6 +33,18 @@ describe('fromDatabaseError', () => {
     })
   })
 
+  it('passes conflict details naming other records, nothing else', () => {
+    const error = fromDatabaseError({
+      code: 'PT409',
+      message: 'duplicate_student',
+      details: '[{"path":"student","message":"HS000001"},{"path":1,"message":"x"}]',
+    })
+    expect(error).toMatchObject({ status: 409, code: 'duplicate_student' })
+    expect(error.details).toEqual([{ path: 'student', message: 'HS000001' }])
+    const sqlDetail = fromDatabaseError({ code: 'PT409', message: 'conflict', details: 'Key (id)' })
+    expect(sqlDetail.details).toBeUndefined()
+  })
+
   it('never forwards SQL error text', () => {
     const error = fromDatabaseError({ code: '42P01', message: 'relation "app.x" does not exist' })
     expect(error).toMatchObject({ status: 500, code: 'internal_error', message: 'internal_error' })

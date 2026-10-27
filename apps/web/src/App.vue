@@ -12,7 +12,7 @@ watch(profile, (current) => {
   if (route.meta.public) return
   if (!current) void router.replace({ name: 'login' })
   else if (current.mustChangePassword) void router.replace({ name: 'change-password' })
-  else if (route.meta.workspace && !workspaces.value.includes(route.meta.workspace)) {
+  else if (route.meta.workspaces?.every((item) => !workspaces.value.includes(item))) {
     void router.replace({ name: 'dashboard' })
   }
 })

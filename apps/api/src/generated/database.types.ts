@@ -9,8 +9,66 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_catalog_entry: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      archive_room: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      archive_site: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
       auth_command_status: { Args: { p_command_id: string }; Returns: string }
+      cancel_participation: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      class_lifecycle_impact: { Args: { p_id: string }; Returns: Json }
       clear_my_avatar: { Args: { p_expected_version: number }; Returns: Json }
+      close_class: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      create_catalog_entry: { Args: { p_kind: string; p_name: string }; Returns: Json }
+      create_class: {
+        Args: {
+          p_end_date: string
+          p_grade_id: string
+          p_name: string
+          p_note?: string
+          p_start_date: string
+          p_subject_id: string
+        }
+        Returns: Json
+      }
+      create_class_assignment: {
+        Args: {
+          p_account_id: string
+          p_class_id: string
+          p_end_date: string
+          p_role: string
+          p_start_date: string
+          p_subject_note?: string
+        }
+        Returns: Json
+      }
+      create_room: { Args: { p_name: string; p_site_id: string }; Returns: Json }
+      create_site: { Args: { p_address: string; p_name: string }; Returns: Json }
+      create_student: {
+        Args: {
+          p_birth_date?: string
+          p_full_name: string
+          p_general_note?: string
+          p_parent_name?: string
+          p_parent_phones?: string[]
+          p_school?: string
+          p_student_phones?: string[]
+        }
+        Returns: Json
+      }
       current_session: {
         Args: { p_allow_password_change?: boolean }
         Returns: {
@@ -20,10 +78,47 @@ export type Database = {
         }[]
       }
       discard_avatar_upload: { Args: { p_path: string }; Returns: boolean }
+      end_class_assignment: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      enroll_student: {
+        Args: {
+          p_class_id: string
+          p_join_date: string
+          p_leave_date?: string
+          p_note?: string
+          p_student_id: string
+        }
+        Returns: Json
+      }
       get_account: { Args: { p_account_id: string }; Returns: Json }
+      get_class: { Args: { p_id: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
+      get_student: { Args: { p_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
       list_accounts: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
+        Returns: Json
+      }
+      list_assignable_accounts: { Args: Record<PropertyKey, never>; Returns: Json }
+      list_catalog_entries: {
+        Args: { p_include_archived?: boolean; p_kind: string }
+        Returns: Json
+      }
+      list_class_assignments: { Args: { p_class_id: string }; Returns: Json }
+      list_class_students: {
+        Args: { p_class_id: string; p_include_deleted?: boolean }
+        Returns: Json
+      }
+      list_classes: {
+        Args: { p_deleted?: boolean; p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: Json
+      }
+      list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
+      list_sites: { Args: { p_include_archived?: boolean }; Returns: Json }
+      list_student_classes: { Args: { p_student_id: string }; Returns: Json }
+      list_students: {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
         Returns: Json
       }
@@ -61,8 +156,31 @@ export type Database = {
         Args: { p_account_id: string; p_expected_version: number }
         Returns: string
       }
+      rename_catalog_entry: {
+        Args: { p_expected_version: number; p_id: string; p_name: string }
+        Returns: Json
+      }
+      reopen_class: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       reserve_avatar_upload: { Args: { p_extension: string }; Returns: string }
       restore_account: { Args: { p_account_id: string; p_expected_version: number }; Returns: Json }
+      restore_catalog_entry: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_class: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_room: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_site: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_student: {
+        Args: {
+          p_birth_date: string
+          p_expected_version: number
+          p_full_name: string
+          p_general_note: string
+          p_id: string
+          p_parent_name: string
+          p_parent_phones: string[]
+          p_school: string
+          p_student_phones: string[]
+        }
+        Returns: Json
+      }
       set_account_enabled: {
         Args: { p_account_id: string; p_enabled: boolean; p_expected_version: number }
         Returns: Json
@@ -72,8 +190,64 @@ export type Database = {
         Returns: Json
       }
       set_my_avatar: { Args: { p_expected_version: number; p_path: string }; Returns: Json }
+      set_participation_leave_date: {
+        Args: { p_expected_version: number; p_id: string; p_leave_date: string }
+        Returns: Json
+      }
+      set_participation_note: {
+        Args: { p_expected_version: number; p_id: string; p_note: string }
+        Returns: Json
+      }
       soft_delete_account: {
         Args: { p_account_id: string; p_expected_version: number; p_reason: string }
+        Returns: Json
+      }
+      soft_delete_class: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      soft_delete_class_student: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      soft_delete_student: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      student_delete_impact: { Args: { p_id: string }; Returns: Json }
+      transfer_student: {
+        Args: {
+          p_expected_version: number
+          p_join_date: string
+          p_leave_date: string
+          p_note: string
+          p_participation_id: string
+          p_target_class_id: string
+        }
+        Returns: Json
+      }
+      update_class: {
+        Args: {
+          p_end_date: string
+          p_expected_version: number
+          p_grade_id: string
+          p_id: string
+          p_name: string
+          p_note: string
+          p_start_date: string
+          p_subject_id: string
+        }
+        Returns: Json
+      }
+      update_class_assignment: {
+        Args: {
+          p_end_date: string
+          p_expected_version: number
+          p_id: string
+          p_role: string
+          p_start_date: string
+          p_subject_note: string
+        }
         Returns: Json
       }
       update_my_profile: {
@@ -82,6 +256,28 @@ export type Database = {
           p_expected_version: number
           p_full_name: string
           p_phone: string
+        }
+        Returns: Json
+      }
+      update_room: {
+        Args: { p_expected_version: number; p_id: string; p_name: string; p_site_id: string }
+        Returns: Json
+      }
+      update_site: {
+        Args: { p_address: string; p_expected_version: number; p_id: string; p_name: string }
+        Returns: Json
+      }
+      update_student: {
+        Args: {
+          p_birth_date: string
+          p_expected_version: number
+          p_full_name: string
+          p_general_note: string
+          p_id: string
+          p_parent_name: string
+          p_parent_phones: string[]
+          p_school: string
+          p_student_phones: string[]
         }
         Returns: Json
       }

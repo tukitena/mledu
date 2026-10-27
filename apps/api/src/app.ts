@@ -8,8 +8,17 @@ import type { AppEnv } from './env'
 import { AppError, codeForStatus } from './lib/errors'
 import { accountRoutes } from './modules/accounts/routes'
 import { authRoutes } from './modules/auth/routes'
+import { catalogRoutes, roomRoutes, siteRoutes } from './modules/catalogs/routes'
+import { assignmentRoutes, classRoutes } from './modules/classes/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
+import { studentRoutes } from './modules/students/routes'
+import {
+  enrollmentClassRoutes,
+  enrollmentStudentRoutes,
+  classStudentRoutes,
+  participationRoutes,
+} from './modules/enrollments/routes'
 
 const allowedOrigins = (value: string) =>
   value
@@ -55,6 +64,16 @@ export function createApp() {
   app.route(`/${API_VERSION}/auth`, authRoutes)
   app.route(`/${API_VERSION}/me`, profileRoutes)
   app.route(`/${API_VERSION}/accounts`, accountRoutes)
+  app.route(`/${API_VERSION}/catalogs`, catalogRoutes)
+  app.route(`/${API_VERSION}/sites`, siteRoutes)
+  app.route(`/${API_VERSION}/rooms`, roomRoutes)
+  app.route(`/${API_VERSION}/students`, studentRoutes)
+  app.route(`/${API_VERSION}/classes`, classRoutes)
+  app.route(`/${API_VERSION}/assignments`, assignmentRoutes)
+  app.route(`/${API_VERSION}/classes`, enrollmentClassRoutes)
+  app.route(`/${API_VERSION}/students`, enrollmentStudentRoutes)
+  app.route(`/${API_VERSION}/class-students`, classStudentRoutes)
+  app.route(`/${API_VERSION}/participations`, participationRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

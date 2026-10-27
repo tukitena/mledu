@@ -8,8 +8,13 @@ declare module 'vue-router' {
     public?: boolean
     /** Signed-in users are sent on to the app. */
     guestOnly?: boolean
-    /** Workspace the page belongs to; switching to it requires the account type to allow it. */
-    workspace?: Workspace
+    /** Sidebar entry highlighted for a page that has none of its own. */
+    navParent?: string
+    /**
+     * Workspaces whose function set includes the page; the first one the account
+     * may use is selected when the current workspace does not offer it.
+     */
+    workspaces?: Workspace[]
   }
 }
 
@@ -57,7 +62,29 @@ export const router = createRouter({
           path: 'admin/accounts',
           name: 'accounts',
           component: () => import('../features/accounts/AccountsPage.vue'),
-          meta: { workspace: 'admin' },
+          meta: { workspaces: ['admin'] },
+        },
+        {
+          path: 'students',
+          name: 'students',
+          component: () => import('../features/students/StudentsPage.vue'),
+        },
+        {
+          path: 'classes',
+          name: 'classes',
+          component: () => import('../features/classes/ClassesPage.vue'),
+        },
+        {
+          path: 'classes/:id',
+          name: 'class-detail',
+          component: () => import('../features/classes/ClassDetailPage.vue'),
+          meta: { navParent: 'classes' },
+        },
+        {
+          path: 'catalogs',
+          name: 'catalogs',
+          component: () => import('../features/catalogs/CatalogsPage.vue'),
+          meta: { workspaces: ['admin', 'receptionist'] },
         },
       ],
     },
@@ -88,9 +115,10 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
   if (current.mustChangePassword && to.name !== 'change-password')
     return { name: 'change-password' }
-  if (to.meta.workspace) {
-    if (!workspaces.value.includes(to.meta.workspace)) return { name: 'dashboard' }
-    workspace.value = to.meta.workspace
+  const allowed = to.meta.workspaces?.filter((item) => workspaces.value.includes(item))
+  if (allowed) {
+    if (!allowed.length) return { name: 'dashboard' }
+    if (!workspace.value || !allowed.includes(workspace.value)) workspace.value = allowed[0]!
   }
   return true
 })

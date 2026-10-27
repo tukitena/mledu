@@ -15,7 +15,7 @@ liệt kê ở cuối; không đánh dấu nghiệm thu toàn bộ AUTH-04/AUTH-
 | AUTH-03 | Vô hiệu hóa/kích hoạt lại; phiên cũ mất hiệu lực ngay, không hồi sinh | `api.set_account_enabled`, Access Token Hook |
 | AUTH-04/05 | Xóa mềm có lý do, giữ email/lịch sử; khôi phục kích hoạt ngay, phiên cũ vẫn mất | `api.soft_delete_account`, `api.restore_account` |
 | AUTH-06 | Mọi lệnh quản trị từ chối đích Admin và quyền Admin; Admin quản trị bằng công cụ vận hành có audit `source=ops` | `app_private.lock_managed_account`, `api.ops_*`, `scripts/ops/accounts.mjs` |
-| AUTH-07 | Tạo tài khoản mặc định User; đổi User ↔ Receptionist, quyền mới áp dụng ngay trên phiên đang mở; UI tự cập nhật | `api.prepare_account_create`, `api.set_account_type`, đồng bộ hồ sơ 30 giây/khi focus |
+| AUTH-07 | Tạo tài khoản mặc định User; đổi User ↔ Receptionist, quyền mới áp dụng ngay ở API cho request kế tiếp của mọi phiên đang mở; giao diện cập nhật khi tải lại trang hoặc ở lượt đồng bộ 5 phút | `api.prepare_account_create`, `api.set_account_type`, đồng bộ hồ sơ mỗi 5 phút khi tab hiển thị |
 | AUTH-08 | Tự sửa họ tên/SĐT/ngày sinh có version; không đổi email ở mọi đường (API, Auth SDK); đổi mật khẩu giữ phiên hiện tại, kết thúc phiên khác; avatar | `api.update_my_profile`, trigger `mledu_guard_email`, avatar bên dưới |
 | UX-01 (nền) | Desktop/mobile, Việt/Anh, sáng/tối/theo hệ thống lưu theo trình duyệt; workspace theo loại tài khoản | `apps/web/src/app/{i18n,theme,session}.ts`, `AppShell.vue` |
 
@@ -80,7 +80,7 @@ Storage v1.84.19.
 | `npm run test:unit` | 28/28 đạt (contracts 8, API trong workerd 16, web 4) |
 | `npm run test:db` (sau `db reset`) | 135/135 pgTAP: thêm `account_access` 84 (hook, quyền, khóa/mở, đổi loại, xóa/khôi phục, lỗi audit rollback, hoàn tất lệnh Auth, reset một lần, hồ sơ, avatar) |
 | `npm run test:integration` | 27/27 với GoTrue/PostgREST/Storage/Mailpit thật: `auth-session` 15 (gồm reset đồng thời 3 request → đúng 1 thành công), `avatar` 5, `session` 5, `health` 2 |
-| `npm run test:e2e` | 18/18 (desktop + Pixel 7): tạo tài khoản → bắt đổi mật khẩu, khóa khi đang đăng nhập, đổi loại tới phiên mở, workspace, reset qua email, hồ sơ + avatar + ảnh giả, ngôn ngữ/theme |
+| `npm run test:e2e` | 18/18 (desktop + Pixel 7): tạo tài khoản → bắt đổi mật khẩu, khóa khi đang đăng nhập, đổi loại tới phiên mở (giao diện cập nhật sau khi tải lại trang), workspace, reset qua email, hồ sơ + avatar + ảnh giả, ngôn ngữ/theme |
 | `npm run build` + `npm run check:artifacts` | Đạt; bundle web không chứa secret key (chỉ có mã kiểm tra tiền tố key của supabase-js) |
 
 Kiểm tra thủ công trên trình duyệt: trang đăng nhập, tổng quan, tài khoản (sáng/tối),
@@ -104,9 +104,9 @@ Lưu ý chạy lại: `command_atomicity.test.sql` (GĐ 1) đếm tổng toàn b
 | G1-01 recovery đồng thời | Đạt ở tầng MLedu trên local (một link một lần reset dù GoTrue verify trùng). **Chưa thử hosted**; luồng mới không dùng PKCE trình duyệt |
 | G1-02 avatar | Đạt local: file giả MIME, >5.000.000 byte, người khác commit, bỏ qua Worker, đổi đồng thời, dọn file. Chưa thử hosted |
 | G1-05 | Thiết kế Auth/audit đã đưa vào migration chính thức; prototype `spike_*` vẫn chỉ là tham chiếu |
-| AUTH-04/07 kiểm tra phân công | Chưa có dữ liệu phân công trước GĐ 3; điểm chèn đã ghi trong `soft_delete_account`/`set_account_type`. Chưa nghiệm thu hai tiêu chí liên quan |
+| AUTH-04/07 kiểm tra phân công | Triển khai ở GĐ 3 (`20261027130000_classes.sql`): từ chối khi còn phân công đang hiệu lực (trả danh sách lớp), tự hủy phân công tương lai trong cùng lệnh; có pgTAP `class_assignment` và test tích hợp/e2e. Chưa thử hosted |
 | Báo lỗi gửi email reset cho Admin (AUTH-02) | Hiện chỉ log vận hành; thông báo Admin thuộc GĐ 9 (NOTIF-01) |
 | Dọn file avatar mồ côi (upload bỏ dở, lỗi xóa) | Bảng `avatar_uploads` đánh dấu sẵn; tác vụ dọn thuộc GĐ 9 |
 | Lệnh Auth đã hết hạn trong `auth_commands` | Không chứa bí mật; chưa có tác vụ dọn (GĐ 9) |
-| UI cập nhật quyền | Đồng bộ định kỳ 30 giây/khi focus; Realtime thuộc GĐ 9 |
+| UI cập nhật quyền | Đồng bộ mỗi 5 phút khi đã đăng nhập và tab hiển thị; không gọi khi focus/quay lại tab. Lỗi thiếu quyền hướng dẫn tải lại trang rồi thử lại; Realtime thuộc GĐ 9 |
 | CI GitHub | Chưa chạy (chưa có remote) |

@@ -8,7 +8,14 @@ defineProps<{ error: DescribedError | null }>()
 <template>
   <FloatingAlert
     :message="error ? $t(`errors.${error.code}`) : null"
-    :detail="error?.requestId ? $t('errors.requestId', { id: error.requestId }) : ''"
+    :detail="
+      [
+        error?.related ? $t('errors.related', { codes: error.related.join(', ') }) : '',
+        error?.requestId ? $t('errors.requestId', { id: error.requestId }) : '',
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    "
     variant="danger"
     data-testid="error-alert"
   />

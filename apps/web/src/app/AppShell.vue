@@ -10,6 +10,9 @@ import { profile, signOut, workspace, workspaces } from './session'
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const secondaryLogoSrc = computed(() =>
+  appliedTheme.value === 'dark' ? '/secondary-dark.png' : '/secondary.png',
+)
 const sidebarOpen = ref(false)
 const menuOpen = ref(false)
 const sidebarCollapsed = ref(false)
@@ -73,6 +76,15 @@ const navItems = computed(() => [
   ...(workspace.value === 'admin'
     ? [{ name: 'accounts', icon: 'bi-people', label: t('nav.accounts') }]
     : []),
+  {
+    name: 'classes',
+    icon: 'bi-easel',
+    label: workspace.value === 'user' ? t('nav.myClasses') : t('nav.classes'),
+  },
+  { name: 'students', icon: 'bi-person-badge', label: t('nav.students') },
+  ...(workspace.value === 'admin' || workspace.value === 'receptionist'
+    ? [{ name: 'catalogs', icon: 'bi-collection', label: t('nav.catalogs') }]
+    : []),
   { name: 'profile', icon: 'bi-person-circle', label: t('nav.profile') },
 ])
 
@@ -86,7 +98,7 @@ watch(
 
 // Leaving a workspace leaves its pages too.
 watch(workspace, (current) => {
-  if (route.meta.workspace && route.meta.workspace !== current)
+  if (route.meta.workspaces && (!current || !route.meta.workspaces.includes(current)))
     void router.push({ name: 'dashboard' })
 })
 
@@ -99,8 +111,8 @@ async function onSignOut() {
 <template>
   <div v-if="profile" class="app-shell" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
     <header class="app-header">
-      <RouterLink class="app-brand" :to="{ name: 'dashboard' }">
-        <span class="brand-mark" aria-hidden="true">M</span>
+      <RouterLink class="app-brand" :to="{ name: 'dashboard' }" :aria-label="t('app.name')">
+        <img class="brand-mark" :src="secondaryLogoSrc" alt="" width="32" height="32" />
         <span>{{ t('app.name') }}</span>
       </RouterLink>
       <button
@@ -244,6 +256,7 @@ async function onSignOut() {
             class="nav-link"
             :to="{ name: item.name }"
             exact-active-class="active"
+            :class="{ active: route.meta.navParent === item.name }"
             :data-testid="`nav-${item.name}`"
             :title="item.label"
             :aria-label="item.label"
@@ -254,7 +267,13 @@ async function onSignOut() {
         </li>
       </ul>
       <div class="sidebar-footer">
-        <i class="bi bi-mortarboard" aria-hidden="true"></i>
+        <img
+          class="brand-mark"
+          :src="secondaryLogoSrc"
+          :alt="t('app.name')"
+          width="32"
+          height="32"
+        />
         <span>{{ t('app.tagline') }}</span>
       </div>
     </nav>

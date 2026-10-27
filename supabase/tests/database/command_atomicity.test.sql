@@ -78,10 +78,10 @@ create function pg_temp.snapshot() returns text language sql as $$
   select format('name=%s version=%s history=%s audit=%s events=%s deliveries=%s',
     (select full_name from app.account_profiles where id = '00000000-0000-4000-8000-000000000003'),
     (select row_version from app.account_profiles where id = '00000000-0000-4000-8000-000000000003'),
-    (select count(*) from app.business_entity_versions),
-    (select count(*) from app.audit_events),
-    (select count(*) from app.outbox_events),
-    (select count(*) from app.outbox_deliveries))
+    (select count(*) from app.business_entity_versions where changed_at = now()),
+    (select count(*) from app.audit_events where created_at = now()),
+    (select count(*) from app.outbox_events where created_at = now()),
+    (select count(*) from app.outbox_deliveries where created_at = now()))
 $$;
 
 select set_config('request.jwt.claims', json_build_object(
@@ -96,13 +96,13 @@ select is(pg_temp.snapshot(),
   'name=Giáo viên Đổi tên version=2 history=1 audit=1 events=1 deliveries=1',
   'change, history, audit and notification request are all stored');
 select is(
-  (select actor_id from app.audit_events), '00000000-0000-4000-8000-000000000001'::uuid,
+  (select actor_id from app.audit_events where created_at = now()), '00000000-0000-4000-8000-000000000001'::uuid,
   'audit records the acting account');
 select ok(
-  (select expires_at = created_at + interval '60 days' from app.audit_events),
+  (select expires_at = created_at + interval '60 days' from app.audit_events where created_at = now()),
   'audit expires exactly 60 days after creation');
 select is(
-  (select before_after #>> '{before,full_name}' from app.audit_events), 'Giáo viên Thử nghiệm',
+  (select before_after #>> '{before,full_name}' from app.audit_events where created_at = now()), 'Giáo viên Thử nghiệm',
   'audit keeps the previous value');
 
 -- 2. Replaying the same event key (job retry) does not duplicate the notification.

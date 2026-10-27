@@ -8,6 +8,8 @@ export class ApiError extends Error {
     readonly code: ErrorCode,
     readonly requestId: string,
     message: string,
+    /** Field problems or, for conflicts, the other records involved (e.g. student codes). */
+    readonly details: { path: string; message: string }[] = [],
   ) {
     super(message)
     this.name = 'ApiError'
@@ -71,8 +73,8 @@ export function createApiClient({ baseUrl, getAccessToken, fetch: fetchImpl }: A
     if (!response.ok) {
       const parsed = ErrorResponse.safeParse(payload)
       if (parsed.success) {
-        const { code, message, requestId: id } = parsed.data.error
-        throw new ApiError(response.status, code, id, message)
+        const { code, message, requestId: id, details } = parsed.data.error
+        throw new ApiError(response.status, code, id, message, details)
       }
       const code = fallbackCode(response.status)
       throw new ApiError(response.status, code, responseId, code)
