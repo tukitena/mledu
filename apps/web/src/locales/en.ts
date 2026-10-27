@@ -1,6 +1,84 @@
 import type { vi } from './vi'
 
 export const en: typeof vi = {
+  enrollments: {
+    student: 'Student',
+    searchStudent: 'Find student',
+    searchClass: 'Find destination class',
+    targetClass: 'Destination class',
+    targetJoinDate: 'Destination join date',
+    choose: 'Choose a search result',
+    joinDate: 'Join date',
+    leaveDate: 'Leave date',
+    note: 'Class note',
+    filter: 'Search student name or code',
+    showDeleted: 'Include deleted records',
+    empty: 'No matching participations.',
+    history: 'Class participation history',
+    recordDeleted: 'Class record deleted',
+    studentDeleted: 'Student deleted',
+    classDeleted: 'Class deleted',
+    saved: 'Participation changes saved.',
+    until: 'Effective until: {time}',
+    leaveHint:
+      'The leave date is the first day not attending (from 00:00). It can only be recorded once; saved join dates cannot change.',
+    closedHint:
+      'Class closed: new participations are unavailable. Existing dates and history are preserved.',
+    impact: '{active} active participations and {future} future registrations.',
+    assignmentImpact: '{count} assignments currently in effect.',
+    actions: {
+      enroll: 'Add student',
+      reenroll: 'Re-enroll',
+      leave: 'Record leave date',
+      note: 'Edit note',
+      cancel: 'Cancel registration',
+      delete: 'Remove class record',
+      transfer: 'Transfer class',
+    },
+    status: {
+      not_started: 'Not started',
+      active: 'Attending',
+      ended: 'Ended',
+      cancelled: 'Ended · Cancelled',
+    },
+    endKind: {
+      cancelled: 'Registration cancelled',
+      record_deleted: 'Class record deleted',
+      student_deleted: 'Student deleted',
+      class_deleted: 'Class deleted',
+    },
+    hint: {
+      enroll:
+        'Choose a student from the directory. A participation is added to the existing class record, or a new record is created if the old one was deleted.',
+      reenroll:
+        'Add a participation to the same record while preserving history. Its dates must not overlap existing participations.',
+      leave:
+        'The leave date must follow the join date. Once confirmed, it cannot be changed or removed.',
+      note: 'Update only this participation’s note. Its dates and history are preserved.',
+      cancel:
+        'Only future registrations can be cancelled. The record, cancellation time and reason are retained.',
+      delete:
+        'End active participations and cancel future registrations at confirmation. History is retained; adding again creates a new record.',
+      transfer:
+        'The source leave date and destination participation are saved together. An existing leave date stays unchanged. Grades, comments and money stay with their original records.',
+    },
+    lifecycle: {
+      close: 'Close class',
+      reopen: 'Reopen class',
+      delete: 'Delete class',
+      restore: 'Restore class',
+    },
+    lifecycleHint: {
+      close:
+        'Closing blocks new enrollment and preserves participation dates, assignments and history.',
+      reopen:
+        'Reopen while the end date has not passed. Ended participations and assignments stay ended.',
+      delete:
+        'Soft-delete the class, ending active participations and cancelling future registrations at confirmation. Students, staff and all history are kept.',
+      restore:
+        'Restore the original class as Closed. Students need a new participation to continue; existing dates and events are retained.',
+    },
+  },
   app: { name: 'MLedu', tagline: 'Miss Lien Edu — centre management' },
   common: {
     save: 'Save',
@@ -253,7 +331,7 @@ export const en: typeof vi = {
     },
     period: { upcoming: 'Not started', running: 'Running', ended: 'Ended' },
     closed: 'Closed',
-    tabs: { staff: 'Staff' },
+    tabs: { staff: 'Staff', students: 'Students' },
     actions: { open: 'Open', edit: 'Edit' },
     myRole: 'You: {role}',
     backToList: 'All classes',
@@ -364,7 +442,14 @@ export const en: typeof vi = {
       'Another student has the same name (accents ignored). Add at least one parent phone that differs.',
     class_dates_locked:
       'The class has activity: its opening date is locked and its end date must be today or later.',
-    outside_class_dates: 'Assignment dates must lie within the class opening and end dates.',
+    outside_class_dates:
+      'Join dates or assignment dates must lie within the class opening and end dates.',
+    participation_overlap: 'This participation overlaps an existing interval in the class record.',
+    participation_dates_locked: 'The saved leave date cannot be changed or removed.',
+    participations_outside_dates: 'The new class dates do not cover the saved join dates.',
+    student_deleted: 'Restore the deleted student before adding another participation.',
+    class_closed: 'The class is closed and cannot accept new participations.',
+    class_ended: 'The class end date has passed. Extend it before reopening.',
     account_not_assignable: 'Only enabled, non-deleted User or Admin accounts can be assigned.',
     assignment_overlap:
       'This person already has an assignment in the class for part of that period (one role at a time).',

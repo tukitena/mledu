@@ -10,6 +10,8 @@ import FloatingAlert from '../../components/FloatingAlert.vue'
 import { formatIsoDate } from '../../lib/format'
 import AssignmentsPanel from './AssignmentsPanel.vue'
 import ClassFormDialog from './ClassFormDialog.vue'
+import EnrollmentsPanel from './EnrollmentsPanel.vue'
+import ClassLifecycleActions from './ClassLifecycleActions.vue'
 import { periodBadge } from './labels'
 
 // One class (CLASS-03) with its staff (CLASS-01/02). The API answers 404 when
@@ -18,7 +20,7 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const TABS = ['staff'] as const
+const TABS = ['staff', 'students'] as const
 type Tab = (typeof TABS)[number]
 
 const klass = ref<ClassDetail | null>(null)
@@ -66,15 +68,18 @@ const date = (value: string) => formatIsoDate(value, locale.value)
           {{ date(klass.endDate) }}
         </p>
       </div>
-      <button
-        v-if="klass && canManage && !klass.deleted"
-        type="button"
-        class="btn btn-outline-secondary"
-        data-testid="class-edit"
-        @click="editing = true"
-      >
-        <i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ t('classes.actions.edit') }}
-      </button>
+      <div class="d-flex flex-wrap gap-2">
+        <button
+          v-if="klass && canManage && !klass.deleted"
+          type="button"
+          class="btn btn-outline-secondary"
+          data-testid="class-edit"
+          @click="editing = true"
+        >
+          <i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ t('classes.actions.edit') }}
+        </button>
+        <ClassLifecycleActions v-if="klass && canManage" :klass="klass" @changed="load" />
+      </div>
     </div>
 
     <FloatingAlert :message="notice" />
@@ -86,6 +91,9 @@ const date = (value: string) => formatIsoDate(value, locale.value)
           <dl class="row mb-0 class-facts">
             <dt class="col-sm-3">{{ t('classes.columns.status') }}</dt>
             <dd class="col-sm-9">
+              <span v-if="klass.deleted" class="badge bg-danger-subtle text-danger-emphasis me-1">{{
+                t('enrollments.classDeleted')
+              }}</span>
               <span class="badge" :class="periodBadge[klass.period]">{{
                 t(`classes.period.${klass.period}`)
               }}</span>
@@ -141,6 +149,12 @@ const date = (value: string) => formatIsoDate(value, locale.value)
             :klass="klass"
             :can-manage="canManage"
             @changed="load"
+          />
+          <EnrollmentsPanel
+            v-if="tab === 'students'"
+            :key="klass.id"
+            :klass="klass"
+            :can-manage="canManage"
           />
         </div>
       </div>

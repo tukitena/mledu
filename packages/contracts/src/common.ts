@@ -78,6 +78,12 @@ export const ErrorCode = z.enum([
   'assignment_locked',
   /** AUTH-04/07: an assignment is in effect; `details` lists the classes ({path: 'class'}). */
   'assignment_in_effect',
+  'participation_overlap',
+  'participation_dates_locked',
+  'participations_outside_dates',
+  'student_deleted',
+  'class_closed',
+  'class_ended',
   'not_found',
   'method_not_allowed',
   'version_conflict',

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { phoneKey } from '@mledu/contracts/normalize'
+import { StudentDeleteImpact } from '@mledu/contracts/enrollments'
+import StudentClassHistory from './StudentClassHistory.vue'
 import {
   Student,
   StudentPage,
@@ -161,6 +163,8 @@ async function submitForm() {
 
 const deleting = ref<Student | null>(null)
 const reason = ref('')
+const deleteImpact = ref<StudentDeleteImpact | null>(null)
+let impactSequence = 0
 
 async function confirmDelete() {
   const student = deleting.value
@@ -195,14 +199,24 @@ function actionsFor(student: Student): RowAction[] {
       ]
 }
 
-function onAction(student: Student, key: string) {
+async function onAction(student: Student, key: string) {
   notice.value = null
   actionError.value = null
   if (key === 'view') viewing.value = student
   if (key === 'edit' || key === 'restore') openForm(key, student)
   if (key === 'delete') {
+    const sequence = ++impactSequence
     reason.value = ''
     deleting.value = student
+    deleteImpact.value = null
+    try {
+      const impact = await apiRequest(`/v1/students/${student.id}/delete-impact`, {
+        schema: StudentDeleteImpact,
+      })
+      if (sequence === impactSequence) deleteImpact.value = impact
+    } catch (cause) {
+      if (sequence === impactSequence) actionError.value = describeError(cause)
+    }
   }
 }
 
@@ -383,6 +397,7 @@ const formatPhones = (phones: string[]) => phones.join(', ')
           <dd class="col-7">{{ viewing.deletedReason }}</dd>
         </template>
       </dl>
+      <StudentClassHistory :student-id="viewing.id" />
       <template #footer>
         <button type="button" class="btn btn-primary" @click="viewing = null">
           {{ t('common.close') }}
@@ -494,6 +509,16 @@ const formatPhones = (phones: string[]) => phones.join(', ')
     >
       <ErrorAlert :error="actionError" />
       <p>{{ t('students.deleteHint') }}</p>
+      <p v-if="deleteImpact" class="small">
+        {{
+          t('enrollments.impact', {
+            active: deleteImpact.activeParticipations,
+            future: deleteImpact.futureParticipations,
+          })
+        }}
+        {{ deleteImpact.classes.join(', ') }}
+      </p>
+      <p v-else-if="!actionError" class="small">{{ t('common.loading') }}</p>
       <label class="form-label" for="student-reason">{{ t('accounts.reason') }}</label>
       <textarea
         id="student-reason"
@@ -509,7 +534,7 @@ const formatPhones = (phones: string[]) => phones.join(', ')
         <button
           type="button"
           class="btn btn-danger"
-          :disabled="busy || !reason.trim()"
+          :disabled="busy || !reason.trim() || !deleteImpact"
           data-testid="student-confirm-delete"
           @click="confirmDelete"
         >

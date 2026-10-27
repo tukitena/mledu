@@ -68,6 +68,7 @@ jobs:
 
       - run: npm run local:env
       - run: npm run test:integration
+      - run: npm run test:db:concurrency
 
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

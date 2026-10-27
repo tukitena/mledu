@@ -24,6 +24,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:db": "supabase test db",
+    "test:db:concurrency": "node --test apps/api/tests/database/*.test.ts",
     "test:integration": "npm run test:integration -w @mledu/api",
     "test:e2e": "playwright test",
     "test:ui": "playwright test --config playwright.ui.config.ts",

@@ -13,6 +13,12 @@ import { assignmentRoutes, classRoutes } from './modules/classes/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
 import { studentRoutes } from './modules/students/routes'
+import {
+  enrollmentClassRoutes,
+  enrollmentStudentRoutes,
+  classStudentRoutes,
+  participationRoutes,
+} from './modules/enrollments/routes'
 
 const allowedOrigins = (value: string) =>
   value
@@ -64,6 +70,10 @@ export function createApp() {
   app.route(`/${API_VERSION}/students`, studentRoutes)
   app.route(`/${API_VERSION}/classes`, classRoutes)
   app.route(`/${API_VERSION}/assignments`, assignmentRoutes)
+  app.route(`/${API_VERSION}/classes`, enrollmentClassRoutes)
+  app.route(`/${API_VERSION}/students`, enrollmentStudentRoutes)
+  app.route(`/${API_VERSION}/class-students`, classStudentRoutes)
+  app.route(`/${API_VERSION}/participations`, participationRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

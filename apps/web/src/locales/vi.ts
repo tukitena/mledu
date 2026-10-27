@@ -1,4 +1,78 @@
 export const vi = {
+  enrollments: {
+    student: 'Học sinh',
+    searchStudent: 'Tìm học sinh',
+    searchClass: 'Tìm lớp đích',
+    targetClass: 'Lớp đích',
+    targetJoinDate: 'Ngày vào lớp đích',
+    choose: 'Chọn từ kết quả tìm kiếm',
+    joinDate: 'Ngày vào',
+    leaveDate: 'Ngày nghỉ',
+    note: 'Ghi chú lớp',
+    filter: 'Tìm tên hoặc mã học sinh',
+    showDeleted: 'Hiện hồ sơ đã xóa',
+    empty: 'Chưa có lần tham gia phù hợp.',
+    history: 'Lịch sử tham gia lớp',
+    recordDeleted: 'Hồ sơ lớp đã xóa',
+    studentDeleted: 'Học sinh đã xóa',
+    classDeleted: 'Lớp đã xóa',
+    saved: 'Đã lưu thay đổi tham gia lớp.',
+    until: 'Kết thúc hiệu lực: {time}',
+    leaveHint:
+      'Ngày nghỉ là ngày đầu tiên không học (từ 00:00). Ngày nghỉ chỉ ghi một lần; ngày vào đã lưu không đổi.',
+    closedHint: 'Lớp đóng: chưa thể thêm lần tham gia. Các ngày và lịch sử cũ vẫn được giữ.',
+    impact: '{active} lần đang học và {future} đăng ký chưa bắt đầu.',
+    assignmentImpact: '{count} phân công đang có hiệu lực.',
+    actions: {
+      enroll: 'Thêm học sinh',
+      reenroll: 'Học lại',
+      leave: 'Ghi ngày nghỉ',
+      note: 'Sửa ghi chú',
+      cancel: 'Hủy đăng ký',
+      delete: 'Xóa hồ sơ khỏi lớp',
+      transfer: 'Chuyển lớp',
+    },
+    status: {
+      not_started: 'Chưa bắt đầu',
+      active: 'Đang học',
+      ended: 'Nghỉ',
+      cancelled: 'Nghỉ · Đã hủy',
+    },
+    endKind: {
+      cancelled: 'Hủy đăng ký',
+      record_deleted: 'Xóa hồ sơ lớp',
+      student_deleted: 'Xóa hồ sơ học sinh',
+      class_deleted: 'Xóa lớp',
+    },
+    hint: {
+      enroll:
+        'Chọn học sinh từ hồ sơ tổng. Nếu hồ sơ lớp còn tồn tại, lần tham gia mới được thêm vào hồ sơ đó; nếu đã xóa thì tạo hồ sơ mới.',
+      reenroll:
+        'Thêm lần tham gia vào hồ sơ cũ, giữ toàn bộ lịch sử. Khoảng mới không được chồng với các lần đã lưu.',
+      leave: 'Ngày nghỉ phải sau ngày vào. Sau khi xác nhận, ngày nghỉ không thể sửa hoặc xóa.',
+      note: 'Chỉ cập nhật ghi chú của lần tham gia này; các ngày và lịch sử vẫn giữ nguyên.',
+      cancel: 'Chỉ hủy đăng ký chưa bắt đầu. Giữ bản ghi cùng thời điểm và lý do hủy.',
+      delete:
+        'Kết thúc các lần đang học và hủy đăng ký tương lai tại lúc xác nhận. Giữ lịch sử; thêm lại sau đó tạo hồ sơ mới.',
+      transfer:
+        'Ngày nghỉ nguồn và lần tham gia đích được lưu cùng nhau. Ngày nghỉ đã có được giữ nguyên. Không chuyển điểm, nhận xét hoặc tiền sang lớp đích.',
+    },
+    lifecycle: {
+      close: 'Đóng lớp',
+      reopen: 'Mở lại lớp',
+      delete: 'Xóa lớp',
+      restore: 'Khôi phục lớp',
+    },
+    lifecycleHint: {
+      close: 'Đóng lớp chặn thêm học sinh; giữ ngày tham gia, phân công và lịch sử.',
+      reopen:
+        'Mở lại lớp khi ngày kết thúc chưa qua. Các lần tham gia hoặc phân công đã kết thúc không tự mở lại.',
+      delete:
+        'Xóa mềm lớp, kết thúc lần đang học và hủy đăng ký tương lai tại thời điểm xác nhận. Giữ học sinh, nhân sự và toàn bộ lịch sử.',
+      restore:
+        'Khôi phục lớp gốc về trạng thái Đóng. Học sinh muốn học tiếp cần lần tham gia mới; các ngày và sự kiện cũ được giữ.',
+    },
+  },
   app: { name: 'MLedu', tagline: 'Miss Lien Edu — quản lý trung tâm' },
   common: {
     save: 'Lưu',
@@ -260,7 +334,7 @@ export const vi = {
     },
     period: { upcoming: 'Chưa mở', running: 'Đang diễn ra', ended: 'Đã kết thúc' },
     closed: 'Lớp đóng',
-    tabs: { staff: 'Nhân sự' },
+    tabs: { staff: 'Nhân sự', students: 'Học sinh' },
     actions: { open: 'Xem lớp', edit: 'Sửa' },
     myRole: 'Bạn: {role}',
     backToList: 'Danh sách lớp',
@@ -376,7 +450,14 @@ export const vi = {
       'Đã có học sinh cùng họ tên (không phân biệt dấu). Cần ít nhất một số phụ huynh không trùng.',
     class_dates_locked:
       'Lớp đã có hoạt động: không đổi ngày mở, ngày kết thúc chỉ được đặt từ hôm nay trở đi.',
-    outside_class_dates: 'Thời hạn phân công phải nằm trong ngày mở và ngày kết thúc của lớp.',
+    outside_class_dates:
+      'Ngày vào hoặc thời hạn phân công phải nằm trong ngày mở và ngày kết thúc lớp.',
+    participation_overlap: 'Khoảng tham gia bị chồng với một lần đã lưu trong hồ sơ lớp này.',
+    participation_dates_locked: 'Ngày nghỉ đã được ghi và không thể sửa hoặc xóa.',
+    participations_outside_dates: 'Ngày lớp mới không bao phủ các ngày vào đã lưu.',
+    student_deleted: 'Học sinh đã xóa. Hãy khôi phục hồ sơ tổng trước khi thêm lần tham gia.',
+    class_closed: 'Lớp đang đóng, không thể thêm lần tham gia.',
+    class_ended: 'Ngày kết thúc lớp đã qua. Hãy gia hạn hợp lệ trước khi mở lại.',
     account_not_assignable:
       'Chỉ phân công tài khoản Người dùng hoặc Admin đang hoạt động, chưa bị xóa.',
     assignment_overlap:
