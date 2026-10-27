@@ -57,13 +57,11 @@ dist-ssr/
 supabase/.temp/
 supabase/.branches/
 
-# Seed parts (one SQL file per rollout) may hold internal data; only the
-# fictional fixtures used by CI and local tests are tracked.
+# Local/deployment data. Only the temporary local account seed is tracked.
+# Before replacing it with real accounts, remove its exception and untrack it.
+# CI/test fixtures live independently under tests/fixtures/database/.
 /supabase/seeds/*
 !/supabase/seeds/00-account.sql
-!/supabase/seeds/10-catalogs.sql
-!/supabase/seeds/20-students.sql
-!/supabase/seeds/30-classes.sql
 
 # Test reports and coverage.
 coverage/
@@ -131,8 +129,7 @@ $RECYCLE.BIN/
 .env.local
 .env.*.local
 
-# Prettier
-.prettierignore
+# Local Prettier overrides; the shared settings live in package.json.
 .prettierrc
 .prettierrc.json
 

@@ -1,4 +1,7 @@
--- Seed part 00: test accounts. Local/test only; never run against staging or production.
+-- Temporary accounts for manually using the LOCAL application only.
+-- CI/test accounts are independently maintained in tests/fixtures/database/00-account.sql.
+-- Before replacing this file with real accounts, untrack it and remove its .gitignore exception.
+-- Never deploy these fictional accounts or this shared password to staging/production.
 -- All people are fictional; emails follow <role>@example.com (reserved domain).
 -- Password for every account: 123456ab (meets the 8-character minimum, AUTH-01).
 -- Inserted straight into auth.users, so Auth's password policy is not applied here.

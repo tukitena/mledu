@@ -6,6 +6,12 @@
   "engines": {
     "node": ">=24.12.0 <25"
   },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 100,
+    "trailingComma": "all"
+  },
   "workspaces": [
     "packages/contracts",
     "apps/api",
@@ -21,9 +27,16 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "tsc --noEmit -p tsconfig.tools.json && npm run typecheck --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
-    "test:db": "supabase test db",
+    "test:tooling": "node --test scripts/testing/*.test.ts",
+    "test:stack:prepare": "node scripts/testing/stack.ts prepare",
+    "test:stack:start": "node scripts/testing/stack.ts start",
+    "test:stack:stop": "node scripts/testing/stack.ts stop",
+    "test:stack:reset": "node scripts/testing/stack.ts reset",
+    "test:env": "node scripts/testing/stack.ts env",
+    "test:db": "node scripts/testing/stack.ts db",
+    "test:db:types": "node scripts/testing/stack.ts types",
     "test:db:concurrency": "node --test apps/api/tests/database/*.test.ts",
     "test:integration": "npm run test:integration -w @mledu/api",
     "test:e2e": "playwright test",

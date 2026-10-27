@@ -1,24 +1,13 @@
-import { readFileSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
+import { readTestEnvironment } from '../../scripts/testing/environment.ts'
 
-// Local stack only (see playwright.config.ts). Public values come from the
-// file `npm run local:env` writes for the SPA; no secret key is needed here.
-const publicEnv = Object.fromEntries(
-  readFileSync(new URL('../../apps/web/.env.local', import.meta.url), 'utf8')
-    .split(/\r?\n/)
-    .map((line) => /^([A-Z_]+)=(.*)$/.exec(line.trim()))
-    .filter((match): match is RegExpExecArray => match !== null)
-    .map((match) => [match[1], match[2]]),
-)
-const SUPABASE_URL = publicEnv.VITE_SUPABASE_URL!
-const PUBLISHABLE_KEY = publicEnv.VITE_SUPABASE_PUBLISHABLE_KEY!
-if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(SUPABASE_URL)) {
-  throw new Error('e2e tests only run against a local Supabase stack')
-}
+const testEnv = readTestEnvironment()
+const SUPABASE_URL = testEnv.SUPABASE_URL
+const PUBLISHABLE_KEY = testEnv.SUPABASE_PUBLISHABLE_KEY
 
 export const API_URL = 'http://127.0.0.1:8797'
 export const FIXTURE_PASSWORD = '123456ab'
-const MAILPIT_URL = 'http://127.0.0.1:54324'
+const MAILPIT_URL = testEnv.TEST_MAILPIT_URL
 
 let counter = 0
 export const uniqueEmail = (label: string) =>
