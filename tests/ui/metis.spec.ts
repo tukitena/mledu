@@ -82,7 +82,12 @@ test('Metis shell resizes, navigates and keeps account actions usable', async ({
   } else {
     await page.getByTestId('desktop-menu').click()
     await expect(page.locator('.app-shell')).toHaveClass(/sidebar-collapsed/)
+    // The toggle must stay clear of the brand so the sidebar can be reopened.
+    const brand = await page.locator('.app-brand').boundingBox()
+    const toggle = await page.getByTestId('desktop-menu').boundingBox()
+    expect(toggle!.x).toBeGreaterThanOrEqual(brand!.x + brand!.width)
     await page.getByTestId('desktop-menu').click()
+    await expect(page.locator('.app-shell')).not.toHaveClass(/sidebar-collapsed/)
   }
   await page.getByTestId('nav-accounts').click()
   if (isMobile) {

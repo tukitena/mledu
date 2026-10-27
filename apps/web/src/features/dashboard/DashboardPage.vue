@@ -99,7 +99,7 @@ const stats = computed(() =>
         <button
           v-if="isAdmin"
           type="button"
-          class="btn btn-outline-secondary square-button"
+          class="btn btn-outline-secondary"
           :aria-label="t('dashboard.refresh')"
           :disabled="loading"
           @click="load"
@@ -217,7 +217,7 @@ const stats = computed(() =>
         </div>
         <span
           class="badge ms-auto"
-          :class="account.status === 'active' ? 'text-bg-success' : 'text-bg-secondary'"
+          :class="account.status === 'active' ? 'bg-success' : 'bg-secondary'"
           >{{ t(`status.${account.status}`) }}</span
         >
       </div>

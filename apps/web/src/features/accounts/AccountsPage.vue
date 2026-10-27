@@ -199,14 +199,14 @@ async function submitCreate() {
 }
 
 const statusBadge: Record<AccountStatus, string> = {
-  active: 'text-bg-success',
-  disabled: 'text-bg-warning',
-  deleted: 'text-bg-secondary',
+  active: 'bg-success',
+  disabled: 'bg-warning',
+  deleted: 'bg-secondary',
 }
 const roleBadge = {
-  admin: 'text-bg-danger',
-  receptionist: 'text-bg-warning',
-  user: 'text-bg-primary',
+  admin: 'bg-danger',
+  receptionist: 'bg-warning',
+  user: 'bg-primary',
 }
 const menuPosition = ref({ left: '0px', top: '0px' })
 
@@ -346,10 +346,10 @@ function initials(name: string) {
                       initials(account.fullName)
                     }}</span>
                     <div>
-                      <div class="fw-semibold">{{ account.fullName }}</div>
+                      <div class="fw-medium">{{ account.fullName }}</div>
                       <span
                         v-if="account.mustChangePassword"
-                        class="badge text-bg-light border d-block mt-1"
+                        class="badge text-bg-light border d-inline-block mt-1"
                         >{{ t('accounts.mustChange') }}</span
                       >
                     </div>

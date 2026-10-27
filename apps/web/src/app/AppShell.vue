@@ -105,7 +105,7 @@ async function onSignOut() {
       </RouterLink>
       <button
         type="button"
-        class="header-icon d-lg-none"
+        class="header-icon sidebar-toggle d-lg-none"
         :aria-label="t('nav.menu')"
         :aria-expanded="sidebarOpen"
         aria-controls="app-sidebar"
@@ -116,7 +116,7 @@ async function onSignOut() {
       </button>
       <button
         type="button"
-        class="header-icon d-none d-lg-inline-flex"
+        class="header-icon sidebar-toggle d-none d-lg-inline-flex"
         :aria-label="t('nav.menu')"
         :aria-expanded="!sidebarCollapsed"
         aria-controls="app-sidebar"
@@ -161,7 +161,7 @@ async function onSignOut() {
         </div>
       </form>
 
-      <div class="header-tools ms-auto d-flex align-items-center gap-2">
+      <div class="header-tools ms-auto ms-lg-0 d-flex align-items-center gap-1">
         <select
           v-if="workspaces.length > 1"
           v-model="workspace"
@@ -197,7 +197,7 @@ async function onSignOut() {
           <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
         </button>
 
-        <div class="position-relative">
+        <div class="user-menu-wrap">
           <button
             type="button"
             class="btn user-menu-toggle"
@@ -206,9 +206,9 @@ async function onSignOut() {
             data-testid="user-menu"
             @click="menuOpen = !menuOpen"
           >
-            <MyAvatar :path="profile.avatarPath" :name="profile.fullName" :size="32" />
-            <span class="d-none d-sm-inline ms-2">{{ profile.fullName }}</span>
-            <i class="bi bi-chevron-down ms-2" aria-hidden="true"></i>
+            <MyAvatar :path="profile.avatarPath" :name="profile.fullName" :size="24" />
+            <span class="d-none d-sm-inline">{{ profile.fullName }}</span>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
           </button>
           <div v-if="menuOpen" class="user-menu shadow">
             <div class="px-3 py-2 small text-body-secondary">

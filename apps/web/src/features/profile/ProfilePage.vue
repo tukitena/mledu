@@ -130,7 +130,7 @@ async function removeAvatar() {
       <div class="col-12 col-lg-4">
         <section class="card h-100">
           <div class="card-body text-center">
-            <h2 class="h6 text-start">{{ t('profile.avatar.title') }}</h2>
+            <h2 class="card-title text-start mb-3">{{ t('profile.avatar.title') }}</h2>
             <MyAvatar :path="profile.avatarPath" :name="profile.fullName" :size="112" />
             <p class="form-text">{{ t('profile.avatar.hint') }}</p>
             <FloatingAlert :message="avatarNotice" />

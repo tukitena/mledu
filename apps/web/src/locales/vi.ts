@@ -120,7 +120,7 @@ export const vi = {
     changePassword: 'Đổi mật khẩu',
     avatar: {
       title: 'Ảnh hồ sơ',
-      hint: 'JPG, PNG hoặc WebP, tối đa 5.000.000 byte.',
+      hint: 'JPG, PNG hoặc WebP, tối đa 5 MB.',
       choose: 'Chọn ảnh',
       remove: 'Gỡ ảnh',
       uploading: 'Đang tải ảnh…',

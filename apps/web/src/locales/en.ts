@@ -122,7 +122,7 @@ export const en: typeof vi = {
     changePassword: 'Change password',
     avatar: {
       title: 'Profile photo',
-      hint: 'JPG, PNG or WebP, up to 5,000,000 bytes.',
+      hint: 'JPG, PNG or WebP, up to 5 MB.',
       choose: 'Choose photo',
       remove: 'Remove photo',
       uploading: 'Uploading…',
