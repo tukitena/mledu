@@ -1,0 +1,21 @@
+# Prose, diagrams and SQL are maintained without reflowing existing documents.
+docs/
+*.md
+*.drawio
+supabase/
+tests/fixtures/
+package-lock.json
+dist/
+coverage/
+playwright-report/
+test-results/
+tmp/
+/template/
+/.agents/
+# Preserve the historical GĐ0 spike's formatting.
+apps/api/src/spike-app.ts
+apps/api/src/auth-bridge.ts
+apps/api/src/local.ts
+apps/api/tests/*.ts
+apps/api/tests/slow/
+scripts/auth-spike/

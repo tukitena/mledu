@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/generated/**',
       'playwright-report/**',
       'test-results/**',
+      'tmp/**',
       'template/**',
       '.agents/**',
     ],
@@ -29,7 +30,12 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['scripts/**/*.mjs', '*.config.{js,ts}', '**/vite.config.ts', '**/vitest.config.ts'],
+    files: [
+      'scripts/**/*.{mjs,ts}',
+      '*.config.{js,ts}',
+      '**/vite.config.ts',
+      '**/vitest.config.ts',
+    ],
     languageOptions: { globals: globals.node },
   },
   {

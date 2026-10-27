@@ -2,7 +2,7 @@ import { REQUEST_ID_HEADER } from '@mledu/contracts/common'
 import { env } from 'cloudflare:workers'
 import { createApp } from '../../src/app'
 
-/** Fixture password from supabase/seeds/00-account.sql (local Auth only). */
+/** Fixture password from tests/fixtures/database/00-account.sql (isolated test Auth only). */
 export const FIXTURE_PASSWORD = '123456ab'
 
 export type Fixture = 'admin' | 'receptionist' | 'user' | 'pending' | 'disabled'
@@ -124,7 +124,7 @@ export async function createReadyAccount(adminToken: string, label: string) {
   return { ...account, password, session, rowVersion: me.rowVersion }
 }
 
-const MAILPIT_URL = 'http://127.0.0.1:54324'
+const MAILPIT_URL = 'http://127.0.0.1:55324'
 
 /**
  * Reset link of the `count`-th email sent to the address by local Auth

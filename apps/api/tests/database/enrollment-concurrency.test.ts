@@ -2,14 +2,11 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { test } from 'node:test'
 import pg from 'pg'
+import { readTestEnvironment } from '../../../../scripts/testing/environment.ts'
 
 // Separate PostgreSQL connections are needed to control lock interleavings.
 // This test is local-only and keeps fictional business fixtures for history.
-const connectionString =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
-const url = new URL(connectionString)
-if (!['localhost', '127.0.0.1'].includes(url.hostname))
-  throw new Error('Concurrency tests require a local database')
+const connectionString = readTestEnvironment().TEST_DATABASE_URL
 
 test('editing a note while its record is deleted cannot deadlock', async () => {
   const setup = new pg.Client({ connectionString })
