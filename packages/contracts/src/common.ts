@@ -51,6 +51,12 @@ export const ErrorCode = z.enum([
   'invalid_state',
   /** Uploaded avatar missing, not a JPG/PNG/WebP image or too large (AUTH-08). */
   'avatar_invalid',
+  /** Name (lookup key) already used by an active record of the same catalog. */
+  'duplicate_name',
+  /** Name matches an archived record; restore that record instead (CAT-01, SCHED-05). */
+  'archived_duplicate',
+  /** Rooms cannot be created in, moved to or restored into an archived site (SCHED-05). */
+  'site_archived',
   'not_found',
   'method_not_allowed',
   'version_conflict',

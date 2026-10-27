@@ -1063,18 +1063,32 @@ body {
 }
 
 // Account table keeps its own horizontal scroll area on narrow screens.
-.accounts-card > .card-body {
+.accounts-card > .card-body,
+.data-card > .card-body {
   padding: 0;
+}
+// Metis card header: 14px/16px padding, bottom rule; holds segmented filters.
+.data-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border-bottom: 1px solid var(--bs-border-color);
 }
 .table-controls {
   margin: 0;
   padding: 1rem;
 }
-.accounts-card > .card-body > .alert {
+.accounts-card > .card-body > .alert,
+.data-card > .card-body > .alert {
   margin: 0 1rem 1rem;
 }
 // Metis data table: uppercase 14px semibold head on the light band, 10px/12px cells.
-.accounts-table {
+.accounts-table,
+.data-table {
   --bs-table-bg: var(--surface-panel);
   --bs-table-hover-bg: rgba(var(--bs-primary-rgb), 0.05);
   min-width: 860px;
@@ -1094,6 +1108,9 @@ body {
   th:first-child {
     width: 26%;
   }
+}
+.data-table {
+  min-width: 640px;
 }
 .account-identity {
   display: flex;

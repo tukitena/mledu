@@ -8,6 +8,7 @@ import type { AppEnv } from './env'
 import { AppError, codeForStatus } from './lib/errors'
 import { accountRoutes } from './modules/accounts/routes'
 import { authRoutes } from './modules/auth/routes'
+import { catalogRoutes, roomRoutes, siteRoutes } from './modules/catalogs/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
 
@@ -55,6 +56,9 @@ export function createApp() {
   app.route(`/${API_VERSION}/auth`, authRoutes)
   app.route(`/${API_VERSION}/me`, profileRoutes)
   app.route(`/${API_VERSION}/accounts`, accountRoutes)
+  app.route(`/${API_VERSION}/catalogs`, catalogRoutes)
+  app.route(`/${API_VERSION}/sites`, siteRoutes)
+  app.route(`/${API_VERSION}/rooms`, roomRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

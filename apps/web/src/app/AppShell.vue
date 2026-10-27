@@ -73,6 +73,9 @@ const navItems = computed(() => [
   ...(workspace.value === 'admin'
     ? [{ name: 'accounts', icon: 'bi-people', label: t('nav.accounts') }]
     : []),
+  ...(workspace.value === 'admin' || workspace.value === 'receptionist'
+    ? [{ name: 'catalogs', icon: 'bi-collection', label: t('nav.catalogs') }]
+    : []),
   { name: 'profile', icon: 'bi-person-circle', label: t('nav.profile') },
 ])
 
@@ -86,7 +89,7 @@ watch(
 
 // Leaving a workspace leaves its pages too.
 watch(workspace, (current) => {
-  if (route.meta.workspace && route.meta.workspace !== current)
+  if (route.meta.workspaces && (!current || !route.meta.workspaces.includes(current)))
     void router.push({ name: 'dashboard' })
 })
 

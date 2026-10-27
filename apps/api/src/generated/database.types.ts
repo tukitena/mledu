@@ -9,8 +9,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_catalog_entry: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      archive_room: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      archive_site: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
       auth_command_status: { Args: { p_command_id: string }; Returns: string }
       clear_my_avatar: { Args: { p_expected_version: number }; Returns: Json }
+      create_catalog_entry: { Args: { p_kind: string; p_name: string }; Returns: Json }
+      create_room: { Args: { p_name: string; p_site_id: string }; Returns: Json }
+      create_site: { Args: { p_address: string; p_name: string }; Returns: Json }
       current_session: {
         Args: { p_allow_password_change?: boolean }
         Returns: {
@@ -27,6 +42,12 @@ export type Database = {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
         Returns: Json
       }
+      list_catalog_entries: {
+        Args: { p_include_archived?: boolean; p_kind: string }
+        Returns: Json
+      }
+      list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
+      list_sites: { Args: { p_include_archived?: boolean }; Returns: Json }
       mark_avatar_verified: { Args: { p_path: string }; Returns: undefined }
       ops_prepare_account_create: {
         Args: { p_account_type: string; p_email: string; p_full_name: string; p_operator: string }
@@ -61,8 +82,15 @@ export type Database = {
         Args: { p_account_id: string; p_expected_version: number }
         Returns: string
       }
+      rename_catalog_entry: {
+        Args: { p_expected_version: number; p_id: string; p_name: string }
+        Returns: Json
+      }
       reserve_avatar_upload: { Args: { p_extension: string }; Returns: string }
       restore_account: { Args: { p_account_id: string; p_expected_version: number }; Returns: Json }
+      restore_catalog_entry: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_room: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_site: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       set_account_enabled: {
         Args: { p_account_id: string; p_enabled: boolean; p_expected_version: number }
         Returns: Json
@@ -83,6 +111,14 @@ export type Database = {
           p_full_name: string
           p_phone: string
         }
+        Returns: Json
+      }
+      update_room: {
+        Args: { p_expected_version: number; p_id: string; p_name: string; p_site_id: string }
+        Returns: Json
+      }
+      update_site: {
+        Args: { p_address: string; p_expected_version: number; p_id: string; p_name: string }
         Returns: Json
       }
     }
