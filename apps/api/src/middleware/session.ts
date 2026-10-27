@@ -31,6 +31,7 @@ export const requireSession = ({ allowPasswordChange = false }: SessionOptions =
     if (!accountType.success) throw new AppError(500, 'internal_error', 'internal_error')
 
     c.set('db', db)
+    c.set('accessToken', token)
     c.set('session', {
       accountId: data.account_id,
       accountType: accountType.data,

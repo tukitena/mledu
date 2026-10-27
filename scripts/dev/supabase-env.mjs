@@ -1,8 +1,8 @@
 // Writes local-only config from `supabase status` for the Worker and the SPA:
-//   apps/api/.dev.vars   (ignored by Git) SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY
-//   apps/web/.env.local  (ignored by Git) VITE_* public values
-// The secret key is not written: GĐ 1 code does not need it. Set SUPABASE_WORKDIR
-// to read a Supabase project in another directory.
+//   apps/api/.dev.vars   (ignored by Git) SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY,
+//                        SUPABASE_SECRET_KEY (backend only: Auth Admin API, avatars)
+//   apps/web/.env.local  (ignored by Git) VITE_* public values, never the secret key
+// Set SUPABASE_WORKDIR to read a Supabase project in another directory.
 import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -20,13 +20,18 @@ const output = execFileSync('supabase', args, {
 const status = JSON.parse(output.slice(output.indexOf('{')))
 const url = status.API_URL
 const publishableKey = status.PUBLISHABLE_KEY
-if (!url || !publishableKey) {
-  throw new Error('supabase status did not return API_URL and PUBLISHABLE_KEY; is it running?')
+const secretKey = status.SECRET_KEY
+if (!url || !publishableKey || !secretKey) {
+  throw new Error('supabase status did not return API_URL and the API keys; is it running?')
+}
+// Local stack only: refuse anything that is not a loopback Supabase URL.
+if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(url)) {
+  throw new Error(`refusing to write local config for non-local Supabase URL ${url}`)
 }
 
 writeFileSync(
   join(root, 'apps/api/.dev.vars'),
-  `SUPABASE_URL=${url}\nSUPABASE_PUBLISHABLE_KEY=${publishableKey}\n`,
+  `SUPABASE_URL=${url}\nSUPABASE_PUBLISHABLE_KEY=${publishableKey}\nSUPABASE_SECRET_KEY=${secretKey}\n`,
 )
 writeFileSync(
   join(root, 'apps/web/.env.local'),

@@ -10,7 +10,7 @@
 
 **Spec:** [Đặc tả nghiệp vụ](plans.md), [tech stack và ranh giới hệ thống](techstack.md), [ERD](../diagrams/architecture.drawio) và [giải thích mô hình](../diagrams/README.md).
 
-Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 1 — nền local đã xong ([biên bản](decisions/gd1-foundation.md)), chờ CI chạy trên GitHub trước khi sang GĐ 2.** Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa khởi tạo ứng dụng đầy đủ hoặc triển khai production. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
+Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 2 — đã triển khai trên local ngày 27/10/2026 ([biên bản](decisions/gd2-auth-profile.md)), chờ duyệt/commit, CI GitHub và thử hosted.** GĐ 1: nền local xong ([biên bản](decisions/gd1-foundation.md)). Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa khởi tạo ứng dụng đầy đủ hoặc triển khai production. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
 
 ## Global Constraints — Ràng buộc xuyên suốt
 
@@ -236,14 +236,20 @@ biên bản chốt GĐ 0 vẫn mở. Schema `spike_private` và API Node của G
 
 ### Giai đoạn 2 — Xác thực, phân quyền, hồ sơ và avatar
 
+**Trạng thái: triển khai local ngày 27/10/2026** — xem [biên bản GĐ 2](decisions/gd2-auth-profile.md).
+Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của AUTH-04/07 chờ dữ liệu
+phân công ở GĐ 3; báo lỗi email cho Admin và dọn file/lệnh hết hạn thuộc GĐ 9.
+
 **Phạm vi:** AUTH-01–08, phần nền UX-01. Tệp chính: `apps/web/src/features/auth/`, `apps/web/src/features/profile/`, `apps/api/src/modules/auth/`, `apps/api/src/modules/profile/`, `packages/contracts/src/profile.ts`, migration tài khoản/quyền và Storage policy.
 
-- [ ] Triển khai đăng nhập, buộc đổi mật khẩu, reset và quản lý phiên theo kết quả được chứng minh ở GĐ 0. Tài khoản Admin được quản trị qua công cụ vận hành có audit.
-- [ ] Thử request với token cũ sau khóa/xóa/đổi loại tài khoản. Kiểm tra yêu cầu đổi mật khẩu và trạng thái hiện hành tại API/RLS/RPC; không chỉ đọc role cũ trong JWT.
-- [ ] Triển khai hồ sơ cá nhân và ba endpoint avatar ở trên; xác minh file thực tế rồi ghi `avatar_path` cùng audit. Thử xung đột version và dọn file không còn tham chiếu.
-- [ ] Dựng layout/workspace theo quyền, Việt/Anh và sáng/tối/theo hệ thống lưu trên trình duyệt. Tính năng chưa đủ điều kiện phải bị backend chặn dù gọi trực tiếp HTTP.
+- [x] Triển khai đăng nhập, buộc đổi mật khẩu, reset và quản lý phiên theo kết quả được chứng minh ở GĐ 0. Tài khoản Admin được quản trị qua công cụ vận hành có audit. *(Local; `scripts/ops/accounts.mjs`. Reset một lần khi dùng đồng thời đạt ở tầng MLedu, chưa thử hosted.)*
+- [x] Thử request với token cũ sau khóa/xóa/đổi loại tài khoản. Kiểm tra yêu cầu đổi mật khẩu và trạng thái hiện hành tại API/RLS/RPC; không chỉ đọc role cũ trong JWT.
+- [x] Triển khai hồ sơ cá nhân và ba endpoint avatar ở trên; xác minh file thực tế rồi ghi `avatar_path` cùng audit. Thử xung đột version và dọn file không còn tham chiếu. *(Thêm `DELETE`/`GET /v1/me/avatar`; tác vụ dọn file mồ côi thuộc GĐ 9.)*
+- [x] Dựng layout/workspace theo quyền, Việt/Anh và sáng/tối/theo hệ thống lưu trên trình duyệt. Tính năng chưa đủ điều kiện phải bị backend chặn dù gọi trực tiếp HTTP.
 
 **Gate:** `apps/api/tests/integration/auth-session.test.ts`, `avatar.test.ts`, `supabase/tests/database/account_access.test.sql`, `tests/e2e/auth.spec.ts` kiểm tra đủ tình huống Review Focus. Người khác không đổi được avatar; secret không nằm trong bundle web.
+
+*Kết quả local 27/10/2026:* bốn file gate đã có và đạt (pgTAP 135/135, tích hợp 27/27, e2e 18/18); chi tiết và giới hạn trong [biên bản GĐ 2](decisions/gd2-auth-profile.md). Gate chưa được coi là đóng khi chưa chạy CI GitHub và hosted.
 
 ### Giai đoạn 3 — Dữ liệu lõi, danh mục, lớp và lần tham gia
 

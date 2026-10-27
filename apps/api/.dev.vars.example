@@ -2,5 +2,6 @@
 # Values below are names only; take local values from `supabase status`.
 SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_PUBLISHABLE_KEY=
-# Optional in GĐ 1. Backend-only; bypasses RLS, so every use needs an explicit permission check.
+# Backend-only; bypasses RLS. Used after a user-scoped RPC checked the caller: Auth Admin
+# API (create account, temporary password), avatar files, Auth command status.
 SUPABASE_SECRET_KEY=

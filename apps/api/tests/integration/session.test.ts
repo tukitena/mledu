@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { createApp } from '../../src/app'
 import type { CurrentSession } from '../../src/env'
 import { requireSession } from '../../src/middleware/session'
-import { signIn, signOut } from './support'
+import { FIXTURE_PASSWORD, passwordSignIn, signIn, signOut } from './support'
 
 // Probe routes exercise the real middleware against Supabase local; they are
 // not part of the deployed API.
@@ -42,10 +42,12 @@ describe('requireSession (JWT forwarded to PostgreSQL)', () => {
     expect(((await allowed.json()) as CurrentSession).mustChangePassword).toBe(true)
   })
 
-  it('rejects a disabled account even though Auth issued a token', async () => {
-    const response = await call('/probe', await signIn('disabled'))
-    expect(response.status).toBe(401)
-    expect(await errorCode(response)).toBe('account_disabled')
+  it('gets no token for a disabled account (access token hook)', async () => {
+    // GĐ 2: the hook refuses the token; a session that was open before the
+    // account was disabled is rejected by requireSession (auth-session.test.ts).
+    const response = await passwordSignIn('disabled@example.com', FIXTURE_PASSWORD)
+    expect(response.status).toBe(403)
+    expect(await response.json()).toMatchObject({ msg: 'account_disabled' })
   })
 
   it('rejects a still-unexpired access token after its session signed out', async () => {

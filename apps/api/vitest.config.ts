@@ -17,12 +17,16 @@ function supabaseBindings() {
   const SUPABASE_URL = process.env.SUPABASE_URL ?? fromFile.SUPABASE_URL
   const SUPABASE_PUBLISHABLE_KEY =
     process.env.SUPABASE_PUBLISHABLE_KEY ?? fromFile.SUPABASE_PUBLISHABLE_KEY
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY ?? fromFile.SUPABASE_SECRET_KEY
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !SUPABASE_SECRET_KEY) {
     throw new Error(
       'Integration tests need Supabase local: run `supabase start` and `npm run local:env`.',
     )
   }
-  return { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY }
+  if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(SUPABASE_URL)) {
+    throw new Error('Integration tests only run against a local Supabase stack.')
+  }
+  return { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY }
 }
 
 export default defineConfig({
@@ -54,7 +58,9 @@ export default defineConfig({
         test: {
           name: 'integration',
           include: ['tests/integration/**/*.test.ts'],
-          testTimeout: 20_000,
+          testTimeout: 30_000,
+          // Files share the seeded accounts and Auth rate limits.
+          fileParallelism: false,
         },
       },
     ],

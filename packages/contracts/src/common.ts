@@ -11,6 +11,21 @@ export const AccountType = z.enum(['admin', 'receptionist', 'user'])
 export type AccountType = z.infer<typeof AccountType>
 
 /**
+ * Function sets shown by the SPA. Admin may switch between all three (A.2);
+ * the choice is presentation only and never authorizes anything on the API.
+ */
+export type Workspace = AccountType
+
+export const workspacesFor = (accountType: AccountType): Workspace[] =>
+  accountType === 'admin' ? ['admin', 'receptionist', 'user'] : [accountType]
+
+/** Optimistic concurrency token of a record (row_version). */
+export const RowVersion = z.number().int().min(1)
+
+/** Calendar date `YYYY-MM-DD` (business dates use Asia/Ho_Chi_Minh). */
+export const IsoDate = z.iso.date()
+
+/**
  * Stable machine-readable error codes. UI text is chosen by the client from the
  * code; `message` is a short English fallback for logs and developers.
  */
@@ -21,7 +36,21 @@ export const ErrorCode = z.enum([
   'session_invalid',
   'account_disabled',
   'password_change_required',
+  /** Session opened from an email link; it may only reset the password (AUTH-02). */
+  'password_reset_required',
+  /** Reset link expired, already used or replaced (AUTH-02). */
+  'reset_link_invalid',
+  /** New password equals the current one. */
+  'password_unchanged',
   'forbidden',
+  /** Admin accounts are managed only through the operations tool (AUTH-06). */
+  'admin_account_forbidden',
+  /** Email already belongs to an account, including soft-deleted ones (AUTH-04/07). */
+  'email_taken',
+  /** The account is not in a state that allows this operation. */
+  'invalid_state',
+  /** Uploaded avatar missing, not a JPG/PNG/WebP image or too large (AUTH-08). */
+  'avatar_invalid',
   'not_found',
   'method_not_allowed',
   'version_conflict',

@@ -6,7 +6,10 @@ import { requestId } from 'hono/request-id'
 import { secureHeaders } from 'hono/secure-headers'
 import type { AppEnv } from './env'
 import { AppError, codeForStatus } from './lib/errors'
+import { accountRoutes } from './modules/accounts/routes'
+import { authRoutes } from './modules/auth/routes'
 import { healthRoutes } from './modules/health/routes'
+import { profileRoutes } from './modules/profile/routes'
 
 const allowedOrigins = (value: string) =>
   value
@@ -49,6 +52,9 @@ export function createApp() {
   )
 
   app.route(`/${API_VERSION}/health`, healthRoutes)
+  app.route(`/${API_VERSION}/auth`, authRoutes)
+  app.route(`/${API_VERSION}/me`, profileRoutes)
+  app.route(`/${API_VERSION}/accounts`, accountRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

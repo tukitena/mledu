@@ -29,6 +29,8 @@ export interface Variables extends RequestIdVariables {
   session: CurrentSession
   /** Database client acting as the signed-in user (RLS and RPC checks apply). */
   db: UserDb
+  /** The caller's access token; only for Auth calls made on the caller's behalf. */
+  accessToken: string
 }
 
 export interface AppEnv {

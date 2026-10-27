@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test'
 
 test('the SPA loads and reaches the Worker API', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'MLedu' })).toBeVisible()
+  // Signed out: the app opens on the sign-in page, which probes the API.
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByRole('heading', { name: 'Đăng nhập' })).toBeVisible()
   await expect(page.getByTestId('api-status')).toHaveAttribute('data-state', 'ok')
 })
 

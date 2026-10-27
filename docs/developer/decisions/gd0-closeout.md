@@ -33,6 +33,10 @@ lại toàn bộ test trong lần dọn dẹp này.
 | G1-04 | Đối chiếu ERD với 60 chức năng, khóa học vụ/tài chính và lịch sử | Trước chốt migration nghiệp vụ chính thức; sơ đồ hiện có là đầu vào review |
 | G1-05 | Đưa thiết kế Auth/audit đã thử vào thiết kế chính thức; bổ sung self-service, reset và các phần AUTH còn thiếu | Trước nghiệm thu nhóm Auth; không mở route production từ prototype |
 
+Cập nhật 27/10/2026 ([biên bản GĐ 2](gd2-auth-profile.md)): G1-01 và G1-02 đạt trên
+local (reset một lần ở tầng MLedu; avatar đủ ca lỗi), **chưa thử hosted** nên vẫn mở;
+G1-05 đã đưa thiết kế vào migration chính thức.
+
 GĐ 1 được bắt đầu với workspace, Vue/Worker local, contracts, nền DB/RLS/audit/
 outbox và CI theo [kế hoạch](../Implementation-plan.md). Các mục chuyển tiếp được
 theo dõi cùng giai đoạn; build/typecheck hoặc nhóm test tích hợp xanh không thay

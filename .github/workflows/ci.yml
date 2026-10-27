@@ -54,10 +54,11 @@ jobs:
       - run: npm ci
 
       # Local stack only; tests never run against staging or production.
+      # Mailpit stays on: reset-by-email tests read the local reset emails.
       - name: Start Supabase local (migrations + seed)
-        run: supabase start -x studio,imgproxy,mailpit,postgres-meta,vector,logflare,supavisor,edge-runtime
+        run: supabase start -x studio,imgproxy,postgres-meta,vector,logflare,supavisor,edge-runtime
 
-      - name: pgTAP (privileges, request context, command atomicity)
+      - name: pgTAP (privileges, request context, command atomicity, accounts)
         run: npm run test:db
 
       - name: Generated database types are up to date

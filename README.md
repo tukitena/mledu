@@ -8,8 +8,8 @@ Hono (Cloudflare Workers) → Supabase (Auth, PostgreSQL/RPC, Storage, Realtime,
 - Lộ trình: [docs/developer/Implementation-plan.md](docs/developer/Implementation-plan.md)
 - Quyết định kỹ thuật: [docs/developer/decisions/](docs/developer/decisions/)
 
-Trạng thái: **GĐ 1 — nền dự án** ([biên bản](docs/developer/decisions/gd1-foundation.md)).
-Chưa có chức năng nghiệp vụ hoặc dữ liệu thật.
+Trạng thái: **GĐ 2 — tài khoản, phiên, hồ sơ và avatar** (local,
+[biên bản](docs/developer/decisions/gd2-auth-profile.md)). Chưa có dữ liệu thật hoặc deploy.
 
 ## Cấu trúc
 
@@ -41,8 +41,10 @@ supabase start
 npm run local:env
 ```
 
-`local:env` ghi `apps/api/.dev.vars` và `apps/web/.env.local` (đều bị Git bỏ qua) từ
-`supabase status`. Sau đó chạy API (cổng 8787) và web (cổng 5173) ở hai terminal:
+`local:env` ghi `apps/api/.dev.vars` (gồm secret key, chỉ cho Worker) và
+`apps/web/.env.local` (chỉ giá trị công khai), đều bị Git bỏ qua, từ `supabase status`.
+Sau khi đổi `supabase/config.toml` (hook, template email) cần `supabase stop` rồi `supabase start`.
+Email đặt lại mật khẩu local xem tại Mailpit http://127.0.0.1:54324. Sau đó chạy API (cổng 8787) và web (cổng 5173) ở hai terminal:
 
 ```bash
 npm run dev:api
@@ -70,6 +72,10 @@ Tài khoản giả trong `supabase/seeds/00-account.sql` (chỉ Auth local): `ad
 | `npm run build` | `apps/web/dist` và bundle Worker `apps/api/dist` |
 | `npm run check:artifacts` | Chặn secret và đường dẫn `template/` trong bản build |
 | `npm run db:reset` / `npm run db:types` | Dựng lại DB local / sinh lại kiểu `api` |
+
+Tài khoản Admin chỉ được quản trị bằng công cụ vận hành (AUTH-06), không qua ứng dụng:
+`node scripts/ops/accounts.mjs create|temp-password|set …` với `SUPABASE_URL`,
+`SUPABASE_SECRET_KEY`, `MLEDU_OPERATOR` lấy từ môi trường (xem đầu file).
 
 Mã thử nghiệm Auth GĐ 0 (chỉ local): `npm run spike:db`, `npm run dev:auth-spike`,
 `npm run test:auth:integration` — điều kiện chạy ghi trong `supabase/spike/gd0-auth-spike.sql`.

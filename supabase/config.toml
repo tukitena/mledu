@@ -208,9 +208,12 @@ anonymous_users = 30
 # Number of sessions that can be refreshed in a 5 minute interval per IP address.
 token_refresh = 150
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).
-sign_in_sign_ups = 30
+# Local only: integration/e2e suites sign in many times from 127.0.0.1. Hosted
+# projects keep their own (default) limits.
+sign_in_sign_ups = 1000
 # Number of OTP / Magic link verifications that can be made in a 5 minute interval per IP address.
-token_verifications = 30
+# Local only, as above (reset tests verify links through the Worker on 127.0.0.1).
+token_verifications = 300
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
@@ -250,10 +253,17 @@ otp_expiry = 300
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Reset links open the SPA with a token hash; the Worker verifies it and sets the
+# password in one request (AUTH-02). Hosted projects use the same templates.
+# Magic links of existing users share the recovery token, so they lead to the
+# same reset page instead of signing in without a password.
+[auth.email.template.recovery]
+subject = "MLedu — Đặt lại mật khẩu / Reset your password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "MLedu — Đặt lại mật khẩu / Reset your password"
+content_path = "./supabase/templates/magic-link.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -288,17 +298,12 @@ max_frequency = "5s"
 # uri = "pg-functions://postgres/auth/before-user-created-hook"
 
 # This hook runs before a token is issued and allows you to add additional claims based on the authentication method used.
-# GĐ 0 Auth spike only (supabase/spike/gd0-auth-spike.sql, `npm run spike:db`).
-# Re-enable on a throwaway local stack to re-run `npm run test:auth:integration`;
-# the spike RPCs also need "public" in [api] schemas. The production hook is
-# designed in GĐ 2 (G1-05).
-# [auth.hook.custom_access_token]
-# enabled = true
-# uri = "pg-functions://postgres/spike_private/access_token_hook"
-
-# [auth.hook.custom_access_token]
-# enabled = true
-# uri = "pg-functions://<database>/<schema>/<hook_name>"
+# MLedu: refuses tokens for disabled/soft-deleted accounts and for sessions revoked
+# by sessions_valid_after (AUTH-03/04/02). Hosted projects must enable the same hook.
+# (The GĐ 0 spike hook in supabase/spike/ is reference only.)
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/app_private/access_token_hook"
 
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
 [auth.sms.twilio]

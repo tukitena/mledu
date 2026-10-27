@@ -9,6 +9,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auth_command_status: { Args: { p_command_id: string }; Returns: string }
+      clear_my_avatar: { Args: { p_expected_version: number }; Returns: Json }
       current_session: {
         Args: { p_allow_password_change?: boolean }
         Returns: {
@@ -17,7 +19,72 @@ export type Database = {
           must_change_password: boolean
         }[]
       }
+      discard_avatar_upload: { Args: { p_path: string }; Returns: boolean }
+      get_account: { Args: { p_account_id: string }; Returns: Json }
+      get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
+      list_accounts: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
+        Returns: Json
+      }
+      mark_avatar_verified: { Args: { p_path: string }; Returns: undefined }
+      ops_prepare_account_create: {
+        Args: { p_account_type: string; p_email: string; p_full_name: string; p_operator: string }
+        Returns: {
+          account_id: string
+          command_id: string
+        }[]
+      }
+      ops_prepare_temporary_password: {
+        Args: { p_account_id: string; p_operator: string }
+        Returns: string
+      }
+      ops_set_account: {
+        Args: {
+          p_account_id: string
+          p_account_type?: string
+          p_enabled?: boolean
+          p_operator: string
+        }
+        Returns: Json
+      }
+      prepare_account_create: {
+        Args: { p_birth_date?: string; p_email: string; p_full_name: string; p_phone?: string }
+        Returns: {
+          account_id: string
+          command_id: string
+        }[]
+      }
+      prepare_password_change: { Args: Record<PropertyKey, never>; Returns: string }
+      prepare_password_reset: { Args: Record<PropertyKey, never>; Returns: string }
+      prepare_temporary_password: {
+        Args: { p_account_id: string; p_expected_version: number }
+        Returns: string
+      }
+      reserve_avatar_upload: { Args: { p_extension: string }; Returns: string }
+      restore_account: { Args: { p_account_id: string; p_expected_version: number }; Returns: Json }
+      set_account_enabled: {
+        Args: { p_account_id: string; p_enabled: boolean; p_expected_version: number }
+        Returns: Json
+      }
+      set_account_type: {
+        Args: { p_account_id: string; p_account_type: string; p_expected_version: number }
+        Returns: Json
+      }
+      set_my_avatar: { Args: { p_expected_version: number; p_path: string }; Returns: Json }
+      soft_delete_account: {
+        Args: { p_account_id: string; p_expected_version: number; p_reason: string }
+        Returns: Json
+      }
+      update_my_profile: {
+        Args: {
+          p_birth_date: string
+          p_expected_version: number
+          p_full_name: string
+          p_phone: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

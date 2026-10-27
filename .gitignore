@@ -1,9 +1,11 @@
 # Reference UI only; never part of the application or deployment.
 /template/
 
-# Local agent skills and configuration.
+# Local agent skills, plugins and configuration.
 /.agents/
-.claude
+.claude/
+CLAUDE.md
+.codegraph/
 
 # Node.js dependencies and package-manager caches (keep lockfiles).
 node_modules/
