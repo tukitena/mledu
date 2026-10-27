@@ -15,7 +15,7 @@ liệt kê ở cuối; không đánh dấu nghiệm thu toàn bộ AUTH-04/AUTH-
 | AUTH-03 | Vô hiệu hóa/kích hoạt lại; phiên cũ mất hiệu lực ngay, không hồi sinh | `api.set_account_enabled`, Access Token Hook |
 | AUTH-04/05 | Xóa mềm có lý do, giữ email/lịch sử; khôi phục kích hoạt ngay, phiên cũ vẫn mất | `api.soft_delete_account`, `api.restore_account` |
 | AUTH-06 | Mọi lệnh quản trị từ chối đích Admin và quyền Admin; Admin quản trị bằng công cụ vận hành có audit `source=ops` | `app_private.lock_managed_account`, `api.ops_*`, `scripts/ops/accounts.mjs` |
-| AUTH-07 | Tạo tài khoản mặc định User; đổi User ↔ Receptionist, quyền mới áp dụng ngay trên phiên đang mở; UI tự cập nhật | `api.prepare_account_create`, `api.set_account_type`, đồng bộ hồ sơ 30 giây/khi focus |
+| AUTH-07 | Tạo tài khoản mặc định User; đổi User ↔ Receptionist, quyền mới áp dụng ngay trên phiên đang mở; UI tự cập nhật | `api.prepare_account_create`, `api.set_account_type`, đồng bộ hồ sơ mỗi 5 phút khi tab hiển thị |
 | AUTH-08 | Tự sửa họ tên/SĐT/ngày sinh có version; không đổi email ở mọi đường (API, Auth SDK); đổi mật khẩu giữ phiên hiện tại, kết thúc phiên khác; avatar | `api.update_my_profile`, trigger `mledu_guard_email`, avatar bên dưới |
 | UX-01 (nền) | Desktop/mobile, Việt/Anh, sáng/tối/theo hệ thống lưu theo trình duyệt; workspace theo loại tài khoản | `apps/web/src/app/{i18n,theme,session}.ts`, `AppShell.vue` |
 
@@ -108,5 +108,5 @@ Lưu ý chạy lại: `command_atomicity.test.sql` (GĐ 1) đếm tổng toàn b
 | Báo lỗi gửi email reset cho Admin (AUTH-02) | Hiện chỉ log vận hành; thông báo Admin thuộc GĐ 9 (NOTIF-01) |
 | Dọn file avatar mồ côi (upload bỏ dở, lỗi xóa) | Bảng `avatar_uploads` đánh dấu sẵn; tác vụ dọn thuộc GĐ 9 |
 | Lệnh Auth đã hết hạn trong `auth_commands` | Không chứa bí mật; chưa có tác vụ dọn (GĐ 9) |
-| UI cập nhật quyền | Đồng bộ định kỳ 30 giây/khi focus; Realtime thuộc GĐ 9 |
+| UI cập nhật quyền | Đồng bộ mỗi 5 phút khi đã đăng nhập và tab hiển thị; không gọi khi focus/quay lại tab. Lỗi thiếu quyền hướng dẫn tải lại trang rồi thử lại; Realtime thuộc GĐ 9 |
 | CI GitHub | Chưa chạy (chưa có remote) |

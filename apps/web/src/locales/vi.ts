@@ -21,6 +21,7 @@ export const vi = {
   nav: {
     dashboard: 'Tổng quan',
     accounts: 'Tài khoản',
+    students: 'Học sinh',
     catalogs: 'Danh mục',
     profile: 'Hồ sơ cá nhân',
     signOut: 'Đăng xuất',
@@ -231,6 +232,57 @@ export const vi = {
     },
     archivedDuplicateHint: 'Bật “Hiện mục đã lưu trữ” để tìm mục trùng tên và chọn Khôi phục.',
   },
+  students: {
+    title: 'Học sinh',
+    subtitle:
+      'Hồ sơ tổng của học sinh toàn trung tâm. Tìm theo tên không dấu, số điện thoại hoặc mã học sinh.',
+    create: 'Thêm học sinh',
+    searchPlaceholder: 'Tên, số điện thoại hoặc mã HS',
+    statusFilter: 'Trạng thái hồ sơ',
+    status: { active: 'Đang lưu hành', deleted: 'Đã xóa' },
+    columns: {
+      name: 'Họ tên',
+      code: 'Mã HS',
+      parentPhones: 'SĐT phụ huynh',
+      birthDate: 'Ngày sinh',
+      school: 'Trường',
+    },
+    fields: {
+      fullName: 'Họ tên học sinh',
+      parentName: 'Tên phụ huynh',
+      parentPhones: 'Số điện thoại phụ huynh',
+      studentPhones: 'Số điện thoại học sinh',
+      birthDate: 'Ngày sinh',
+      school: 'Trường',
+      generalNote: 'Ghi chú tổng quan',
+    },
+    parentOf: 'PH: {name}',
+    empty: 'Không có học sinh phù hợp.',
+    total: '{n} học sinh',
+    actions: { view: 'Xem hồ sơ', edit: 'Sửa', delete: 'Xóa', restore: 'Khôi phục' },
+    formTitle: {
+      create: 'Thêm học sinh',
+      edit: 'Sửa hồ sơ {name}',
+      restore: 'Khôi phục hồ sơ {name}',
+    },
+    createHint:
+      'Chỉ họ tên là bắt buộc. Nếu đã có học sinh cùng họ tên, cần nhập số phụ huynh khác với hồ sơ đó.',
+    restoreHint:
+      'Hồ sơ được khôi phục với mã và lịch sử cũ; các lớp và lần tham gia cũ không tự mở lại. Nếu trùng thông tin, hãy sửa ngay trong biểu mẫu này.',
+    deleteTitle: 'Xóa học sinh {name}',
+    deleteHint:
+      'Hồ sơ được xóa mềm: giữ mã, liên hệ, điểm, chuyên cần và tài chính; có thể khôi phục sau.',
+    deletedReason: 'Lý do xóa',
+    addPhone: 'Thêm số',
+    removePhone: 'Bỏ số này',
+    invalidPhone: 'Số không hợp lệ: 10–11 chữ số bắt đầu bằng 0, hoặc + và 8–15 chữ số.',
+    done: {
+      create: 'Đã thêm {name} ({code}).',
+      edit: 'Đã lưu hồ sơ {name}.',
+      restore: 'Đã khôi phục {name} ({code}).',
+      delete: 'Đã xóa hồ sơ {name} ({code}).',
+    },
+  },
   errors: {
     bad_request: 'Yêu cầu không hợp lệ.',
     validation_failed: 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.',
@@ -241,12 +293,18 @@ export const vi = {
     password_reset_required: 'Phiên này chỉ dùng để đặt lại mật khẩu.',
     reset_link_invalid: 'Liên kết đặt lại không hợp lệ, đã hết hạn hoặc đã được dùng.',
     password_unchanged: 'Mật khẩu mới phải khác mật khẩu hiện tại.',
-    forbidden: 'Bạn không có quyền thực hiện thao tác này.',
+    forbidden: 'Bạn không có quyền thực hiện thao tác này. Vui lòng tải lại trang rồi thử lại.',
     admin_account_forbidden: 'Không thể quản trị tài khoản Admin trong ứng dụng.',
     email_taken: 'Email đã được dùng cho một tài khoản (kể cả tài khoản đã xóa).',
     invalid_state: 'Trạng thái hiện tại của dữ liệu không cho phép thao tác này.',
     duplicate_name: 'Tên này đã được dùng (so sánh không phân biệt dấu, hoa thường, khoảng trắng).',
     archived_duplicate: 'Tên này thuộc một mục đã lưu trữ. Hãy khôi phục mục đó thay vì tạo mới.',
+    duplicate_student:
+      'Trùng học sinh đã có: cùng họ tên (không phân biệt dấu) và chung số phụ huynh.',
+    duplicate_student_archived:
+      'Trùng học sinh đã xóa: cùng họ tên và chung số phụ huynh. Hãy khôi phục hồ sơ đó thay vì tạo mới.',
+    parent_phone_required:
+      'Đã có học sinh cùng họ tên (không phân biệt dấu). Cần ít nhất một số phụ huynh không trùng.',
     site_archived: 'Địa điểm đã lưu trữ: không thể thêm, chuyển hoặc khôi phục phòng vào đó.',
     avatar_invalid: 'Ảnh không hợp lệ: chỉ nhận JPG, PNG hoặc WebP tối đa 5.000.000 byte.',
     not_found: 'Không tìm thấy dữ liệu.',
@@ -258,6 +316,7 @@ export const vi = {
     dependency_unavailable: 'Không kết nối được máy chủ. Hãy thử lại.',
     internal_error: 'Đã có lỗi xảy ra. Hãy thử lại.',
     requestId: 'Mã yêu cầu: {id}',
+    related: 'Liên quan: {codes}',
   },
   notFound: { title: 'Không tìm thấy trang', back: 'Về trang chính' },
 }

@@ -63,6 +63,11 @@ export const router = createRouter({
           meta: { workspaces: ['admin'] },
         },
         {
+          path: 'students',
+          name: 'students',
+          component: () => import('../features/students/StudentsPage.vue'),
+        },
+        {
           path: 'catalogs',
           name: 'catalogs',
           component: () => import('../features/catalogs/CatalogsPage.vue'),

@@ -73,6 +73,7 @@ const navItems = computed(() => [
   ...(workspace.value === 'admin'
     ? [{ name: 'accounts', icon: 'bi-people', label: t('nav.accounts') }]
     : []),
+  { name: 'students', icon: 'bi-person-badge', label: t('nav.students') },
   ...(workspace.value === 'admin' || workspace.value === 'receptionist'
     ? [{ name: 'catalogs', icon: 'bi-collection', label: t('nav.catalogs') }]
     : []),

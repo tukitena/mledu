@@ -1301,3 +1301,15 @@ body {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+// Plain-text notes keep the line breaks they were written with.
+.text-preline {
+  white-space: pre-line;
+}
+.phone-list legend {
+  float: none;
+  font-size: inherit;
+}
+.students-table th:first-child {
+  width: 28%;
+}

@@ -57,6 +57,15 @@ export const ErrorCode = z.enum([
   'archived_duplicate',
   /** Rooms cannot be created in, moved to or restored into an archived site (SCHED-05). */
   'site_archived',
+  /**
+   * Same name key and a shared parent phone as an existing student (STU-04).
+   * `details` lists the other students as {path: 'student', message: code}.
+   */
+  'duplicate_student',
+  /** As duplicate_student, but every match is archived: restore it instead (STU-04). */
+  'duplicate_student_archived',
+  /** Another student has the same name key; at least one parent phone is needed (STU-04). */
+  'parent_phone_required',
   'not_found',
   'method_not_allowed',
   'version_conflict',

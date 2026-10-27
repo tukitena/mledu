@@ -11,6 +11,7 @@ import { authRoutes } from './modules/auth/routes'
 import { catalogRoutes, roomRoutes, siteRoutes } from './modules/catalogs/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
+import { studentRoutes } from './modules/students/routes'
 
 const allowedOrigins = (value: string) =>
   value
@@ -59,6 +60,7 @@ export function createApp() {
   app.route(`/${API_VERSION}/catalogs`, catalogRoutes)
   app.route(`/${API_VERSION}/sites`, siteRoutes)
   app.route(`/${API_VERSION}/rooms`, roomRoutes)
+  app.route(`/${API_VERSION}/students`, studentRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

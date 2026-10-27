@@ -38,6 +38,24 @@ export const codeForStatus = (status: number): ErrorCode =>
 export interface PostgrestLikeError {
   code?: string
   message?: string
+  /** DETAIL of the raised error; app_private.raise_api_conflict puts ErrorDetail[] JSON here. */
+  details?: string | null
+}
+
+/** Conflict details from the database: only {path, message} strings are passed on. */
+function conflictDetails(details: string | null | undefined): ErrorDetail[] | undefined {
+  if (!details) return undefined
+  try {
+    const parsed: unknown = JSON.parse(details)
+    if (!Array.isArray(parsed)) return undefined
+    const items = parsed.filter(
+      (item): item is ErrorDetail =>
+        typeof item?.path === 'string' && typeof item?.message === 'string',
+    )
+    return items.length ? items.slice(0, 20) : undefined
+  } catch {
+    return undefined
+  }
 }
 
 /**
@@ -52,7 +70,12 @@ export function fromDatabaseError(error: PostgrestLikeError): AppError {
   if (ptStatus) {
     const status = Number(ptStatus) as ContentfulStatusCode
     const code = raised.success ? raised.data : codeForStatus(status)
-    return new AppError(status, code, code)
+    return new AppError(
+      status,
+      code,
+      code,
+      status === 409 ? conflictDetails(error.details) : undefined,
+    )
   }
   switch (sqlstate) {
     // PostgREST rejected the JWT (expired, malformed or wrong signature).

@@ -23,6 +23,7 @@ export const en: typeof vi = {
   nav: {
     dashboard: 'Overview',
     accounts: 'Accounts',
+    students: 'Students',
     catalogs: 'Catalogs',
     profile: 'My profile',
     signOut: 'Sign out',
@@ -224,6 +225,53 @@ export const en: typeof vi = {
     archivedDuplicateHint:
       'Turn on “Show archived” to find the matching record and choose Restore.',
   },
+  students: {
+    title: 'Students',
+    subtitle:
+      'Centre-wide student records. Search by name (accents ignored), phone or student code.',
+    create: 'Add student',
+    searchPlaceholder: 'Name, phone or student code',
+    statusFilter: 'Record status',
+    status: { active: 'Current', deleted: 'Deleted' },
+    columns: {
+      name: 'Name',
+      code: 'Code',
+      parentPhones: 'Parent phones',
+      birthDate: 'Date of birth',
+      school: 'School',
+    },
+    fields: {
+      fullName: 'Student name',
+      parentName: 'Parent name',
+      parentPhones: 'Parent phones',
+      studentPhones: 'Student phones',
+      birthDate: 'Date of birth',
+      school: 'School',
+      generalNote: 'General note',
+    },
+    parentOf: 'Parent: {name}',
+    empty: 'No matching students.',
+    total: '{n} students',
+    actions: { view: 'View', edit: 'Edit', delete: 'Delete', restore: 'Restore' },
+    formTitle: { create: 'Add student', edit: 'Edit {name}', restore: 'Restore {name}' },
+    createHint:
+      'Only the name is required. If a student with the same name exists, add a parent phone that differs from theirs.',
+    restoreHint:
+      'The record comes back with its code and history; old classes and participations are not reopened. Fix any conflicting data in this form.',
+    deleteTitle: 'Delete {name}',
+    deleteHint:
+      'The record is soft-deleted: code, contacts, grades, attendance and fees are kept; it can be restored later.',
+    deletedReason: 'Deletion reason',
+    addPhone: 'Add number',
+    removePhone: 'Remove this number',
+    invalidPhone: 'Invalid number: 10–11 digits starting with 0, or + and 8–15 digits.',
+    done: {
+      create: 'Added {name} ({code}).',
+      edit: 'Saved {name}.',
+      restore: 'Restored {name} ({code}).',
+      delete: 'Deleted {name} ({code}).',
+    },
+  },
   errors: {
     bad_request: 'The request is not valid.',
     validation_failed: 'Some values are not valid. Please check them.',
@@ -234,13 +282,18 @@ export const en: typeof vi = {
     password_reset_required: 'This session can only reset the password.',
     reset_link_invalid: 'The reset link is not valid, has expired or was already used.',
     password_unchanged: 'The new password must differ from the current one.',
-    forbidden: 'You are not allowed to do this.',
+    forbidden: 'You are not allowed to do this. Please reload the page and try again.',
     admin_account_forbidden: 'Admin accounts cannot be managed in the application.',
     email_taken: 'This email already belongs to an account (including deleted ones).',
     invalid_state: 'The current state of this record does not allow this.',
     duplicate_name: 'This name is already used (compared ignoring accents, case and spacing).',
     archived_duplicate:
       'This name belongs to an archived record. Restore it instead of creating a new one.',
+    duplicate_student: 'Duplicate student: same name (accents ignored) and a shared parent phone.',
+    duplicate_student_archived:
+      'Matches a deleted student with the same name and parent phone. Restore that record instead.',
+    parent_phone_required:
+      'Another student has the same name (accents ignored). Add at least one parent phone that differs.',
     site_archived: 'The site is archived: rooms cannot be added to, moved to or restored into it.',
     avatar_invalid: 'Invalid image: JPG, PNG or WebP up to 5,000,000 bytes only.',
     not_found: 'Not found.',
@@ -252,6 +305,7 @@ export const en: typeof vi = {
     dependency_unavailable: 'Cannot reach the server. Try again.',
     internal_error: 'Something went wrong. Try again.',
     requestId: 'Request ID: {id}',
+    related: 'Related: {codes}',
   },
   notFound: { title: 'Page not found', back: 'Back to home' },
 }

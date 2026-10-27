@@ -26,6 +26,18 @@ export type Database = {
       create_catalog_entry: { Args: { p_kind: string; p_name: string }; Returns: Json }
       create_room: { Args: { p_name: string; p_site_id: string }; Returns: Json }
       create_site: { Args: { p_address: string; p_name: string }; Returns: Json }
+      create_student: {
+        Args: {
+          p_birth_date?: string
+          p_full_name: string
+          p_general_note?: string
+          p_parent_name?: string
+          p_parent_phones?: string[]
+          p_school?: string
+          p_student_phones?: string[]
+        }
+        Returns: Json
+      }
       current_session: {
         Args: { p_allow_password_change?: boolean }
         Returns: {
@@ -37,6 +49,7 @@ export type Database = {
       discard_avatar_upload: { Args: { p_path: string }; Returns: boolean }
       get_account: { Args: { p_account_id: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
+      get_student: { Args: { p_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
       list_accounts: {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
@@ -48,6 +61,10 @@ export type Database = {
       }
       list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
       list_sites: { Args: { p_include_archived?: boolean }; Returns: Json }
+      list_students: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
+        Returns: Json
+      }
       mark_avatar_verified: { Args: { p_path: string }; Returns: undefined }
       ops_prepare_account_create: {
         Args: { p_account_type: string; p_email: string; p_full_name: string; p_operator: string }
@@ -91,6 +108,20 @@ export type Database = {
       restore_catalog_entry: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_room: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_site: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_student: {
+        Args: {
+          p_birth_date: string
+          p_expected_version: number
+          p_full_name: string
+          p_general_note: string
+          p_id: string
+          p_parent_name: string
+          p_parent_phones: string[]
+          p_school: string
+          p_student_phones: string[]
+        }
+        Returns: Json
+      }
       set_account_enabled: {
         Args: { p_account_id: string; p_enabled: boolean; p_expected_version: number }
         Returns: Json
@@ -102,6 +133,10 @@ export type Database = {
       set_my_avatar: { Args: { p_expected_version: number; p_path: string }; Returns: Json }
       soft_delete_account: {
         Args: { p_account_id: string; p_expected_version: number; p_reason: string }
+        Returns: Json
+      }
+      soft_delete_student: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
       }
       update_my_profile: {
@@ -119,6 +154,20 @@ export type Database = {
       }
       update_site: {
         Args: { p_address: string; p_expected_version: number; p_id: string; p_name: string }
+        Returns: Json
+      }
+      update_student: {
+        Args: {
+          p_birth_date: string
+          p_expected_version: number
+          p_full_name: string
+          p_general_note: string
+          p_id: string
+          p_parent_name: string
+          p_parent_phones: string[]
+          p_school: string
+          p_student_phones: string[]
+        }
         Returns: Json
       }
     }
