@@ -198,9 +198,12 @@ test('language, themes and keyboard navigation work with the new header', async 
     await expect(page).toHaveURL(/\/admin\/accounts$/)
     await page.keyboard.press('Control+k')
     await page.getByTestId('nav-search').fill('')
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Tab')
+    const searchResults = page.locator('.header-search').getByRole('link')
+    await expect(searchResults.last()).toHaveText('My profile')
+    for (const result of await searchResults.all()) {
+      await page.keyboard.press('Tab')
+      await expect(result).toBeFocused()
+    }
     await expect(
       page.locator('.header-search').getByRole('link', { name: 'My profile' }),
     ).toBeFocused()
