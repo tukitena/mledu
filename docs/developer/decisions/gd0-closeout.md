@@ -29,7 +29,7 @@ lại toàn bộ test trong lần dọn dẹp này.
 | --- | --- | --- |
 | G1-01 | Xác minh recovery đồng thời trên phiên bản/luồng hosted sẽ dùng, gồm PKCE; xác định và kiểm chứng cách xử lý | Trước nghiệm thu Auth GĐ 2; một link chỉ hoàn tất một lần khi dùng đồng thời |
 | G1-02 | Thử avatar private, kiểm tra file thật, lỗi audit và đổi đồng thời | Trước chốt triển khai avatar GĐ 2; chưa có bằng chứng đạt từ GĐ 0 |
-| G1-03 | Benchmark Excel gần giới hạn dung lượng, 5.000 dòng và bài 50 thành phần | Trước chốt parser/nơi xử lý file; chưa coi runtime hiện tại đã đáp ứng file cực đại |
+| G1-03 | ~~Benchmark Excel gần giới hạn dung lượng, 5.000 dòng và bài 50 thành phần~~ | **Đóng 27/10/2026, không đo.** Đọc file tại trình duyệt bằng SheetJS CE 0.20.3, chấp nhận độ trễ; không còn là điều kiện chặn. Kiểm thử chức năng file 5.000 dòng vẫn thuộc gate GĐ 8 (techstack §5.1) |
 | G1-04 | Đối chiếu ERD với 60 chức năng, khóa học vụ/tài chính và lịch sử | Trước chốt migration nghiệp vụ chính thức; sơ đồ hiện có là đầu vào review |
 | G1-05 | Đưa thiết kế Auth/audit đã thử vào thiết kế chính thức; bổ sung self-service, reset và các phần AUTH còn thiếu | Trước nghiệm thu nhóm Auth; không mở route production từ prototype |
 

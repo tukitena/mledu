@@ -52,9 +52,10 @@ npm run dev:api
 npm run dev:web
 ```
 
-Tài khoản giả trong `supabase/seed.sql` (chỉ Auth local): `admin@`, `receptionist@`,
-`user@`, `pending@` (phải đổi mật khẩu), `disabled@` (bị khóa) thuộc `mledu.test`,
-mật khẩu `mledu-local-only`.
+Tài khoản giả trong `supabase/seeds/00-account.sql` (chỉ Auth local): `admin@`,
+`receptionist@`, `user@`, `pending@` (phải đổi mật khẩu), `disabled@` (bị khóa) thuộc
+`example.com`, mật khẩu `123456ab`. Mỗi lần triển khai thêm một file seed riêng
+(`01-….sql`, …) chạy theo thứ tự tên; các file này bị Git bỏ qua vì có thể chứa dữ liệu nội bộ.
 
 ## Lệnh kiểm chứng
 

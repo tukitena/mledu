@@ -13,6 +13,7 @@
     "@fullcalendar/vue3": "7.1.3",
     "@mledu/contracts": "*",
     "@supabase/supabase-js": "2.118.0",
+    "apexcharts": "8.5.0",
     "bootstrap": "5.3.8",
     "bootstrap-icons": "1.13.2",
     "sweetalert2": "11.26.25",
@@ -22,6 +23,8 @@
     "vue": "3.5.44",
     "vue-i18n": "11.4.16",
     "vue-router": "5.4.0",
+    "vue3-apexcharts": "1.11.3",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "4.6.7"
   },
   "devDependencies": {

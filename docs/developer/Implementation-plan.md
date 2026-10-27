@@ -22,10 +22,10 @@ Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 1 — nền local 
 - Không có tenant hoặc quyền theo địa điểm; không tạo tài khoản phụ huynh. Tra cứu phụ huynh đi qua endpoint Workers được giới hạn dữ liệu/tần suất.
 - Tiền VND nguyên đồng. Không thanh toán từng phần, quá hạn, giảm theo phần trăm hoặc tự chia học phí theo buổi/ngày.
 - Avatar: JPG/PNG/WebP, tối đa 5.000.000 byte; chỉ chủ tài khoản tự đổi. DB lưu path tương đối hoặc NULL; bucket private; backend kiểm tra file thực tế.
-- Excel: chỉ `.xlsx` theo mẫu; dưới 10.000.000 byte, tối đa 5.000 dòng; không thực thi công thức; một lỗi chặn cả file, một lần thành công có một audit.
+- Excel: chỉ `.xlsx` theo mẫu; dưới 10.000.000 byte, tối đa 5.000 dòng; không thực thi công thức; một lỗi chặn cả file, một lần thành công có một audit. File được đọc tại trình duyệt và gửi về API dưới dạng JSON; một lần áp dụng là một request, một RPC (techstack §5.1).
 - `template/` chỉ để tham khảo và bị ignore; không import, symlink, lấy dependency/config hoặc đọc nó khi build/runtime. `.agents/` là cài đặt cục bộ bị ignore.
 - Không đưa secrets vào mã nguồn, `VITE_*`, contracts, log, audit hoặc artifact frontend. Publishable key không phải quyền ghi rộng vào dữ liệu.
-- Chỉ tạo các thư mục/module khi giai đoạn thực sự cần; không sinh hàng loạt file rỗng hoặc triển khai toàn bộ 54 thực thể trong một migration khổng lồ.
+- Chỉ tạo các thư mục/module khi giai đoạn thực sự cần; không sinh hàng loạt file rỗng hoặc triển khai toàn bộ 52 thực thể trong một migration khổng lồ.
 
 ## Review Focus — Năm nhóm lỗi cần kiểm chứng sớm
 
@@ -35,7 +35,7 @@ Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 1 — nền local 
 | Xóa/thêm lại hoặc kết thúc giữa ngày làm lẫn hồ sơ, học vụ và khoản tiền | Học vụ theo học sinh/bài/buổi; tiền theo hồ sơ lớp; quá khứ giữ nguyên | GĐ 3–7, 10 |
 | Hai người đặt phòng/thu cùng khoản/xác nhận cùng file | Chỉ một kết quả hợp lệ; không ghi trùng hoặc cập nhật một phần | GĐ 4, 6, 8 |
 | File avatar giả MIME, upload xong nhưng audit lỗi, hai lần đổi ảnh đồng thời | File sai bị chặn; path cũ còn hiệu lực khi commit lỗi; không xóa ảnh đang dùng | GĐ 2 |
-| Excel cực đại và lỗi nền tảng/gián đoạn tác vụ | Đủ 5.000 dòng/50 phần; nguyên khối toàn file; chạy bù đúng lịch sử, không tạo trùng | GĐ 0, 8, 9 |
+| Excel cực đại và lỗi nền tảng/gián đoạn tác vụ | Đủ 5.000 dòng/50 phần (kiểm thử chức năng, không đo hiệu năng); nguyên khối toàn file; chạy bù đúng lịch sử, không tạo trùng | GĐ 8, 9 |
 
 ## 1. Cấu trúc repository đề xuất
 
@@ -123,11 +123,11 @@ mledu/
 ├── supabase/
 │   ├── config.toml
 │   ├── migrations/                      # SQL version hóa: bảng, RLS, RPC, index, Cron
-│   ├── seed.sql                         # Chỉ dữ liệu giả/kiểm thử cục bộ
+│   ├── seeds/                           # Mỗi lần triển khai một file NN-<phần>.sql; chỉ track 00-account.sql (tài khoản giả)
 │   └── tests/database/                  # pgTAP cho constraint/RLS/RPC và rollback
 ├── tests/
 │   ├── e2e/                             # Luồng trình duyệt theo vai trò
-│   ├── performance/                     # Excel cực đại, RPC và truy vấn lớn
+│   ├── performance/                     # Quy mô dữ liệu GĐ 10 (RPC, truy vấn lớn); không benchmark Excel
 │   └── fixtures/                        # Dữ liệu giả, không chứa thông tin thật
 ├── scripts/
 │   ├── dev/                             # Công cụ phục vụ phát triển
@@ -152,7 +152,7 @@ mledu/
 | Thành phần | Trách nhiệm | Phụ thuộc được phép |
 | --- | --- | --- |
 | `apps/web` | UI, route, gọi API, phiên trình duyệt, nhận tín hiệu Realtime | `packages/contracts`, cấu hình công khai |
-| `apps/api` | Kiểm tra request/phiên, điều phối upload/Excel, gọi RPC, truy vấn theo quyền | `packages/contracts`, client Supabase được giới hạn |
+| `apps/api` | Kiểm tra request/phiên, điều phối upload avatar, kiểm tra/áp dụng dữ liệu Excel dạng JSON, gọi RPC, truy vấn theo quyền | `packages/contracts`, client Supabase được giới hạn |
 | `packages/contracts` | Hợp đồng dữ liệu truyền qua HTTP | Kiểu/schema thuần; không secret, không client admin hoặc mã Worker |
 | `supabase/migrations` | Ràng buộc, RLS, khóa, transaction/RPC, audit/outbox nguyên khối | SQL version trước đó; không đọc `template/` |
 | `tests/e2e` | Kiểm tra hành vi hệ thống qua giao diện/API | Bản chạy local/staging và fixture giả |
@@ -193,7 +193,7 @@ DTO tương ứng đặt trong `packages/contracts/src/profile.ts`; route/servic
 | 5 | Bài kiểm tra, điểm, nhận xét và công bố | GĐ 3 |
 | 6 | Học phí, khoản ngoài, thu và gỡ sai | GĐ 3–4 |
 | 7 | Trang lớp và tra cứu phụ huynh đúng phạm vi | GĐ 2–6 |
-| 8 | Đồng bộ Excel theo các lệnh nghiệp vụ đã có | GĐ 3–6 + benchmark GĐ 0 |
+| 8 | Đồng bộ Excel theo các lệnh nghiệp vụ đã có | GĐ 3–6 |
 | 9 | Cron/chạy bù, thông báo, vòng đời liên miền, in/dashboard | GĐ 3–8; nền audit/outbox đã có từ GĐ 1 |
 | 10 | Nghiệm thu tích hợp, diễn tập phục hồi và đưa vào vận hành | Tất cả giai đoạn trước |
 
@@ -212,7 +212,7 @@ toàn bộ test nhanh đạt 35/38, ba gate recovery native còn đỏ.
 - [ ] Thử AUTH-01–08 trên môi trường giả lập/staging: mật khẩu tạm, reset 5 phút/một lần, cấp lại vô hiệu link cũ, token cũ sau khóa/đổi quyền/đăng xuất, tài khoản xóa mềm và email giữ lại.
 - [ ] Tiêm lỗi giữa Auth Admin API và ghi audit; xác định cơ chế đáp ứng yêu cầu nguyên khối. Nếu chưa chứng minh được, ghi rõ điểm chặn và thống nhất điều chỉnh triển khai/yêu cầu trước khi nghiệm thu nhóm Auth; không coi một outbox hoặc tác vụ bù là tự động giải quyết atomicity này.
 - [ ] Thử upload private, xác minh file và cập nhật path/audit; kiểm tra ảnh giả MIME, file vượt 5.000.000 byte, audit lỗi và hai lần đổi ảnh đồng thời.
-- [ ] Benchmark parser với `.xlsx` gần giới hạn dung lượng, 5.000 dòng và bài 50 phần; đo CPU, bộ nhớ, staging và timeout RPC. Nếu cần tiến trình parse riêng thì ghi thiết kế bổ sung trước khi tạo hạ tầng mới.
+- [ ] Benchmark parser với `.xlsx` gần giới hạn dung lượng, 5.000 dòng và bài 50 phần; đo CPU, bộ nhớ, staging và timeout RPC. Nếu cần tiến trình parse riêng thì ghi thiết kế bổ sung trước khi tạo hạ tầng mới. *(Đóng 27/10/2026, không thực hiện: đọc file tại trình duyệt bằng SheetJS CE, chấp nhận độ trễ, không benchmark — techstack §5.1.)*
 - [ ] Review ERD với 60 chức năng; xác nhận khóa học vụ khác khóa tài chính, khoảng thời gian, SQL constraint/RPC và cách giữ lịch sử.
 
 **Gate:** Có số đo và bằng chứng cho từng thử nghiệm; điểm chưa đạt có phạm vi và quyết định xử lý. Không đánh dấu Auth đạt chỉ vì đăng nhập thành công hoặc Excel đạt vì file nhỏ chạy được.
@@ -302,14 +302,14 @@ biên bản chốt GĐ 0 vẫn mở. Schema `spike_private` và API Node của G
 
 ### Giai đoạn 8 — Đồng bộ Excel có preview và xác nhận
 
-**Phạm vi:** XLS-01–06. Module `imports/`, fixture giả và `tests/performance/excel-import.test.ts`.
+**Phạm vi:** XLS-01–06. Module `imports/` ở web (đọc/xuất `.xlsx`) và API (xem trước/áp dụng JSON), fixture giả gồm file 5.000 dòng để kiểm thử chức năng (không đo hiệu năng). Luồng theo techstack §5.1.
 
-- [ ] Xuất đúng mẫu từng chức năng với mã/phiên bản và `_Meta`; parser không thực thi công thức, không đoán lại hồ sơ khi mã được cung cấp sai.
-- [ ] Upload private, kiểm tra/staging/preview có lỗi dòng/cột; chưa thay dữ liệu. Ô trống giữ nguyên, `XÓA` xử lý theo loại trường và khóa công bố.
-- [ ] Xác nhận kiểm tra lại quyền, khoảng tham gia, version/công bố/lưu trữ và hash; một transaction áp dụng toàn file, một audit, dấu thành công giữ không thời hạn.
+- [ ] Xuất đúng mẫu từng chức năng tại trình duyệt với mã/phiên bản và `_Meta`; trình đọc không thực thi công thức (ô công thức là lỗi), không đoán lại hồ sơ khi mã được cung cấp sai.
+- [ ] Trình duyệt trích file thành JSON có số dòng/cột; API xem trước trả Thêm/Sửa/Xóa và lỗi dòng/cột, chưa thay dữ liệu. Ô trống giữ nguyên, `XÓA` xử lý theo loại trường và khóa công bố.
+- [ ] Áp dụng là một request: API/RPC kiểm tra lại quyền, khoảng tham gia, version/công bố/lưu trữ và dấu chống nhập lại tính từ payload chuẩn hóa; một transaction áp dụng toàn file, một audit, dấu thành công giữ không thời hạn. Không ghi theo từng dòng.
 - [ ] Thử file tối đa và đồng thời hai lần xác nhận cùng nội dung/phạm vi. Preview/hủy/lỗi/không thay đổi không đánh dấu nhập thành công.
 
-**Gate:** `import-atomicity.test.ts`, `import-deduplication.test.ts`, `tests/e2e/imports.spec.ts`. File 5.001 dòng hoặc đạt 10.000.000 byte bị từ chối; 5.000 dòng hợp lệ không bị cắt. Audit lỗi không để lại thay đổi một phần.
+**Gate:** `import-atomicity.test.ts`, `import-deduplication.test.ts`, `tests/e2e/imports.spec.ts`. File 5.001 dòng hoặc đạt 10.000.000 byte bị trình duyệt từ chối; payload hơn 5.000 dòng gửi thẳng API cũng bị từ chối; 5.000 dòng hợp lệ không bị cắt. Audit lỗi không để lại thay đổi một phần.
 
 ### Giai đoạn 9 — Tác vụ, thông báo và hoàn thiện các luồng liên miền
 
@@ -329,11 +329,11 @@ biên bản chốt GĐ 0 vẫn mở. Schema `spike_private` và API Node của G
 
 - [ ] Lập ma trận 60 mã chức năng với bằng chứng DB/API/E2E. Chạy ma trận Admin/Receptionist/giáo viên/trợ giảng/phụ huynh và token cũ; không suy nghiệm thu từ số màn hình.
 - [ ] Đo quy mô giả lập 1.500 học sinh, 100 lớp, 100 tài khoản theo đặc tả; đo tải đồng thời theo kịch bản được chấp nhận, không coi 100 tài khoản là 100 người online cùng lúc.
-- [ ] Kiểm tra mobile/desktop, Việt/Anh, theme theo hệ thống, reload route SPA, reconnect Realtime, in A4/A5, Excel cực đại và bản build khi thiếu template.
+- [ ] Kiểm tra mobile/desktop, Việt/Anh, theme theo hệ thống, reload route SPA, reconnect Realtime, in A4/A5, nhập file Excel 5.000 dòng (chức năng, chấp nhận độ trễ) và bản build khi thiếu template.
 - [ ] Diễn tập backup/restore DB **và** nội dung Storage riêng. Thử migration trên staging, rollback ứng dụng với schema tương thích và phục hồi dữ liệu; kiểm tra runbook xử lý job chờ Admin.
 - [ ] Chuẩn bị dữ liệu khởi đầu qua công cụ có kiểm tra/audit; UAT trên staging. Sau phê duyệt release, deploy production, smoke test, theo dõi lỗi/usage và bàn giao người vận hành.
 
-**Gate:** Không còn lỗi chặn trong ma trận nghiệm thu; điểm Auth/audit và benchmark Excel ở GĐ 0 được đóng bằng bằng chứng. Production chỉ nhận dữ liệu thật sau khi quyền, backup/restore và luồng tiền đã đạt.
+**Gate:** Không còn lỗi chặn trong ma trận nghiệm thu; điểm Auth/audit ở GĐ 0 được đóng bằng bằng chứng (benchmark Excel đã đóng theo quyết định 27/10/2026, không đo). Production chỉ nhận dữ liệu thật sau khi quyền, backup/restore và luồng tiền đã đạt.
 
 ## 3. Kiểm thử và lệnh kiểm chứng khi bắt đầu triển khai
 
@@ -349,7 +349,7 @@ npm run test:unit          Unit/contract tests
 npm run test:db            pgTAP trên Supabase local, gồm quyền và rollback
 npm run test:integration   HTTP + Supabase local, gồm yêu cầu đồng thời
 npm run test:e2e           Luồng trình duyệt local/staging
-npm run test:performance   Kịch bản cực đại đã định nghĩa; không chạy trên production
+npm run test:performance   Quy mô dữ liệu GĐ 10; không gồm Excel; không chạy trên production
 npm run build              Build web và Worker, chỉ lấy source chính thức
 ```
 
@@ -358,7 +358,7 @@ Mỗi thay đổi nghiệp vụ bắt đầu từ ca kiểm thử mô tả lỗi
 ## 4. Những phần chưa tự động trở thành quyết định triển khai
 
 - Cấu trúc thư mục, npm workspaces, tên endpoint, tên test và scripts là đề xuất trong kế hoạch này. Các package thực tế chỉ được tạo khi giai đoạn tương ứng bắt đầu.
-- Phiên bản runtime/dependency, parser XLSX, thư viện lịch/bảng/biểu đồ và SMTP cần được chốt qua thử nghiệm theo tech stack. Kế hoạch không đặt mua compute hoặc add-on mới.
-- Nếu benchmark buộc chuyển nơi parse file, phải cập nhật thiết kế và pipeline deploy tương ứng; vẫn giữ giới hạn, preview và transaction toàn file.
+- Đã chốt (27/10/2026): đọc/xuất Excel tại trình duyệt, ApexCharts cho biểu đồ. Phiên bản runtime/dependency, thư viện đọc XLSX cụ thể và SMTP vẫn chốt qua thử nghiệm theo tech stack. Kế hoạch không đặt mua compute hoặc add-on mới.
+- Hiệu năng Excel không đo và không chặn giai đoạn nào. Nếu khi dùng thật một lần áp dụng vượt timeout, sửa ở tầng DB theo techstack §5.1; vẫn giữ giới hạn, preview và transaction toàn file.
 - Không thêm Supabase Edge Functions thành API thứ hai hoặc thêm cache/queue/database riêng mặc định. Bổ sung hạ tầng phải xuất phát từ phép đo hoặc yêu cầu cụ thể.
 - Bất kỳ thay đổi nào làm khác quyền/nghiệp vụ trong `plans.md` phải được thống nhất và cập nhật nguồn đặc tả trước khi coi là tiêu chí mới.

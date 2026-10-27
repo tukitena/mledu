@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers'
 
-/** Fixture password from supabase/seed.sql (local Auth only). */
-const FIXTURE_PASSWORD = 'mledu-local-only'
+/** Fixture password from supabase/seeds/00-account.sql (local Auth only). */
+const FIXTURE_PASSWORD = '123456ab'
 
 export type Fixture = 'admin' | 'receptionist' | 'user' | 'pending' | 'disabled'
 
@@ -10,7 +10,7 @@ export async function signIn(fixture: Fixture): Promise<string> {
   const response = await fetch(`${env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
     method: 'POST',
     headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: `${fixture}@mledu.test`, password: FIXTURE_PASSWORD }),
+    body: JSON.stringify({ email: `${fixture}@example.com`, password: FIXTURE_PASSWORD }),
   })
   if (!response.ok) throw new Error(`sign-in failed for ${fixture}: ${response.status}`)
   const body = (await response.json()) as { access_token: string }

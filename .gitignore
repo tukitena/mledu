@@ -46,9 +46,14 @@ dist-ssr/
 !.dev.vars.*.template
 .wrangler/
 
-# Supabase CLI local state; keep config.toml, migrations and seed SQL.
+# Supabase CLI local state; keep config.toml and migrations.
 supabase/.temp/
 supabase/.branches/
+
+# Seed parts (one SQL file per rollout) may hold internal data; only the
+# fictional test accounts used by CI and local tests are tracked.
+/supabase/seeds/*
+!/supabase/seeds/00-account.sql
 
 # Test reports and coverage.
 coverage/

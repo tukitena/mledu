@@ -10,14 +10,15 @@ Tài liệu này ghi lại lựa chọn kỹ thuật đã được chấp nhận
 
 | Lớp | Công nghệ | Trách nhiệm |
 | --- | --- | --- |
-| Frontend | Vue 3, TypeScript, Vite, Vue Router | SPA cho các workspace nội bộ và trang phụ huynh; route, component và trạng thái giao diện. |
+| Frontend | Vue 3, TypeScript, Vite, Vue Router | SPA cho các workspace nội bộ và trang phụ huynh; route, component và trạng thái giao diện. Đọc/xuất file `.xlsx` ngay tại trình duyệt (mục 5.1). |
 | Giao diện | Bootstrap 5, SCSS, Bootstrap Icons | Xây dựng giao diện trong source chính thức, tham khảo hình thức của Metis. |
+| Biểu đồ | ApexCharts + `vue3-apexcharts` | Dashboard theo vai trò (DASH-01); điều kiện giấy phép tại mục 3. |
 | Hosting web | Cloudflare Pages | Build và phục vụ tài nguyên tĩnh của SPA. |
-| API | Cloudflare Workers, Hono, TypeScript | Kiểm tra đầu vào, xác thực yêu cầu, API phụ huynh, điều phối nhập Excel và các thao tác cần quyền backend. |
+| API | Cloudflare Workers, Hono, TypeScript | Kiểm tra đầu vào, xác thực yêu cầu, API phụ huynh, nhận dữ liệu Excel đã được trình duyệt trích thành JSON để kiểm tra/áp dụng, và các thao tác cần quyền backend. |
 | Xác thực | Supabase Auth | Đăng nhập email/mật khẩu, phiên và khôi phục mật khẩu; bổ sung kiểm tra để đáp ứng chính xác AUTH-01 đến AUTH-08. |
 | Dữ liệu | PostgreSQL do Supabase quản lý | Dữ liệu quan hệ, RLS, constraint, khóa và transaction. Dùng phiên bản PostgreSQL được Supabase hỗ trợ tại lúc tạo project. |
 | Giao dịch nghiệp vụ | PostgreSQL functions, gọi qua RPC | Thực hiện nguyên khối các lệnh thu/gỡ thu, chuyển lớp, đóng/mở lớp, nhập Excel và audit liên quan. |
-| File | Supabase Storage | Ảnh hồ sơ và file nhập tạm; bucket private và quyền đọc/ghi theo nghiệp vụ. |
+| File | Supabase Storage | Ảnh hồ sơ; bucket private và quyền đọc/ghi theo nghiệp vụ. File Excel không lưu lên Storage (mục 5.1). |
 | Cập nhật trực tiếp | Supabase Realtime | Báo có thay đổi để SPA tải lại thông báo, số chưa đọc hoặc dữ liệu theo quyền hiện hành. |
 | Tác vụ | Supabase Cron, bảng job/outbox | Sinh nghĩa vụ học phí, chạy bù, phân phối thông báo, thử lại và dọn audit/thông báo hết hạn. |
 | Email | SMTP riêng kết nối Supabase Auth | Email đặt lại mật khẩu; nhà cung cấp cụ thể chưa chốt. |
@@ -35,7 +36,8 @@ Lộ trình và cấu trúc thư mục đề xuất được mô tả tại [k�
 | Đăng nhập và refresh phiên thông thường | Vue dùng Supabase Auth SDK; khi gọi API gửi JWT để backend kiểm tra phiên, trạng thái và quyền hiện hành. |
 | Quản trị tài khoản, đổi/đặt lại mật khẩu và thao tác xác thực cần audit | Theo luồng backend được thiết kế và kiểm chứng cho AUTH-01–08; không dùng lời gọi SDK trực tiếp để bỏ qua kiểm tra/audit. |
 | Realtime | Vue kết nối kênh được cấp quyền để nhận tín hiệu thay đổi tối thiểu, sau đó lấy dữ liệu mới qua API. |
-| Truyền file | API cấp quyền cho đúng đường dẫn; trình duyệt có thể truyền trực tiếp tới Storage bằng quyền/URL được cấp. Bước kiểm tra và xác nhận cập nhật nghiệp vụ vẫn qua API. |
+| Truyền file | API cấp quyền cho đúng đường dẫn; trình duyệt có thể truyền trực tiếp tới Storage bằng quyền/URL được cấp. Bước kiểm tra và xác nhận cập nhật nghiệp vụ vẫn qua API. Hiện chỉ áp dụng cho avatar. |
+| Excel | Trình duyệt đọc `.xlsx` và gửi dữ liệu đã trích dạng JSON qua request API thông thường; file không rời trình duyệt. Xuất mẫu cũng tạo tại trình duyệt từ dữ liệu API trả về. |
 
 Không dùng việc frontend có publishable key làm lý do mở quyền đọc/ghi rộng các bảng hoặc RPC. Quyền truy cập trực tiếp ngoài API vẫn phải được thu hẹp và kiểm thử theo mục 4.1–4.3.
 
@@ -65,7 +67,14 @@ Thư mục đang có trong workspace là `metis-v1.0.0/`. Lần ghi nhận tài 
 
 Cloudflare có hướng dẫn [deploy Vue lên Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-vue-site/). Pages mặc định xử lý fallback SPA khi không có `404.html` cấp gốc; khi triển khai cần kiểm tra điều kiện này trên artifact thực tế. [Nguồn routing](https://developers.cloudflare.com/pages/configuration/serving-pages/)
 
-Các thư viện bổ trợ đã khảo sát gồm FullCalendar Standard cho lịch, Tabulator cho bảng phức tạp, Tom Select cho tìm/chọn và SweetAlert2 cho xác nhận. Đây là danh sách ứng viên; phiên bản, wrapper Vue và mức sử dụng sẽ được chốt qua kiểm tra tích hợp. SheetJS CE là ứng viên xử lý XLSX. Biểu đồ chưa chốt giữa Chart.js và ApexCharts; nếu dùng ApexCharts phải đối chiếu [điều kiện cấp phép](https://apexcharts.com/license/), không suy từ giấy phép của template.
+Các thư viện bổ trợ đã khảo sát gồm FullCalendar Standard cho lịch, Tabulator cho bảng phức tạp, Tom Select cho tìm/chọn và SweetAlert2 cho xác nhận. Các gói này đã được cài và khóa phiên bản; wrapper Vue và mức sử dụng vẫn chốt qua kiểm tra tích hợp ở giai đoạn dùng đến. **Đọc/ghi XLSX: chốt SheetJS CE 0.20.3** (Apache-2.0) tại trình duyệt, cài từ kênh phát hành chính thức `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` vì gói `xlsx` trên npm registry dừng ở 0.18.5 và có lỗ hổng đã công bố. Lockfile ghi URL và integrity; khi nâng phiên bản phải đổi URL tarball và xem trang security advisories của SheetJS.
+
+**Biểu đồ: chốt ApexCharts** (quyết định ngày 27/10/2026), dùng `apexcharts` 8.5.0 và `vue3-apexcharts` 1.11.3. ApexCharts không dùng giấy phép MIT mà theo [mô hình theo doanh thu](https://apexcharts.com/license/); không suy từ giấy phép của template:
+
+- **Community License (miễn phí)** chỉ áp dụng khi đơn vị sử dụng — kể cả công ty mẹ/đơn vị liên kết — có doanh thu, ngân sách hoạt động hoặc nguồn tài trợ hằng năm **dưới 2 triệu USD**. Vượt ngưỡng phải mua giấy phép thương mại (Pro/Premium tính theo developer).
+- Chỉ dùng các loại biểu đồ trong gói mặc định. Các tính năng Premium (Unit/Waffle, Raincloud, Trellis, Storyboard, Linked Views, Ink, Measure Ruler, Context Menu, Perspectives, Rewind) cần license key; không import các module này.
+- Community License không cho nhúng vào sản phẩm/nền tảng phân phối cho bên khác dùng (cần OEM). MLedu là ứng dụng nội bộ của trung tâm; nếu sau này đóng gói bán hoặc cung cấp cho đơn vị khác thì phải xem lại giấy phép.
+- Đơn vị vận hành cần xác nhận mình đủ điều kiện Community trước khi đưa lên production. Điều khoản có thể đổi theo phiên bản, nên đọc lại `LICENSE.md` khi nâng cấp gói.
 
 ## 4. Ranh giới backend và dữ liệu
 
@@ -111,21 +120,42 @@ Các thư viện bổ trợ đã khảo sát gồm FullCalendar Standard cho l�
 - Storage upload và transaction PostgreSQL là hai thao tác riêng. Nếu upload thành công nhưng cập nhật hồ sơ/audit thất bại, giữ path cũ và dọn file mới chưa được tham chiếu. Việc dọn phải kiểm tra lại không có hồ sơ đang dùng file; không xóa ảnh còn hiệu lực khi có hai lần đổi ảnh đồng thời. Nhật ký/audit chỉ ghi path và thay đổi nghiệp vụ phù hợp, không ghi token/URL upload hoặc URL đọc có chữ ký.
 - Khi xem ảnh, API kiểm tra quyền và cấp URL ngắn hạn hoặc tải qua luồng có xác thực. URL được sinh khi cần, không lưu làm định danh lâu dài. Signed URL còn dùng được đến hết hạn; nếu chức năng đòi thu hồi quyền đọc ngay tại từng request thì dùng luồng tải kiểm tra quyền mỗi lần. [Nguồn truy cập bucket private](https://supabase.com/docs/guides/storage/buckets/fundamentals).
 
-Lựa chọn này chỉ áp dụng tham chiếu avatar. File Excel tạm và metadata lô nhập tiếp tục theo mô hình staging/preview ở mục 5.1 và ERD.
+Lựa chọn này chỉ áp dụng tham chiếu avatar. Excel không dùng Storage: file được đọc tại trình duyệt theo mục 5.1.
 
 ## 5. Excel, tác vụ và thông báo
 
 ### 5.1. Đồng bộ Excel
 
-Luồng đã chốt: **upload private → backend đọc/kiểm tra → staging và preview → người dùng xác nhận → kiểm tra lại → một transaction áp dụng**.
+Luồng đã chốt (27/10/2026, thay luồng upload file lên backend trước đó): **trình duyệt đọc `.xlsx` → trích thành JSON theo hợp đồng → API kiểm tra và trả bản xem trước (không ghi) → người dùng xác nhận → API kiểm tra lại → một RPC/transaction áp dụng**. File không được upload lên Storage hay Worker; không có bảng staging phía server.
 
-- Backend kiểm tra giới hạn file dưới 10.000.000 byte, tối đa 5.000 dòng, đúng mẫu/phạm vi, `_Meta`, mã ẩn và phiên bản. Không tin dữ liệu đã được frontend kiểm tra.
-- Không thực thi công thức; kiểm tra ô công thức, kiểu dữ liệu, ngày, số điện thoại dạng text và quy tắc ô trống/`XÓA`.
-- Lưu dấu nội dung file thành công theo phạm vi không thời hạn; đổi tên file không vượt chống nhập lại. Preview/hủy/lỗi/không có thay đổi không đánh dấu thành công.
-- Có thể chia bước đọc, chuẩn bị và lưu staging; xác nhận áp dụng vẫn nguyên khối toàn bộ file, cùng đúng một audit.
-- Đo tải với 5.000 dòng và bài 50 thành phần, gồm CPU, bộ nhớ và thời gian RPC. Nếu phải dùng tiến trình parse riêng, đó là điều chỉnh nơi xử lý file; không nới giới hạn hoặc thay đổi tính nguyên khối.
+**Trình duyệt (`apps/web/src/features/imports/`):**
 
-Workers có giới hạn bộ nhớ 128 MB mỗi isolate; Supabase Edge Functions hiện giới hạn CPU 2 giây/request. Chưa có benchmark chứng minh parser cụ thể đáp ứng file cực đại. [Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [Edge Functions limits](https://supabase.com/docs/guides/functions/limits)
+- Chỉ nhận `.xlsx` theo mẫu, dưới 10.000.000 byte, tối đa 5.000 dòng dữ liệu; kiểm tra sheet `DuLieu`/`_Meta`, cột và cột ẩn mã/phiên bản.
+- Đọc giá trị ô, **không tính công thức**: ô có công thức hoặc macro là lỗi. Ngày là ô ngày Excel hoặc `YYYY-MM-DD`; số điện thoại đọc dạng text; giữ đúng nghĩa ô trống và `XÓA` theo XLS-04.
+- Chuyển thành JSON có `rowNumber` và tên cột để gắn lỗi về đúng dòng/cột. Lỗi phát hiện ở trình duyệt được báo ngay nhưng **không thay kiểm tra ở backend**.
+- Xuất mẫu cũng tạo tại trình duyệt từ dữ liệu API trả về (mã ẩn, `PhienBan`, `_Meta`).
+
+**Request gửi về backend là request API JSON thông thường.** Mỗi phạm vi (học sinh tổng, học sinh tại lớp, điểm, nhận xét) có hai thao tác:
+
+| Thao tác | Nội dung | Ghi dữ liệu |
+| --- | --- | --- |
+| Xem trước | `{ scope, meta, rows[] }` → danh sách Thêm/Sửa/Xóa, giá trị hiện tại/dự kiến, lỗi theo dòng/cột, xung đột phiên bản, file đã nhập | Không |
+| Áp dụng | Cùng payload, gửi lại sau khi người dùng xác nhận | Một RPC: toàn bộ dòng, một audit, dấu chống nhập lại |
+
+Các quy tắc XLS-04/05/06 trong `plans.md` giữ nguyên. Hệ quả cho triển khai:
+
+- **Một lần áp dụng là một request và một transaction.** Không tách thành nhiều request ghi theo từng dòng hoặc từng nhóm, vì như vậy không bảo đảm được "lỗi một dòng chặn toàn file", không để lại thay đổi dở dang và đúng một audit.
+- **Backend không tin dữ liệu từ trình duyệt:** kiểm tra lại quyền và phân công hiện hành, số dòng (≤ 5.000), giới hạn kích thước body, kiểu dữ liệu, chuẩn hóa STU-04, mã/phiên bản, khóa công bố, trạng thái lưu trữ, trùng khóa trong file — ở cả bước xem trước và áp dụng.
+- **Chống nhập lại:** backend tính dấu SHA-256 từ payload đã chuẩn hóa theo thứ tự cố định cùng phạm vi/lớp/bài/đợt, lưu không thời hạn khi áp dụng thành công. Tên file không nằm trong dấu nên đổi tên không vượt qua. Hash file do trình duyệt gửi (nếu có) chỉ để hiển thị, không dùng làm khóa.
+- **Giới hạn 10.000.000 byte** là giới hạn của file nên chỉ kiểm tra được ở trình duyệt; backend chặn bằng số dòng và kích thước body. Gọi API trực tiếp không qua file vẫn chịu toàn bộ kiểm tra nghiệp vụ ở trên.
+
+**Hiệu năng — đóng, không đo (quyết định 27/10/2026).** Chấp nhận độ trễ khi đọc file lớn trên trình duyệt (nhất là điện thoại) và khi áp dụng file lớn; không làm benchmark và không coi hiệu năng Excel là điều kiện chặn của bất kỳ giai đoạn nào. Cách làm giảm rủi ro mà không cần số đo:
+
+- Đọc file trong Web Worker để giao diện không bị treo; hiển thị trạng thái đang xử lý.
+- SheetJS đọc với `cellFormula: true` (phát hiện ô công thức để báo lỗi; thư viện không tính công thức) và `cellStyles: true` (đọc cột ẩn); sheet ẩn đọc qua `Workbook.Sheets[].Hidden`.
+- Nếu một lần áp dụng vượt timeout thì xử lý ở tầng DB (khóa, xử lý theo lô trong cùng transaction, cấu hình timeout của RPC), không chia thành nhiều transaction.
+
+Tiêu chí **chức năng** của `plans.md` vẫn phải đạt và được kiểm thử ở GĐ 8: file 5.000 dòng hợp lệ không bị cắt, file 5.001 dòng hoặc từ 10.000.000 byte bị từ chối, cả file nguyên khối với một audit.
 
 ### 5.2. Tác vụ nền và Realtime
 
@@ -143,11 +173,11 @@ Các mục dưới đây là tiêu chí kỹ thuật còn phải chứng minh, k
 2. Thiết kế audit cho thao tác Auth: gọi Auth Admin API rồi ghi audit là hai giao dịch. Phải giải quyết ranh giới này và thử lỗi để đáp ứng yêu cầu audit bắt buộc; không tự hạ xuống cơ chế bù như một ngoại lệ nghiệp vụ. Nếu nền tảng không bảo đảm được cần báo rõ để điều chỉnh triển khai hoặc thống nhất lại yêu cầu.
 3. Kiểm tra quyền với token/phiên cũ, hết phân công giữa preview và xác nhận, tài khoản khóa/xóa và yêu cầu đổi mật khẩu chưa hoàn tất.
 4. Kiểm tra hai yêu cầu đặt phòng/thu tiền/nhập cùng file đồng thời, lỗi audit và rollback đầy đủ.
-5. Benchmark Excel cực đại, thời gian DB function và các timeout trên đường Workers → Supabase. [Nguồn timeout](https://supabase.com/docs/guides/database/postgres/timeouts)
+5. ~~Benchmark Excel cực đại~~ — **đóng ngày 27/10/2026, không đo**; chấp nhận độ trễ (mục 5.1). Vẫn kiểm thử chức năng với file 5.000 dòng ở GĐ 8. Timeout DB tham khảo: [Nguồn timeout](https://supabase.com/docs/guides/database/postgres/timeouts)
 6. Kiểm tra bản build không có template, không chứa secret; route con SPA, màn hình nhỏ và in A4/A5 hoạt động đúng.
 7. Tách môi trường local/staging/production và kiểm tra khôi phục dữ liệu. Backup database của Supabase không bao gồm nội dung file trong Storage, nên cần kế hoạch sao lưu file riêng. [Nguồn backup](https://supabase.com/docs/guides/platform/backups)
 
-Phiên bản patch, parser XLSX cuối cùng, thư viện biểu đồ, nhà cung cấp SMTP và gói compute mua thực tế chưa được chốt bởi tài liệu này. Cấu trúc source có phương án đề xuất trong [kế hoạch triển khai](Implementation-plan.md), cần kiểm chứng khi khởi tạo dự án.
+Đã chốt ngày 27/10/2026: đọc/xuất Excel tại trình duyệt bằng SheetJS CE 0.20.3, ApexCharts cho biểu đồ, không benchmark hiệu năng Excel. Phiên bản patch, nhà cung cấp SMTP và gói compute mua thực tế chưa được chốt bởi tài liệu này. Cấu trúc source có phương án đề xuất trong [kế hoạch triển khai](Implementation-plan.md), cần kiểm chứng khi khởi tạo dự án.
 
 ## 7. So sánh chi phí ở quy mô MLedu
 
@@ -157,7 +187,7 @@ Phiên bản patch, parser XLSX cuối cùng, thư viện biểu đồ, nhà cun
 - Giá niêm yết USD được kiểm tra ngày 26/10/2026; compute theo giờ nên tổng thực tế có thể lệch mốc tháng làm tròn.
 - Quy đổi minh họa **1 USD = 26.000 VND**, chỉ là tỷ giá lập ngân sách, không phải tỷ giá ngân hàng cập nhật.
 - Bảng nền tảng giả định một production project, chưa vượt quota, email nằm trong gói miễn phí và không mua add-on riêng. Staging tính ở bảng riêng.
-- Không gồm thuế, chênh lệch tỷ giá/phí thẻ, tên miền, nhân công phát triển/vận hành, bản quyền tùy chọn, sao lưu ngoài nền tảng, dung lượng vượt quota hoặc dịch vụ parse file bổ sung.
+- Không gồm thuế, chênh lệch tỷ giá/phí thẻ, tên miền, nhân công phát triển/vận hành, bản quyền tùy chọn (kể cả giấy phép thương mại ApexCharts nếu không đủ điều kiện Community), sao lưu ngoài nền tảng hoặc dung lượng vượt quota.
 
 Kịch bản lưu lượng để tính thử, chưa phải số đo thực tế:
 
@@ -168,7 +198,7 @@ Kịch bản lưu lượng để tính thử, chưa phải số đo thực tế:
 | Tác vụ và phần dự phòng khác | Quy ước dự toán | 50.000 |
 | Tổng cơ sở | Cộng ba nhóm | **720.000** |
 
-Nếu 720.000 request cơ sở trung bình 10 ms CPU và thêm 500 lượt xử lý file, mỗi lượt giả sử 1.000 ms CPU, tổng là **720.500 request và 7.700.000 CPU-ms/tháng**. Đây chỉ là ví dụ billing; thời gian chờ network không phải CPU, và parser phải được đo riêng. Lượng request không bao gồm các lượt tải asset tĩnh qua Pages.
+Nếu 720.000 request cơ sở trung bình 10 ms CPU và thêm 1.000 request Excel (xem trước + áp dụng của 500 lần nhập), mỗi request giả sử 200 ms CPU để kiểm tra JSON, tổng là **721.000 request và 7.400.000 CPU-ms/tháng**. Đây chỉ là ví dụ billing: việc đọc file chạy ở trình duyệt nên không tính CPU Worker, thời gian chờ network không phải CPU, và bước kiểm tra JSON phải được đo riêng. Lượng request không bao gồm các lượt tải asset tĩnh qua Pages.
 
 ### 7.2. Chi phí từng dịch vụ
 
@@ -198,7 +228,7 @@ Realtime Pro gồm 5 triệu message/tháng; phần vượt được tính theo 
 | Phương án so sánh: Pages + Supabase Edge Functions/Micro | 0 + (25 + 10 − 10), function trong quota | ≈ $25 | 650.000 | ≈ $300 |
 | Phương án so sánh: Laravel + PostgreSQL tự quản trên một VPS | VPS $24 + backup hằng ngày 30% | ≈ $31.20 | 811.200 | ≈ $374.40 |
 
-Phương án Supabase Edge Functions giả định không dùng Workers Paid, không có tiến trình parse bổ sung và không vượt 2 triệu lượt gọi function/tháng của Pro. Tiết kiệm khoảng $5/tháng so với stack đã chọn, nhưng phải kiểm chứng runtime Excel trước. [Nguồn function usage](https://supabase.com/docs/guides/platform/manage-your-usage/edge-function-invocations)
+Phương án Supabase Edge Functions giả định không dùng Workers Paid và không vượt 2 triệu lượt gọi function/tháng của Pro. Tiết kiệm khoảng $5/tháng so với stack đã chọn; vì Excel được đọc ở trình duyệt, giới hạn CPU 2 giây/request chỉ còn ảnh hưởng tới bước kiểm tra JSON. [Nguồn function usage](https://supabase.com/docs/guides/platform/manage-your-usage/edge-function-invocations)
 
 VPS minh họa là DigitalOcean Basic Regular 4 GiB RAM/2 vCPU giá $24/tháng; backup hằng ngày cộng 30%, tức $7.20. Phương án này tự vận hành ứng dụng, PostgreSQL, worker, cập nhật hệ điều hành và phục hồi. Bảng không mặc định VPS đáp ứng tải và không coi tài nguyên/SLA của VPS tương đương Supabase managed. [Giá Droplet](https://www.digitalocean.com/pricing/droplets), [giá backup](https://www.digitalocean.com/pricing/backups)
 
@@ -219,5 +249,5 @@ Giả định Workers production/staging cùng tài khoản Paid và tổng usag
 - Nếu giữ staging trả phí liên tục, dùng mốc **$40–45/tháng** trước phần dự phòng và các khoản loại trừ. Việc chọn Micro hay Small phải dựa vào đo tải và theo dõi CPU, RAM, query/lock, không chỉ số lượng học sinh.
 - Audit 60 ngày của MLedu nằm trong database ứng dụng và có tính vào dung lượng; retention log của nhà cung cấp không thay cho audit này.
 - Supabase Pro có backup database hằng ngày, giữ 7 ngày. Nếu cần phục hồi tới thời điểm gần sự cố hơn, PITR là add-on riêng: mốc 7 ngày khoảng $100/tháng và cần tối thiểu compute Small. Như vậy stack Small + Workers + PITR vào khoảng **$135/tháng**, chưa gồm staging/chi phí khác. Đây là lựa chọn về phục hồi chưa được quyết định mua. [Nguồn backup/PITR](https://supabase.com/docs/guides/platform/backups)
-- Sao lưu nội dung Storage ra nơi khác, tên miền, email trả phí, dung lượng/egress vượt quota, tăng compute và tiến trình parse riêng có thể phát sinh thêm. Chưa gộp các khoản chưa có yêu cầu hoặc số đo vào mốc $30/$35.
+- Sao lưu nội dung Storage ra nơi khác, tên miền, email trả phí, dung lượng/egress vượt quota, tăng compute và giấy phép thương mại ApexCharts (khi đơn vị từ 2 triệu USD/năm trở lên hoặc cần tính năng Premium) có thể phát sinh thêm. Chưa gộp các khoản chưa có yêu cầu hoặc số đo vào mốc $30/$35.
 - Giới hạn CPU mỗi request, giới hạn tần suất tra cứu công khai và cảnh báo usage giúp kiểm soát chi phí. Kiểm tra lại bảng giá khi triển khai; không coi spend cap là trần cho mọi hạng mục, đặc biệt compute. [Nguồn compute billing](https://supabase.com/docs/guides/platform/manage-your-usage/compute)

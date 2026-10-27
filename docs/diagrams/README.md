@@ -1,8 +1,8 @@
 # ERD MLedu
 
-Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc diagrams.net. File chứa **54 thực thể logic**, một trang mục lục và **9 trang ERD chi tiết**. Bảng, thuộc tính, đường nối và ghi chú đều chỉnh sửa được; mục lục và bảng có phụ đề `THAM CHIẾU` liên kết tới trang tương ứng.
+Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc diagrams.net. File chứa **52 thực thể logic**, một trang mục lục và **9 trang ERD chi tiết**. Bảng, thuộc tính, đường nối và ghi chú đều chỉnh sửa được; mục lục và bảng có phụ đề `THAM CHIẾU` liên kết tới trang tương ứng.
 
-Đây là **thiết kế đề xuất từ đặc tả**, không phải sơ đồ reverse-engineer từ database đang chạy. Nguồn nghiệp vụ là [plans.md](../developer/plans.md); lựa chọn nền tảng theo [techstack.md](../developer/techstack.md), đặc biệt các mục 1, 4, 5 và 6. Tên bảng, kiểu dữ liệu, việc gộp tháng/kỳ và cách lưu phiên bản là lựa chọn mô hình hóa để review, chưa phải migration triển khai. Các giai đoạn và cấu trúc source được đề xuất trong [kế hoạch triển khai MLedu](../developer/Implementation-plan.md).
+Đây là **thiết kế đề xuất từ đặc tả**, không phải sơ đồ reverse-engineer từ database đang chạy. Nguồn nghiệp vụ là [plans.md](../developer/plans.md); lựa chọn nền tảng theo [techstack.md](../developer/techstack.md), đặc biệt các mục 1, 4, 5 và 6. Tên bảng, kiểu dữ liệu, việc gộp tháng/kỳ và cách lưu phiên bản là lựa chọn mô hình hóa để review. Ngoại lệ: các bảng nền GĐ 1 (`account_profiles`, `audit_events`, `business_entity_versions`, `outbox_events`, `outbox_deliveries`) đã có migration trong `supabase/migrations/`; metadata của chúng ghi `"proposed": false` kèm đường dẫn migration, và migration là nguồn đúng khi hai bên lệch nhau. Các giai đoạn và cấu trúc source được đề xuất trong [kế hoạch triển khai MLedu](../developer/Implementation-plan.md).
 
 ## Các trang
 
@@ -16,7 +16,7 @@ Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc di
 | 05 | Hình thức thu, tháng/kỳ, mức gốc, nghĩa vụ và điều chỉnh học phí | FEE-01–04, FEE-07–10 |
 | 06 | Cấu hình ngoài học phí, lựa chọn học sinh theo thời gian và lần phát sinh | FEE-07, FEE-11 |
 | 07 | Lần thu, chi tiết tiền thực nhận và sự kiện Admin gỡ thu sai | FEE-03, FEE-05–06, DASH-01 |
-| 08 | File private, lô nhập, staging/preview và dấu chống nhập lại | XLS-01–06, AUD-01 |
+| 08 | Lần áp dụng Excel thành công và dấu chống nhập lại; file đọc tại trình duyệt | XLS-01–06, AUD-01 |
 | 09 | Phiên bản nghiệp vụ dài hạn, audit, job, outbox và thông báo | AUD-01, NOTIF-01, tech stack mục 5 |
 
 REPORT-01 và DASH-01 dùng dữ liệu buổi/điểm danh, nghĩa vụ và chi tiết thu; không cần thêm bảng lưu bản in hoặc tổng dashboard. UX-01 lưu lựa chọn ngôn ngữ/giao diện trên trình duyệt, nên không có bảng tùy chọn theo tài khoản.
@@ -27,7 +27,8 @@ REPORT-01 và DASH-01 dùng dữ liệu buổi/điểm danh, nghĩa vụ và chi
 - Đường nối đi từ bảng cha tới bảng con. Đầu cha là `1` hoặc `0..1` nếu FK tùy chọn; đầu con là `0..N`, hoặc `0..1` nếu FK duy nhất. Các đường giao nhau dùng cầu vượt, không có nghĩa nối chung.
 - Đường trên mỗi trang là phần quan hệ liên quan tới trang đó. FK tới actor hoặc bảng ở trang khác vẫn có trong metadata bảng; danh mục cuối tài liệu ghi đầy đủ đích tham chiếu.
 - Chỉ hiển thị thuộc tính quan trọng. `phone, birth_date` hoặc `starts_on, ends_on` là cách rút gọn nhiều cột, không phải một cột SQL. Các bảng nghiệp vụ dùng timestamp, actor, lý do và `row_version` theo phạm vi; không suy rằng mọi bảng đều có cùng bộ cột hoặc cùng chính sách xóa mềm.
-- `auth.users`, `auth.sessions` và `storage.objects` là lược trích các thực thể do Supabase quản lý. Không thiết kế lại schema nội bộ của nền tảng. Avatar dùng `account_profiles.avatar_path`, không tạo FK tới `storage.objects`. FK `import_batches.source_object_id` chỉ tham chiếu file nhập tạm; khi dọn file cần bỏ tham chiếu hoặc `ON DELETE SET NULL`, giữ metadata lô nhập.
+- `auth.users` và `auth.sessions` là lược trích các thực thể do Supabase quản lý. Không thiết kế lại schema nội bộ của nền tảng. Avatar dùng `account_profiles.avatar_path` trong bucket private, không tạo FK tới `storage.objects` nên sơ đồ không vẽ bảng này.
+- **Vẽ lại ngày 27/10/2026:** Excel được đọc tại trình duyệt và gửi về API dạng JSON ([tech stack mục 5.1](../developer/techstack.md#51-đồng-bộ-excel)). Trang 08 bỏ `storage.objects`, `import_batches.source_object_id` và `import_staging_rows`; `import_batches` chỉ ghi lần áp dụng thành công (người áp dụng, phạm vi, `payload_hash`, số dòng/thay đổi) cùng transaction với dữ liệu và audit; `import_success_fingerprints` giữ dấu tính từ payload chuẩn hóa + phạm vi. Xem trước không ghi bảng nào.
 
 ## Các quyết định mô hình quan trọng
 
@@ -42,7 +43,7 @@ REPORT-01 và DASH-01 dùng dữ liệu buổi/điểm danh, nghĩa vụ và chi
 9. **Giữ lựa chọn khoản ngoài theo thời gian.** Cấu hình gồm các phiên bản, lựa chọn học sinh có mốc hiệu lực và lần phát sinh riêng. Nghĩa vụ thực tế vẫn gắn hồ sơ lớp. Định kỳ theo kỳ chỉ dùng kỳ học phí có sẵn; thay cấu hình hoặc thêm đối tượng không tạo khoản hồi tố. Khóa lần phát sinh không phụ thuộc revision cấu hình.
 10. **Thu đủ một khoản và giữ bản thu cũ.** Một lần thu đúng một học sinh/một lớp, có thể chứa nhiều khoản và nhiều hồ sơ lịch sử của chính học sinh/lớp đó. RPC kiểm tra sự phù hợp này, phiên bản tiền, điều chỉnh và việc thu đủ. Một khoản có tối đa một chi tiết thu chưa gỡ. Gỡ sai gắn sự kiện Admin vào chi tiết đã chọn; snapshot tiền cũ không đổi. `void_action_id` phải thuộc cùng lần thu của chi tiết. Không thêm trả góp, hoàn tiền, quá hạn hoặc khóa sổ chưa có trong đặc tả.
 11. **Lịch sử dài hạn tách khỏi audit.** `business_entity_versions` là phương án lưu phiên bản trước/sau dạng JSONB, loại trừ bí mật, với khóa loại đối tượng/id/phiên bản. Đây là tham chiếu logic được RPC kiểm soát, không giả định PostgreSQL có FK đa hình. Các bảng lịch sử chuyên biệt như mức phí, điều chỉnh và gỡ thu vẫn giữ bất biến theo miền. Chỉ audit và thông báo có thời hạn 60 ngày theo đặc tả.
-12. **Excel và thông báo có chống trùng riêng.** Dấu nhập thành công giữ không thời hạn theo hash và scope đã chuẩn hóa; chỉ ghi khi cả file có thay đổi và áp dụng thành công. Một lô có tối đa một audit hiện còn trong thời hạn lưu. Outbox/delivery giữ khóa sự kiện/người nhận để việc dọn thông báo không làm mất dấu chống trùng.
+12. **Excel và thông báo có chống trùng riêng.** Dấu nhập thành công giữ không thời hạn theo hash (do backend tính) của payload đã chuẩn hóa và scope; chỉ ghi khi cả file có thay đổi và áp dụng thành công. Một lô có tối đa một audit hiện còn trong thời hạn lưu. Outbox/delivery giữ khóa sự kiện/người nhận để việc dọn thông báo không làm mất dấu chống trùng.
 13. **Avatar lưu path, file nằm trong Storage.** `account_profiles.avatar_path` là `text NULL`, lưu đường dẫn tương đối trong bucket private `avatars`, ví dụ `<user_id>/<file_id>.webp`. Tên bucket dùng cấu hình ứng dụng; không lưu binary/Base64 hoặc signed URL vào hồ sơ. API kiểm tra quyền sở hữu, loại ảnh và giới hạn 5.000.000 byte trước khi cập nhật path cùng audit. File chưa được hồ sơ tham chiếu là file chờ xử lý; lỗi cập nhật phải giữ avatar cũ và dọn file mới. Đọc ảnh qua URL có thời hạn hoặc luồng tải được cấp quyền. Chi tiết tại [tech stack mục 4.5](../developer/techstack.md#45-avatar-và-luồng-lưu-file).
 
 ## Những điều ERD không tự bảo đảm
@@ -110,9 +111,7 @@ Danh mục FK bên dưới liệt kê cả các quan hệ không lặp lại tr�
 | `payments` | payments | `student_id` → `students`; `class_id` → `classes`; `collected_by` → `account_profiles` |
 | `payment_void_actions` | payments | `payment_id` → `payments`; `voided_by` → `account_profiles` |
 | `payment_lines` | payments | `payment_id` → `payments`; `receivable_id` → `receivables`; `adjustment_version_id` → `tuition_adjustment_versions`; `void_action_id` → `payment_void_actions` |
-| `storage.objects` | imports | — |
-| `import_batches` | imports | `uploaded_by` → `account_profiles`; `source_object_id` → `storage.objects`; `class_id` → `classes`; `test_id` → `tests`; `round_id` → `comment_rounds` |
-| `import_staging_rows` | imports | `import_id` → `import_batches` |
+| `import_batches` | imports | `applied_by` → `account_profiles`; `class_id` → `classes`; `test_id` → `tests`; `round_id` → `comment_rounds` |
 | `import_success_fingerprints` | imports | `import_id` → `import_batches` |
 | `business_entity_versions` | operations | `changed_by` → `account_profiles` |
 | `background_jobs` | operations | `outbox_event_id` → `outbox_events` |

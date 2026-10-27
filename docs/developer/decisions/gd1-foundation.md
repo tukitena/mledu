@@ -39,9 +39,8 @@ giai đoạn tương ứng bắt đầu (techstack §3).
 | `tabulator-tables` (+ `@types/tabulator-tables` 6.3.6) | 6.7.1 | GĐ 3+ | Bảng phức tạp |
 | `tom-select` | 2.6.2 | GĐ 3+ | Tìm/chọn; Apache-2.0 |
 | `sweetalert2` | 11.26.25 | GĐ 3+ | Hộp xác nhận |
-
-Chưa cài: parser XLSX (chờ benchmark G1-03 quyết định nơi parse) và thư viện biểu đồ
-(Chart.js/ApexCharts chưa chốt, ApexCharts cần đối chiếu giấy phép).
+| `apexcharts` + `vue3-apexcharts` | 8.5.0 + 1.11.3 | GĐ 9 (DASH-01) | Chốt ngày 27/10/2026; giấy phép theo doanh thu (miễn phí dưới 2 triệu USD/năm, không dùng tính năng Premium) — techstack §3 |
+| `xlsx` (SheetJS CE) | 0.20.3 | GĐ 8 (XLS-01–06) | Chốt ngày 27/10/2026; cài từ `cdn.sheetjs.com` (bản npm registry cũ, có lỗ hổng); Apache-2.0 — techstack §3, §5.1 |
 
 ### Mã thử nghiệm GĐ 0 trong repository
 
@@ -97,7 +96,7 @@ Git hoặc `VITE_*`. Không có workflow deploy; production chỉ deploy sau ph�
 | Cột `import_id`/`job_id` của audit, `class_id` của outbox | Thêm cùng bảng đích (GĐ 8/9/3) |
 | Access Token Hook, lệnh Auth có audit nguyên khối, self-service mật khẩu | G1-05, GĐ 2 |
 | Bucket `avatars`, Storage policy, luồng avatar | G1-02, GĐ 2 |
-| `npm run test:performance` | G1-03 (benchmark Excel) |
+| `npm run test:performance` | GĐ 10 (quy mô dữ liệu); benchmark Excel G1-03 đã đóng, không đo |
 | i18n Việt/Anh, theme, layout theo quyền | GĐ 2 |
 
 ## Bằng chứng (local, 26/10/2026)
