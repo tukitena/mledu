@@ -73,6 +73,11 @@ const navItems = computed(() => [
   ...(workspace.value === 'admin'
     ? [{ name: 'accounts', icon: 'bi-people', label: t('nav.accounts') }]
     : []),
+  {
+    name: 'classes',
+    icon: 'bi-easel',
+    label: workspace.value === 'user' ? t('nav.myClasses') : t('nav.classes'),
+  },
   { name: 'students', icon: 'bi-person-badge', label: t('nav.students') },
   ...(workspace.value === 'admin' || workspace.value === 'receptionist'
     ? [{ name: 'catalogs', icon: 'bi-collection', label: t('nav.catalogs') }]
@@ -248,6 +253,7 @@ async function onSignOut() {
             class="nav-link"
             :to="{ name: item.name }"
             exact-active-class="active"
+            :class="{ active: route.meta.navParent === item.name }"
             :data-testid="`nav-${item.name}`"
             :title="item.label"
             :aria-label="item.label"

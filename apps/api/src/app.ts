@@ -9,6 +9,7 @@ import { AppError, codeForStatus } from './lib/errors'
 import { accountRoutes } from './modules/accounts/routes'
 import { authRoutes } from './modules/auth/routes'
 import { catalogRoutes, roomRoutes, siteRoutes } from './modules/catalogs/routes'
+import { assignmentRoutes, classRoutes } from './modules/classes/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
 import { studentRoutes } from './modules/students/routes'
@@ -61,6 +62,8 @@ export function createApp() {
   app.route(`/${API_VERSION}/sites`, siteRoutes)
   app.route(`/${API_VERSION}/rooms`, roomRoutes)
   app.route(`/${API_VERSION}/students`, studentRoutes)
+  app.route(`/${API_VERSION}/classes`, classRoutes)
+  app.route(`/${API_VERSION}/assignments`, assignmentRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

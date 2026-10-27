@@ -8,6 +8,8 @@ declare module 'vue-router' {
     public?: boolean
     /** Signed-in users are sent on to the app. */
     guestOnly?: boolean
+    /** Sidebar entry highlighted for a page that has none of its own. */
+    navParent?: string
     /**
      * Workspaces whose function set includes the page; the first one the account
      * may use is selected when the current workspace does not offer it.
@@ -66,6 +68,17 @@ export const router = createRouter({
           path: 'students',
           name: 'students',
           component: () => import('../features/students/StudentsPage.vue'),
+        },
+        {
+          path: 'classes',
+          name: 'classes',
+          component: () => import('../features/classes/ClassesPage.vue'),
+        },
+        {
+          path: 'classes/:id',
+          name: 'class-detail',
+          component: () => import('../features/classes/ClassDetailPage.vue'),
+          meta: { navParent: 'classes' },
         },
         {
           path: 'catalogs',

@@ -93,8 +93,11 @@ test('a type change reaches the open session without signing in again (AUTH-07)'
     accountType: 'receptionist',
     expectedVersion: me.body.rowVersion,
   })
-  // The SPA re-reads the profile when the window regains focus.
+  // The API applies the new type to the next request; the SPA re-reads the
+  // profile every 5 minutes (not on focus) or when the page is reloaded.
   await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByTestId('workspace-note')).toContainText('Giảng dạy')
+  await page.reload()
   await expect(page.getByTestId('workspace-note')).toContainText('Lễ tân')
 })
 

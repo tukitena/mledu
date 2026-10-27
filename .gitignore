@@ -63,6 +63,7 @@ supabase/.branches/
 !/supabase/seeds/00-account.sql
 !/supabase/seeds/10-catalogs.sql
 !/supabase/seeds/20-students.sql
+!/supabase/seeds/30-classes.sql
 
 # Test reports and coverage.
 coverage/

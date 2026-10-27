@@ -24,6 +24,28 @@ export type Database = {
       auth_command_status: { Args: { p_command_id: string }; Returns: string }
       clear_my_avatar: { Args: { p_expected_version: number }; Returns: Json }
       create_catalog_entry: { Args: { p_kind: string; p_name: string }; Returns: Json }
+      create_class: {
+        Args: {
+          p_end_date: string
+          p_grade_id: string
+          p_name: string
+          p_note?: string
+          p_start_date: string
+          p_subject_id: string
+        }
+        Returns: Json
+      }
+      create_class_assignment: {
+        Args: {
+          p_account_id: string
+          p_class_id: string
+          p_end_date: string
+          p_role: string
+          p_start_date: string
+          p_subject_note?: string
+        }
+        Returns: Json
+      }
       create_room: { Args: { p_name: string; p_site_id: string }; Returns: Json }
       create_site: { Args: { p_address: string; p_name: string }; Returns: Json }
       create_student: {
@@ -47,7 +69,12 @@ export type Database = {
         }[]
       }
       discard_avatar_upload: { Args: { p_path: string }; Returns: boolean }
+      end_class_assignment: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
       get_account: { Args: { p_account_id: string }; Returns: Json }
+      get_class: { Args: { p_id: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       get_student: { Args: { p_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
@@ -55,8 +82,14 @@ export type Database = {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
         Returns: Json
       }
+      list_assignable_accounts: { Args: Record<PropertyKey, never>; Returns: Json }
       list_catalog_entries: {
         Args: { p_include_archived?: boolean; p_kind: string }
+        Returns: Json
+      }
+      list_class_assignments: { Args: { p_class_id: string }; Returns: Json }
+      list_classes: {
+        Args: { p_deleted?: boolean; p_limit?: number; p_offset?: number; p_search?: string }
         Returns: Json
       }
       list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
@@ -137,6 +170,30 @@ export type Database = {
       }
       soft_delete_student: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      update_class: {
+        Args: {
+          p_end_date: string
+          p_expected_version: number
+          p_grade_id: string
+          p_id: string
+          p_name: string
+          p_note: string
+          p_start_date: string
+          p_subject_id: string
+        }
+        Returns: Json
+      }
+      update_class_assignment: {
+        Args: {
+          p_end_date: string
+          p_expected_version: number
+          p_id: string
+          p_role: string
+          p_start_date: string
+          p_subject_note: string
+        }
         Returns: Json
       }
       update_my_profile: {

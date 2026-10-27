@@ -23,6 +23,8 @@ export const en: typeof vi = {
   nav: {
     dashboard: 'Overview',
     accounts: 'Accounts',
+    classes: 'Classes',
+    myClasses: 'My classes',
     students: 'Students',
     catalogs: 'Catalogs',
     profile: 'My profile',
@@ -225,6 +227,72 @@ export const en: typeof vi = {
     archivedDuplicateHint:
       'Turn on “Show archived” to find the matching record and choose Restore.',
   },
+  classes: {
+    title: 'Classes',
+    subtitle: 'Multi-subject classes with dated teachers and assistants. Dates use Vietnam time.',
+    myTitle: 'My classes',
+    mySubtitle: 'Classes where your teacher or assistant assignment is in effect.',
+    create: 'Create class',
+    editTitle: 'Edit {name}',
+    searchPlaceholder: 'Search by class name',
+    choose: 'Choose…',
+    columns: {
+      name: 'Class',
+      subjectGrade: 'Subject · Grade',
+      dates: 'Dates',
+      staff: 'Current staff',
+      status: 'Status',
+    },
+    fields: {
+      name: 'Class name',
+      subject: 'Subject',
+      grade: 'Grade',
+      startDate: 'Opening date',
+      endDate: 'End date',
+      note: 'Note',
+    },
+    period: { upcoming: 'Not started', running: 'Running', ended: 'Ended' },
+    closed: 'Closed',
+    tabs: { staff: 'Staff' },
+    actions: { open: 'Open', edit: 'Edit' },
+    myRole: 'You: {role}',
+    backToList: 'All classes',
+    dateRule:
+      'Once the class has started or has participants, its opening date is locked and the end date must be today or later.',
+    empty: 'No matching classes.',
+    myEmpty: 'You have no class assignment in effect.',
+    total: '{n} classes',
+    saved: 'Saved class {name}.',
+  },
+  assignments: {
+    create: 'Add staff',
+    editTitle: 'Edit assignment of {name}',
+    columns: {
+      person: 'Staff',
+      role: 'Role',
+      dates: 'Dates',
+      subjectNote: 'Speciality',
+      status: 'Status',
+    },
+    fields: { startDate: 'Start date', endDate: 'End date' },
+    role: { teacher: 'Teacher', assistant: 'Assistant' },
+    status: {
+      not_started: 'Not started',
+      active: 'In effect',
+      expired: 'Expired',
+      ended: 'Ended early',
+      cancelled: 'Cancelled',
+    },
+    actions: { edit: 'Edit', end: 'End now', cancel: 'Cancel assignment' },
+    hint: 'Dates lie within the class dates. One person holds one role in a class at a time.',
+    startedHint:
+      'The assignment is in effect: only the end date (today or later) and speciality can change.',
+    endHint: 'End the assignment of {name} now? Class rights stop at once; history is kept.',
+    cancelHint: 'Cancel the not-yet-started assignment of {name}? The record stays in history.',
+    empty: 'No staff assigned yet.',
+    saved: 'Saved the assignment of {name}.',
+    done: { end: 'Ended the assignment of {name}.', cancel: 'Cancelled the assignment of {name}.' },
+  },
   students: {
     title: 'Students',
     subtitle:
@@ -294,6 +362,16 @@ export const en: typeof vi = {
       'Matches a deleted student with the same name and parent phone. Restore that record instead.',
     parent_phone_required:
       'Another student has the same name (accents ignored). Add at least one parent phone that differs.',
+    class_dates_locked:
+      'The class has activity: its opening date is locked and its end date must be today or later.',
+    outside_class_dates: 'Assignment dates must lie within the class opening and end dates.',
+    account_not_assignable: 'Only enabled, non-deleted User or Admin accounts can be assigned.',
+    assignment_overlap:
+      'This person already has an assignment in the class for part of that period (one role at a time).',
+    assignment_locked:
+      'The assignment has started: role and start date are fixed; the end date must be today or later.',
+    assignment_in_effect:
+      'The account still has an assignment in effect. End those assignments first.',
     site_archived: 'The site is archived: rooms cannot be added to, moved to or restored into it.',
     avatar_invalid: 'Invalid image: JPG, PNG or WebP up to 5,000,000 bytes only.',
     not_found: 'Not found.',

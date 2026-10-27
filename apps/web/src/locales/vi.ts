@@ -21,6 +21,8 @@ export const vi = {
   nav: {
     dashboard: 'Tổng quan',
     accounts: 'Tài khoản',
+    classes: 'Lớp học',
+    myClasses: 'Lớp của tôi',
     students: 'Học sinh',
     catalogs: 'Danh mục',
     profile: 'Hồ sơ cá nhân',
@@ -232,6 +234,73 @@ export const vi = {
     },
     archivedDuplicateHint: 'Bật “Hiện mục đã lưu trữ” để tìm mục trùng tên và chọn Khôi phục.',
   },
+  classes: {
+    title: 'Lớp học',
+    subtitle: 'Lớp đa môn với giáo viên, trợ giảng theo thời hạn. Ngày tính theo giờ Việt Nam.',
+    myTitle: 'Lớp của tôi',
+    mySubtitle: 'Các lớp bạn đang có phân công giáo viên hoặc trợ giảng còn hiệu lực.',
+    create: 'Tạo lớp',
+    editTitle: 'Sửa lớp {name}',
+    searchPlaceholder: 'Tìm theo tên lớp',
+    choose: 'Chọn…',
+    columns: {
+      name: 'Tên lớp',
+      subjectGrade: 'Môn · Khối',
+      dates: 'Thời gian',
+      staff: 'Nhân sự hiện tại',
+      status: 'Trạng thái',
+    },
+    fields: {
+      name: 'Tên lớp',
+      subject: 'Môn',
+      grade: 'Khối',
+      startDate: 'Ngày mở',
+      endDate: 'Ngày kết thúc',
+      note: 'Ghi chú',
+    },
+    period: { upcoming: 'Chưa mở', running: 'Đang diễn ra', ended: 'Đã kết thúc' },
+    closed: 'Lớp đóng',
+    tabs: { staff: 'Nhân sự' },
+    actions: { open: 'Xem lớp', edit: 'Sửa' },
+    myRole: 'Bạn: {role}',
+    backToList: 'Danh sách lớp',
+    dateRule:
+      'Khi lớp đã bắt đầu hoặc có học sinh tham gia, ngày mở bị khóa và ngày kết thúc chỉ đặt từ hôm nay trở đi.',
+    empty: 'Chưa có lớp phù hợp.',
+    myEmpty: 'Bạn chưa có phân công lớp nào còn hiệu lực.',
+    total: '{n} lớp',
+    saved: 'Đã lưu lớp {name}.',
+  },
+  assignments: {
+    create: 'Thêm nhân sự',
+    editTitle: 'Sửa phân công của {name}',
+    columns: {
+      person: 'Nhân sự',
+      role: 'Vai trò',
+      dates: 'Thời hạn',
+      subjectNote: 'Môn phụ trách',
+      status: 'Trạng thái',
+    },
+    fields: { startDate: 'Ngày bắt đầu', endDate: 'Ngày kết thúc' },
+    role: { teacher: 'Giáo viên', assistant: 'Trợ giảng' },
+    status: {
+      not_started: 'Chưa bắt đầu',
+      active: 'Đang hiệu lực',
+      expired: 'Hết hạn',
+      ended: 'Kết thúc sớm',
+      cancelled: 'Đã hủy',
+    },
+    actions: { edit: 'Sửa', end: 'Kết thúc sớm', cancel: 'Hủy phân công' },
+    hint: 'Thời hạn nằm trong ngày mở – kết thúc của lớp. Một người chỉ giữ một vai trò trong lớp tại một thời điểm.',
+    startedHint:
+      'Phân công đang hiệu lực: chỉ đổi được ngày kết thúc (từ hôm nay trở đi) và môn phụ trách.',
+    endHint:
+      'Kết thúc phân công của {name} ngay bây giờ? Quyền với lớp dừng ngay; lịch sử được giữ.',
+    cancelHint: 'Hủy phân công chưa bắt đầu của {name}? Bản ghi vẫn được lưu trong lịch sử.',
+    empty: 'Lớp chưa có nhân sự.',
+    saved: 'Đã lưu phân công của {name}.',
+    done: { end: 'Đã kết thúc phân công của {name}.', cancel: 'Đã hủy phân công của {name}.' },
+  },
   students: {
     title: 'Học sinh',
     subtitle:
@@ -305,6 +374,17 @@ export const vi = {
       'Trùng học sinh đã xóa: cùng họ tên và chung số phụ huynh. Hãy khôi phục hồ sơ đó thay vì tạo mới.',
     parent_phone_required:
       'Đã có học sinh cùng họ tên (không phân biệt dấu). Cần ít nhất một số phụ huynh không trùng.',
+    class_dates_locked:
+      'Lớp đã có hoạt động: không đổi ngày mở, ngày kết thúc chỉ được đặt từ hôm nay trở đi.',
+    outside_class_dates: 'Thời hạn phân công phải nằm trong ngày mở và ngày kết thúc của lớp.',
+    account_not_assignable:
+      'Chỉ phân công tài khoản Người dùng hoặc Admin đang hoạt động, chưa bị xóa.',
+    assignment_overlap:
+      'Người này đã có phân công trong lớp trùng thời gian (một người chỉ một vai trò tại một thời điểm).',
+    assignment_locked:
+      'Phân công đã bắt đầu: không đổi vai trò, ngày bắt đầu; ngày kết thúc chỉ đặt từ hôm nay trở đi.',
+    assignment_in_effect:
+      'Tài khoản còn phân công đang hiệu lực. Hãy kết thúc các phân công đó trước.',
     site_archived: 'Địa điểm đã lưu trữ: không thể thêm, chuyển hoặc khôi phục phòng vào đó.',
     avatar_invalid: 'Ảnh không hợp lệ: chỉ nhận JPG, PNG hoặc WebP tối đa 5.000.000 byte.',
     not_found: 'Không tìm thấy dữ liệu.',

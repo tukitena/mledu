@@ -237,8 +237,8 @@ biên bản chốt GĐ 0 vẫn mở. Schema `spike_private` và API Node của G
 ### Giai đoạn 2 — Xác thực, phân quyền, hồ sơ và avatar
 
 **Trạng thái: triển khai local ngày 27/10/2026** — xem [biên bản GĐ 2](decisions/gd2-auth-profile.md).
-Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của AUTH-04/07 chờ dữ liệu
-phân công ở GĐ 3; báo lỗi email cho Admin và dọn file/lệnh hết hạn thuộc GĐ 9.
+Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của AUTH-04/07 đã bổ sung ở GĐ 3
+(tính năng lớp và phân công); báo lỗi email cho Admin và dọn file/lệnh hết hạn thuộc GĐ 9.
 
 **Phạm vi:** AUTH-01–08, phần nền UX-01. Tệp chính: `apps/web/src/features/auth/`, `apps/web/src/features/profile/`, `apps/api/src/modules/auth/`, `apps/api/src/modules/profile/`, `packages/contracts/src/profile.ts`, migration tài khoản/quyền và Storage policy.
 

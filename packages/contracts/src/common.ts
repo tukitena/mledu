@@ -66,6 +66,18 @@ export const ErrorCode = z.enum([
   'duplicate_student_archived',
   /** Another student has the same name key; at least one parent phone is needed (STU-04). */
   'parent_phone_required',
+  /** CLASS-03: after the class has activity its opening date is locked and its end date stays ≥ today. */
+  'class_dates_locked',
+  /** CLASS-01: assignment dates must lie within the class dates. */
+  'outside_class_dates',
+  /** CLASS-01: only enabled, non-deleted User/Admin accounts can be assigned. */
+  'account_not_assignable',
+  /** CLASS-01/02: the person already has an assignment in this class for part of that period. */
+  'assignment_overlap',
+  /** CLASS-01: a started assignment keeps its role and start date; its end date stays ≥ today. */
+  'assignment_locked',
+  /** AUTH-04/07: an assignment is in effect; `details` lists the classes ({path: 'class'}). */
+  'assignment_in_effect',
   'not_found',
   'method_not_allowed',
   'version_conflict',
