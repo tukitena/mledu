@@ -4,7 +4,8 @@ import { IsoDate, RowVersion } from './common'
 
 /**
  * Student master records (STU-04/01/02). Every internal account searches the
- * whole centre; Admin and Receptionist create, edit, soft-delete and restore.
+ * whole centre. Assigned teachers/assistants can edit existing active profiles;
+ * creation, soft deletion and restoration remain Admin/Receptionist-only.
  */
 export const StudentStatus = z.enum(['active', 'deleted'])
 export type StudentStatus = z.infer<typeof StudentStatus>
@@ -25,6 +26,8 @@ export const Student = z.object({
   deletedAt: z.string().nullable(),
   deletedReason: z.string().nullable(),
   createdAt: z.string(),
+  /** Request-time capability; writes always recheck assignment and scope. */
+  canEdit: z.boolean(),
   rowVersion: RowVersion,
 })
 export type Student = z.infer<typeof Student>

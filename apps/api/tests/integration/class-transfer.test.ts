@@ -223,7 +223,7 @@ it('cancels future participation, closes enrollment, and restores a deleted clas
   expect((await read(source.id))[0]!.participations[0]!.status).toBe('cancelled')
 })
 
-it('enforces assignment scope on every read, manager-only writes, and revoked sessions', async () => {
+it('enforces assignment scope on every read, manager-only enrollment, and revoked sessions', async () => {
   const { source, student } = await fixture()
   const user = await createReadyAccount(admin, 'enrollment-reader')
   const token = user.session.accessToken

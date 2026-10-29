@@ -20,7 +20,7 @@ import PhoneListField from '../../components/PhoneListField.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
 
 // Student master records (STU-04/01/02). Every workspace searches the whole
-// centre; Admin/Receptionist workspaces manage. The API enforces both.
+// centre; management and assignment-scoped editing are separate capabilities.
 const { t, locale } = useI18n()
 const PAGE_SIZE = 20
 
@@ -189,14 +189,15 @@ async function confirmDelete() {
 
 function actionsFor(student: Student): RowAction[] {
   const view = { key: 'view', label: t('students.actions.view') }
-  if (!canManage.value) return [view]
-  return student.status === 'deleted'
-    ? [view, { key: 'restore', label: t('students.actions.restore') }]
-    : [
-        view,
-        { key: 'edit', label: t('students.actions.edit') },
-        { key: 'delete', label: t('students.actions.delete'), danger: true },
-      ]
+  const actions: RowAction[] = [view]
+  if (student.status === 'active' && student.canEdit)
+    actions.push({ key: 'edit', label: t('students.actions.edit') })
+  if (canManage.value) {
+    if (student.status === 'deleted')
+      actions.push({ key: 'restore', label: t('students.actions.restore') })
+    else actions.push({ key: 'delete', label: t('students.actions.delete'), danger: true })
+  }
+  return actions
 }
 
 async function onAction(student: Student, key: string) {
@@ -415,6 +416,9 @@ const formatPhones = (phones: string[]) => phones.join(', ')
       </p>
       <p v-else-if="formMode === 'create'" class="small text-body-secondary">
         {{ t('students.createHint') }}
+      </p>
+      <p v-else class="small text-body-secondary" data-testid="student-shared-hint">
+        {{ t('students.sharedEditHint') }}
       </p>
       <ErrorAlert :error="actionError" />
       <form id="student-form" novalidate @submit.prevent="submitForm">

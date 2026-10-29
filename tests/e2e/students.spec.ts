@@ -58,7 +58,7 @@ test('Receptionist creates, finds, soft-deletes and restores a student', async (
   await expect(page.getByText(`Đã khôi phục ${name} (${code})`)).toBeVisible()
 })
 
-test('a User searches students but cannot change them', async ({ page }) => {
+test('an unassigned User searches students but cannot change them', async ({ page }) => {
   await signInThroughUi(page, 'user@example.com', FIXTURE_PASSWORD)
   await expect(page.getByTestId('welcome')).toBeVisible()
   await page.goto('/students')

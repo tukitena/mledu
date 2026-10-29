@@ -30,7 +30,7 @@ beforeAll(async () => {
 })
 
 describe('students (STU-04)', () => {
-  it('Receptionist creates; a User searches but cannot write', async () => {
+  it('Receptionist creates; an unassigned User searches but cannot create', async () => {
     const name = `Học Sinh ${unique()}`
     const refused = await api('/v1/students', { token: user, method: 'POST', body: fields(name) })
     expect(refused.status).toBe(403)

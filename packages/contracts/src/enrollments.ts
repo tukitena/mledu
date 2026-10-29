@@ -31,6 +31,8 @@ export const ClassStudent = z.object({
   deletedReason: z.string().nullable(),
   createdAt: z.string(),
   participations: z.array(Participation),
+  /** Note/first leave date only; never grants enrollment or lifecycle actions. */
+  canEdit: z.boolean(),
   rowVersion: RowVersion,
 })
 export type ClassStudent = z.infer<typeof ClassStudent>

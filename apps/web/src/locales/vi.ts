@@ -408,6 +408,8 @@ export const vi = {
       edit: 'Sửa hồ sơ {name}',
       restore: 'Khôi phục hồ sơ {name}',
     },
+    sharedEditHint:
+      'Đây là hồ sơ tổng dùng chung. Thay đổi thông tin tại đây có hiệu lực ở tất cả các lớp của học sinh.',
     createHint:
       'Chỉ họ tên là bắt buộc. Nếu đã có học sinh cùng họ tên, cần nhập số phụ huynh khác với hồ sơ đó.',
     restoreHint:

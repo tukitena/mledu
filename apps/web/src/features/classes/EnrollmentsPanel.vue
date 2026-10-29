@@ -162,15 +162,19 @@ function open(action: Action, record?: ClassStudent, part?: Participation) {
   if (action === 'enroll' || action === 'transfer') void findChoices()
 }
 function actionsFor(record: ClassStudent, part: Participation): RowAction[] {
-  if (!props.canManage || props.klass.deleted || record.deleted) return []
-  const keys: Action[] = ['note']
-  if (!part.endedAt && part.status !== 'cancelled') {
-    if (!part.leaveDate) keys.push('leave')
-    if (!record.student.deleted) keys.push('transfer')
+  if (props.klass.deleted || record.deleted) return []
+  const keys: Action[] = []
+  if (record.canEdit) {
+    keys.push('note')
+    if (!part.endedAt && part.status !== 'cancelled' && !part.leaveDate) keys.push('leave')
   }
-  if (part.status === 'not_started') keys.push('cancel')
-  if (canEnroll.value && !record.student.deleted) keys.push('reenroll')
-  keys.push('delete')
+  if (props.canManage) {
+    if (!part.endedAt && part.status !== 'cancelled' && !record.student.deleted)
+      keys.push('transfer')
+    if (part.status === 'not_started') keys.push('cancel')
+    if (canEnroll.value && !record.student.deleted) keys.push('reenroll')
+    keys.push('delete')
+  }
   return keys.map((key) => ({
     key,
     label: t(`enrollments.actions.${key}`),

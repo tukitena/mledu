@@ -23,6 +23,8 @@ Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 2 — đã triển
 - Tiền VND nguyên đồng. Không thanh toán từng phần, quá hạn, giảm theo phần trăm hoặc tự chia học phí theo buổi/ngày.
 - Avatar: JPG/PNG/WebP, tối đa 5.000.000 byte; chỉ chủ tài khoản tự đổi. DB lưu path tương đối hoặc NULL; bucket private; backend kiểm tra file thực tế.
 - Excel: chỉ `.xlsx` theo mẫu; dưới 10.000.000 byte, tối đa 5.000 dòng; không thực thi công thức; một lỗi chặn cả file, một lần thành công có một audit. File được đọc tại trình duyệt và gửi về API dưới dạng JSON; một lần áp dụng là một request, một RPC (techstack §5.1).
+- Template bài kiểm tra chung chỉ Admin quản lý; bài giữ cấu hình riêng/snapshot, không cập nhật dây chuyền. IELTS theo TEST-01, không áp phép cộng tổng thông thường hoặc tự quy đổi L/R.
+- Giấy báo/biên nhận dùng nhiều mẫu DOCX do Admin tải lên, default theo loại; tải Word và preview/in trong trình duyệt với tập bố cục giới hạn (techstack §4.7). Chưa có renderer/mẫu in được nghiệm thu; không thêm bộ chuyển đổi server theo suy đoán.
 - `template/` chỉ để tham khảo và bị ignore; không import, symlink, lấy dependency/config hoặc đọc nó khi build/runtime. `.agents/` là cài đặt cục bộ bị ignore.
 - Không đưa secrets vào mã nguồn, `VITE_*`, contracts, log, audit hoặc artifact frontend. Publishable key không phải quyền ghi rộng vào dữ liệu.
 - Chỉ tạo các thư mục/module khi giai đoạn thực sự cần; không sinh hàng loạt file rỗng hoặc triển khai toàn bộ 52 thực thể trong một migration khổng lồ.
@@ -259,6 +261,8 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 - [x] Tạo hồ sơ học sinh, nhiều số liên hệ, chuẩn hóa tên/SĐT và chống trùng đồng thời theo STU-04; mã học sinh giữ ổn định qua xuất/nhập và khôi phục.
 - [x] Tạo lớp, phân công theo thời hạn và hồ sơ học sinh–lớp chứa nhiều lần tham gia. Kiểm tra không chồng khoảng, khóa ngày đã lưu và cắt khoảng bằng sự kiện.
 - [x] Thực hiện chuyển lớp trong một RPC, phân biệt học lại trong hồ sơ cũ với xóa rồi thêm hồ sơ mới. Chuẩn bị hợp đồng vòng đời lớp để lịch/phí đăng ký xử lý nguyên khối ở GĐ 4/6/9.
+- [x] Bổ sung quyền sửa học sinh cho User theo quyết định 28/10/2026 tại STU-04/STU-03: giáo viên/trợ giảng đang được phân công sửa hồ sơ tổng dùng chung, ghi chú và ghi ngày nghỉ lần đầu của lần tham gia đúng lớp; ngày vào/ngày nghỉ đã lưu vẫn khóa như Admin/Receptionist. Tách quyền sửa khỏi tạo/thêm/xóa/hủy/khôi phục/chuyển lớp/học lại trong UI/API/RPC; không nới helper quản trị chung. Đã triển khai và kiểm chứng local ngày 29/10/2026; xem [biên bản bổ sung quyền sửa](decisions/student-edit-permissions.md). Excel vẫn thuộc GĐ8.
+- [x] Bổ sung nghiệm thu local quyền sửa: cả hai vai trò lớp; học sinh nhiều lớp nhưng chỉ sửa lần tham gia đúng lớp; hồ sơ chung phản ánh mọi lớp; ngoài phạm vi/lưu trữ/thu hồi phân công/token cũ bị chặn; kiểm tra khóa ngày, chống trùng, version đồng thời và lỗi audit rollback. Giữ kiểm thử từ chối thêm/xóa/khôi phục/chuyển lớp cho User. Bằng chứng mới: 417 pgTAP, 49 integration, 7 concurrency và 36 E2E desktop/mobile đạt; CI/hosted chưa kiểm chứng.
 
 **Gate:** `student_identity.test.sql`, `participation_periods.test.sql`, `class_assignment.test.sql`, `class-transfer.test.ts` kiểm tra tên trùng/SĐT chung, kết thúc giữa ngày, phân công chồng, gia hạn sau khi đã nghỉ và rollback chuyển lớp. Chưa nghiệm thu toàn bộ CLASS-05 trước khi hoàn tất xử lý liên miền ở GĐ 9.
 
@@ -277,14 +281,17 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 
 ### Giai đoạn 5 — Học vụ, thang điểm, nhận xét và công bố
 
-**Phạm vi:** TEST-01–06, COMMENT-01–03, ACAD-01. Module `assessments/`, `comments/`; migration cấu hình/phiên bản/mức chữ/kết quả và quyền học vụ.
+**Phạm vi:** TEST-01–06, COMMENT-01–03, ACAD-01. Module `assessments/`, `comments/`; migration template chung/cấu hình/phiên bản/kết quả và quyền học vụ. Cập nhật yêu cầu ngày 28/10/2026, chưa triển khai.
 
-- [ ] Tạo bài số/phân số/chữ, mẫu chữ của lớp 1–20 mức và bản chụp theo bài; chế độ trực tiếp hoặc theo 1–50 phần.
+- [ ] Thư viện template số/phân số/chữ/IELTS chung toàn trung tâm, chỉ Admin tạo/sửa/lưu/xóa mềm/khôi phục; kiểm tra phiên bản và audit. Gộp bộ mức chữ 1–20 vào template, không tạo thư viện chữ riêng theo lớp.
+- [ ] Tạo bài từ đầu hoặc chọn template rồi chỉnh riêng; lưu snapshot/nguồn/phiên bản, sửa template không thay bài cũ. Giáo viên/trợ giảng sửa cấu hình bài theo quyền, không ghi template. Số/phân số có chế độ trực tiếp hoặc 1–50 phần.
 - [ ] Lưu điểm chính xác, Vắng riêng, phần chưa nhập khác 0; tổng theo phần do backend tính, phân số giữ tổng số câu toàn bài và không rút gọn.
+- [ ] IELTS chọn một đến bốn kỹ năng, chế độ riêng từng kỹ năng nhưng thống nhất cả bài. L/R nhập số câu đúng + band tay hoặc chỉ band; Writing chi tiết gồm Task 1/2, mỗi Task bốn tiêu chí, làm tròn Task rồi gộp 1:2; Speaking bốn tiêu chí hoặc chỉ band. Overall chỉ khi đủ bốn band, tính/round tại backend; không tự quy đổi L/R hoặc ghi đè điểm tự tính.
+- [ ] IELTS thiếu dữ liệu không thành 0; bài một đến ba kỹ năng đủ dữ liệu vẫn công bố được mà không có Overall. Lưu phiên bản công thức, áp khóa công bố cả kết quả và lọc chi tiết phụ huynh theo TEST-01/04; không công bố riêng từng kỹ năng/Task.
 - [ ] Nhận xét gắn bài/đợt có khóa và công bố riêng. Đợt chỉ có tên nghiệp vụ; thời điểm tạo từng nhận xét là mốc lọc lịch sử.
 - [ ] Đổi cấu hình phải hủy công bố, giữ phiên bản cũ, nhập lại điểm và giữ Vắng. Xóa/khôi phục cả bài/đợt nguyên khối, khôi phục về chưa công bố.
 
-**Gate:** `grading-config.test.sql`, `publication-lock.test.sql`, `tests/e2e/academics.spec.ts` kiểm tra 1.001 ký tự, hơn hai số lẻ, thiếu phần, Vắng, thang đổi, trợ giảng không công bố và xóa/thêm hồ sơ không nhân đôi kết quả.
+**Gate (tên test dự kiến):** `grading-config.test.sql`, `publication-lock.test.sql`, `tests/e2e/academics.spec.ts` kiểm tra 1.001 ký tự, hơn hai số lẻ ở thang số, thiếu phần, Vắng, thang đổi, trợ giảng không công bố và xóa/thêm hồ sơ không nhân đôi kết quả. Bổ sung Admin-only template, snapshot không đổi sau sửa/xóa mẫu, IELTS trực tiếp/chi tiết, đủ/thiếu kỹ năng, Task trọng số 1:2, biên 0,25/0,75, thứ tự làm tròn, sai bước band và không quy đổi L/R. Chưa đánh dấu gate đạt từ việc sửa tài liệu.
 
 ### Giai đoạn 6 — Nghĩa vụ, điều chỉnh, thu và gỡ sai
 
@@ -293,7 +300,9 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 - [ ] Cấu hình hình thức thu bất biến, mức từng tháng hoặc kỳ không chồng; nghĩa vụ theo hồ sơ và giao đồng thời giữa kỳ, tham gia và khoảng lớp Mở.
 - [ ] Giữ mức gốc tại lúc tạo, điều chỉnh cố định theo phiên bản và trạng thái Không phải thu khi tổng bằng 0. Khoản ngoài theo đối tượng/thời điểm/lần phát sinh riêng.
 - [ ] Thu đủ nhiều khoản trong một RPC; kiểm tra cùng học sinh/lớp, version và khóa chống thu trùng. Thu trước tạo khoản + chi tiết + audit trong cùng giao dịch.
+- [ ] Cấp mã biên nhận duy nhất và snapshot giao dịch cùng lần thu; retry không tạo trùng. Chuẩn bị dữ liệu cho REPORT-01, chưa phụ thuộc renderer GĐ9 để ghi nhận thu thành công; lỗi tạo file không thu lại.
 - [ ] Admin gỡ sai một/nhiều chi tiết, giữ snapshot cũ; thu lại tạo lần mới. Giữ nợ hợp lệ của hồ sơ lưu trữ, hủy nghĩa vụ không còn đối tượng theo đúng quy tắc.
+- [ ] Trạng thái biên nhận theo gỡ một phần/toàn bộ trong cùng transaction, không hủy nhầm phần còn hiệu lực; lần thu lại có mã mới, giữ lịch sử bản gốc.
 
 **Gate:** `fee-obligations.test.sql`, `payment-concurrency.test.ts`, `payment-void.test.sql`, `tests/e2e/fees.spec.ts` kiểm tra nghỉ/học lại, hồ sơ mới cùng kỳ, gốc không đổi sau sửa mức, delta âm, 0 đồng, thu trước, gỡ chọn lọc và audit lỗi rollback toàn bộ.
 
@@ -313,7 +322,9 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 **Phạm vi:** XLS-01–06. Module `imports/` ở web (đọc/xuất `.xlsx`) và API (xem trước/áp dụng JSON), fixture giả gồm file 5.000 dòng để kiểm thử chức năng (không đo hiệu năng). Luồng theo techstack §5.1.
 
 - [ ] Xuất đúng mẫu từng chức năng tại trình duyệt với mã/phiên bản và `_Meta`; trình đọc không thực thi công thức (ô công thức là lỗi), không đoán lại hồ sơ khi mã được cung cấp sai.
+- [ ] Mẫu IELTS theo tập kỹ năng/chế độ của bài: L/R số câu + band tay, W hai Task/tám tiêu chí, S bốn tiêu chí hoặc band trực tiếp. Backend tính lại các cột tự tính/Overall; đổi template chung không đổi schema bài cũ; chặn file phiên bản cấu hình cũ. Không tạo/sửa template hoặc bài qua Excel.
 - [ ] Trình duyệt trích file thành JSON có số dòng/cột; API xem trước trả Thêm/Sửa/Xóa và lỗi dòng/cột, chưa thay dữ liệu. Ô trống giữ nguyên, `XÓA` xử lý theo loại trường và khóa công bố.
+- [ ] User chỉ sửa hồ sơ tổng/lần tham gia trong phạm vi STU-04/STU-03 qua XLS-01/02; cùng kiểm tra trường/ngày như giao diện. Chặn cả file có dòng thêm/xóa/ngoài phạm vi; kiểm tra lại phân công khi apply, không suy quyền từ việc đã tải mẫu hoặc preview thành công.
 - [ ] Áp dụng là một request: API/RPC kiểm tra lại quyền, khoảng tham gia, version/công bố/lưu trữ và dấu chống nhập lại tính từ payload chuẩn hóa; một transaction áp dụng toàn file, một audit, dấu thành công giữ không thời hạn. Không ghi theo từng dòng.
 - [ ] Thử file tối đa và đồng thời hai lần xác nhận cùng nội dung/phạm vi. Preview/hủy/lỗi/không thay đổi không đánh dấu nhập thành công.
 
@@ -327,9 +338,13 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 - [ ] Nghiệm thu trọn luồng đóng/mở/xóa/khôi phục lớp và kết thúc/hủy tham gia: giữ quá khứ, xử lý buổi tương lai/đăng ký/nghĩa vụ cùng một lệnh và audit. Mở lại kiểm tra phòng/lễ và không tạo bù thời gian đóng.
 - [ ] Giao thông báo đúng người, chống trùng sự kiện/người nhận, Realtime chỉ báo thay đổi. Chặn dữ liệu tiền với User, kiểm tra quyền hiện hành khi mở đối tượng.
 - [ ] Dọn audit/thông báo đúng 60 ngày; dữ liệu nghiệp vụ/phiên bản và dấu nhập thành công vẫn còn. Hoàn thiện UI lịch sử/audit cho Admin và lỗi tác vụ có thể xử lý/thử lại.
-- [ ] Hoàn thiện dashboard theo vai trò, tổng tiền đúng hai mốc áp dụng/thu; in A4 điểm danh và A5 giấy báo qua trình duyệt, có preview/ngắt trang đúng.
+- [ ] Hoàn thiện dashboard theo vai trò, tổng tiền đúng hai mốc áp dụng/thu; in A4 điểm danh theo lịch/khoảng tham gia đúng.
+- [ ] Trước triển khai in Word, kiểm chứng bộ mẫu DOCX có marker/lặp dòng bằng dữ liệu giả: desktop/mobile, tên dài, nhiều khoản/trang, font, dấu tiếng Việt, marker tách text run và tính năng không hỗ trợ. Chốt giới hạn nén/giải nén/ảnh/phiếu mỗi lượt và thư viện/phiên bản/license; chưa coi tài liệu nhà cung cấp là bằng chứng đạt trên MLedu. Không mở lại gate benchmark Excel.
+- [ ] Admin upload/quản lý nhiều mẫu DOCX giấy báo/biên nhận, preview mẫu giả và chọn default theo loại; Storage private, backend kiểm tra, metadata/phiên bản/default/audit nguyên khối, rollback và dọn orphan an toàn. Không dùng chung bucket avatar, không public viewer.
+- [ ] Admin/Receptionist chọn mẫu để tải DOCX và preview/in từ cùng dữ liệu/phiên bản; A5 giấy báo, biên nhận đúng khổ khai báo được hỗ trợ, ngắt trang không mất nội dung. Trình duyệt xử lý tài liệu; không thêm dịch vụ chuyển DOCX → PDF hoặc cam kết mọi bố cục Word.
+- [ ] Biên nhận chỉ từ lần thu đã commit, giữ snapshot giao dịch và phiên bản mẫu khi phát hành; in lại giữ mã/dữ liệu gốc và hiện gỡ thu mới nhất. Marker/trạng thái bắt buộc không bị mẫu bỏ qua; User bị chặn cả API/file; thay default/xóa mềm mẫu không làm hỏng dựng lại lịch sử.
 
-**Gate:** `lifecycle-atomicity.test.ts`, `job-recovery.test.sql`, `retention.test.sql`, `notification-permissions.test.ts`, `tests/e2e/reports.spec.ts`. Gián đoạn rồi chạy bù không thu trùng; audit hết hạn không làm mất nợ/điểm; lớp khôi phục không hồi sinh khoảng đã kết thúc.
+**Gate (tên test dự kiến):** `lifecycle-atomicity.test.ts`, `job-recovery.test.sql`, `retention.test.sql`, `notification-permissions.test.ts`, `tests/e2e/reports.spec.ts`. Gián đoạn rồi chạy bù không thu trùng; audit hết hạn không làm mất nợ/điểm; lớp khôi phục không hồi sinh khoảng đã kết thúc. In cần bằng chứng so sánh DOCX/preview/bản in với mẫu thuộc tập hỗ trợ; thử marker sai, file vượt giới hạn, gỡ thu chọn lọc/toàn bộ, in lại, quyền đổi/thu hồi, default đồng thời và audit lỗi. Không đánh dấu hoàn tất trước khi có fixture/render thực tế.
 
 ### Giai đoạn 10 — Nghiệm thu tích hợp và vận hành
 
@@ -337,8 +352,8 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 
 - [ ] Lập ma trận 60 mã chức năng với bằng chứng DB/API/E2E. Chạy ma trận Admin/Receptionist/giáo viên/trợ giảng/phụ huynh và token cũ; không suy nghiệm thu từ số màn hình.
 - [ ] Đo quy mô giả lập 1.500 học sinh, 100 lớp, 100 tài khoản theo đặc tả; đo tải đồng thời theo kịch bản được chấp nhận, không coi 100 tài khoản là 100 người online cùng lúc.
-- [ ] Kiểm tra mobile/desktop, Việt/Anh, theme theo hệ thống, reload route SPA, reconnect Realtime, in A4/A5, nhập file Excel 5.000 dòng (chức năng, chấp nhận độ trễ) và bản build khi thiếu template.
-- [ ] Diễn tập backup/restore DB **và** nội dung Storage riêng. Thử migration trên staging, rollback ứng dụng với schema tương thích và phục hồi dữ liệu; kiểm tra runbook xử lý job chờ Admin.
+- [ ] Kiểm tra mobile/desktop, Việt/Anh, theme theo hệ thống, reload route SPA, reconnect Realtime, tải DOCX/preview/in A4/A5 và biên nhận, nhập file Excel 5.000 dòng (chức năng, chấp nhận độ trễ, gồm schema IELTS) và bản build khi thiếu thư mục Metis `template/`.
+- [ ] Diễn tập backup/restore DB **và** nội dung Storage riêng, gồm mẫu DOCX/phiên bản được biên nhận tham chiếu; dựng lại biên nhận sau phục hồi. Thử migration trên staging, rollback ứng dụng với schema tương thích và phục hồi dữ liệu; kiểm tra runbook xử lý job chờ Admin.
 - [ ] Chuẩn bị dữ liệu khởi đầu qua công cụ có kiểm tra/audit; UAT trên staging. Sau phê duyệt release, deploy production, smoke test, theo dõi lỗi/usage và bàn giao người vận hành.
 
 **Gate:** Không còn lỗi chặn trong ma trận nghiệm thu; điểm Auth/audit ở GĐ 0 được đóng bằng bằng chứng (benchmark Excel đã đóng theo quyết định 27/10/2026, không đo). Production chỉ nhận dữ liệu thật sau khi quyền, backup/restore và luồng tiền đã đạt.

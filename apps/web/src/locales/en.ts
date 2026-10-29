@@ -400,6 +400,8 @@ export const en: typeof vi = {
     total: '{n} students',
     actions: { view: 'View', edit: 'Edit', delete: 'Delete', restore: 'Restore' },
     formTitle: { create: 'Add student', edit: 'Edit {name}', restore: 'Restore {name}' },
+    sharedEditHint:
+      'This is a shared student profile. Changes here apply to every class this student belongs to.',
     createHint:
       'Only the name is required. If a student with the same name exists, add a parent phone that differs from theirs.',
     restoreHint:
