@@ -7,6 +7,7 @@ import { apiRequest } from '../../app/session'
 import { describeError, type DescribedError } from '../../app/errors'
 import ModalDialog from '../../components/ModalDialog.vue'
 import ErrorAlert from '../../components/ErrorAlert.vue'
+import ReopenClassDialog from '../scheduling/ReopenClassDialog.vue'
 
 const props = defineProps<{ klass: ClassDetail }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -17,8 +18,13 @@ const impact = ref<ClassLifecycleImpact | null>(null)
 const reason = ref('')
 const error = ref<DescribedError | null>(null)
 const busy = ref(false)
+const reopening = ref(false)
 let sequence = 0
 async function open(value: Action) {
+  if (value === 'reopen') {
+    reopening.value = true
+    return
+  }
   const current = ++sequence
   action.value = value
   impact.value = null
@@ -60,8 +66,19 @@ async function submit() {
     busy.value = false
   }
 }
+function onReopened() {
+  reopening.value = false
+  emit('changed')
+}
 </script>
 <template>
+  <ReopenClassDialog
+    v-if="reopening"
+    :class-id="klass.id"
+    :expected-version="klass.rowVersion"
+    @close="reopening = false"
+    @saved="onReopened"
+  />
   <div class="d-flex flex-wrap gap-2">
     <template v-if="!klass.deleted">
       <button

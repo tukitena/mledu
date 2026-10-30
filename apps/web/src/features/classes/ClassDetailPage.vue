@@ -13,6 +13,9 @@ import ClassFormDialog from './ClassFormDialog.vue'
 import EnrollmentsPanel from './EnrollmentsPanel.vue'
 import ClassLifecycleActions from './ClassLifecycleActions.vue'
 import { periodBadge } from './labels'
+import SchedulePanel from '../scheduling/SchedulePanel.vue'
+import StaffWarnings from '../scheduling/StaffWarnings.vue'
+import { ClassSchedule } from '@mledu/contracts/scheduling'
 
 // One class (CLASS-03) with its staff (CLASS-01/02). The API answers 404 when
 // the caller may not read it, including a User whose assignment just ended.
@@ -20,13 +23,14 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const TABS = ['staff', 'students'] as const
+const TABS = ['staff', 'students', 'schedule'] as const
 type Tab = (typeof TABS)[number]
 
 const klass = ref<ClassDetail | null>(null)
 const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const editing = ref(false)
+const scheduleWarnings = ref<ClassSchedule['warnings']>([])
 const canManage = computed(() => workspace.value === 'admin' || workspace.value === 'receptionist')
 const tab = computed<Tab>({
   get: () => (TABS.find((item) => item === route.query.tab) as Tab | undefined) ?? 'staff',
@@ -39,6 +43,9 @@ async function load() {
     klass.value = await apiRequest(`/v1/classes/${String(route.params.id)}`, {
       schema: ClassDetail,
     })
+    scheduleWarnings.value = (
+      await apiRequest(`/v1/classes/${String(route.params.id)}/schedule`, { schema: ClassSchedule })
+    ).warnings
   } catch (cause) {
     klass.value = null
     error.value = describeError(cause)
@@ -86,6 +93,7 @@ const date = (value: string) => formatIsoDate(value, locale.value)
     <ErrorAlert :error="error" />
 
     <template v-if="klass">
+      <StaffWarnings v-if="tab !== 'schedule'" :warnings="scheduleWarnings" />
       <div class="card mb-3">
         <div class="card-body">
           <dl class="row mb-0 class-facts">
@@ -156,6 +164,7 @@ const date = (value: string) => formatIsoDate(value, locale.value)
             :klass="klass"
             :can-manage="canManage"
           />
+          <SchedulePanel v-if="tab === 'schedule'" :key="klass.id" :klass="klass" />
         </div>
       </div>
     </template>

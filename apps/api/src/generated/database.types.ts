@@ -9,6 +9,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_schedule_change: {
+        Args: { p_change: Json; p_class_id: string; p_token: string }
+        Returns: Json
+      }
       archive_catalog_entry: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
@@ -93,7 +97,9 @@ export type Database = {
         Returns: Json
       }
       get_account: { Args: { p_account_id: string }; Returns: Json }
+      get_attendance: { Args: { p_session_id: string }; Returns: Json }
       get_class: { Args: { p_id: string }; Returns: Json }
+      get_class_schedule: { Args: { p_class_id: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       get_student: { Args: { p_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
@@ -156,6 +162,7 @@ export type Database = {
         Args: { p_account_id: string; p_expected_version: number }
         Returns: string
       }
+      preview_schedule_change: { Args: { p_change: Json; p_class_id: string }; Returns: Json }
       rename_catalog_entry: {
         Args: { p_expected_version: number; p_id: string; p_name: string }
         Returns: Json
@@ -179,6 +186,10 @@ export type Database = {
           p_school: string
           p_student_phones: string[]
         }
+        Returns: Json
+      }
+      save_attendance: {
+        Args: { p_fingerprint: string; p_session_id: string; p_students: Json }
         Returns: Json
       }
       set_account_enabled: {

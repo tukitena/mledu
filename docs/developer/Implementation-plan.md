@@ -10,7 +10,7 @@
 
 **Spec:** [Đặc tả nghiệp vụ](plans.md), [tech stack và ranh giới hệ thống](techstack.md), [ERD](../diagrams/architecture.drawio) và [giải thích mô hình](../diagrams/README.md).
 
-Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 2 — đã triển khai trên local ngày 27/10/2026 ([biên bản](decisions/gd2-auth-profile.md)), chờ duyệt/commit, CI GitHub và thử hosted.** GĐ 1: nền local xong ([biên bản](decisions/gd1-foundation.md)). Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa khởi tạo ứng dụng đầy đủ hoặc triển khai production. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
+Ngày lập: **26/10/2026**. **Giai đoạn hiện hành: GĐ 4 — triển khai local ngày 30/10/2026; xem [biên bản và các gate còn mở](decisions/gd4-scheduling-attendance.md).** GĐ 3 đã có nền lớp/phân công/lần tham gia; GĐ 2 đã triển khai local ngày 27/10/2026 ([biên bản](decisions/gd2-auth-profile.md)); GĐ 1 có [biên bản nền local](decisions/gd1-foundation.md). Đã đóng đợt thử nghiệm GĐ 0 theo quyết định của người dùng; xem [biên bản chốt và công việc chuyển tiếp](decisions/gd0-closeout.md). Các tiêu chí chưa đạt/chưa thử vẫn giữ trạng thái chưa nghiệm thu, không thay đổi đặc tả. Chưa triển khai production. Các ghi chú CI trong biên bản cũ là trạng thái tại thời điểm ghi; CI cho thay đổi GĐ4 và hosted vẫn chưa kiểm chứng. Mỗi giai đoạn cần được tách thành các task nhỏ khi bắt đầu thực hiện; tài liệu này không thay thế 60 tiêu chí nghiệm thu trong đặc tả.
 
 ## Global Constraints — Ràng buộc xuyên suốt
 
@@ -270,14 +270,18 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 
 ### Giai đoạn 4 — Lịch, phòng, nghỉ lễ và chuyên cần
 
+**Trạng thái: triển khai local ngày 30/10/2026**, chưa chốt nghiệm thu visual/CI/hosted; xem [biên bản GĐ4](decisions/gd4-scheduling-attendance.md). Migration đã áp dụng tiến trên `mledu-dev` và `mledu-test`, không reset dữ liệu phát triển. CLASS-05 vẫn còn tài chính/thông báo và nghiệm thu liên miền ở GĐ6/9.
+
 **Phạm vi:** SCHED-01–06, ATT-01. Module `scheduling/`, `attendance/`; migration lịch tuần có mốc áp dụng, buổi thực tế và exclusion phòng.
 
-- [ ] Sinh buổi thực tế có khóa chống trùng từ lịch tuần; giữ ngoại lệ, buổi nghỉ/bù và thông tin phòng/địa điểm lịch sử.
-- [ ] Đổi từng buổi/lịch tuần và áp dụng/bỏ lễ sau preview/xác nhận; không đổi hoặc dựng lại buổi đã bắt đầu. Buổi nghỉ/gỡ không chiếm phòng.
-- [ ] Chặn hai request đặt cùng phòng chồng giờ bằng cơ chế DB có kiểm thử đồng thời. Trùng nhân sự chỉ cảnh báo; phòng được để trống.
-- [ ] Điểm danh theo thời điểm buổi và khoảng tham gia; lần lưu đầu ghi Có mặt/Vắng đúng danh sách, chưa lưu là null. Ghi chú/lịch sử giữ theo học sinh/buổi.
+- [x] Sinh buổi thực tế có khóa chống trùng từ lịch tuần; giữ ngoại lệ, buổi nghỉ/bù và thông tin phòng/địa điểm lịch sử.
+- [x] Đổi từng buổi/lịch tuần và áp dụng/bỏ lễ sau preview/xác nhận; không đổi hoặc dựng lại buổi đã bắt đầu. Buổi nghỉ/gỡ không chiếm phòng. Mở lại có phương án sửa từng buổi/lịch tuần, kiểm tra và audit nguyên khối.
+- [x] Chặn hai request đặt cùng phòng chồng giờ bằng cơ chế DB có kiểm thử đồng thời. Trùng nhân sự chỉ cảnh báo; phòng được để trống.
+- [x] Điểm danh theo thời điểm buổi và khoảng tham gia; lần lưu đầu ghi Có mặt/Vắng đúng danh sách, chưa lưu là null. Ghi chú/lịch sử giữ theo học sinh/buổi.
 
 **Gate:** `room-concurrency.test.ts`, `schedule-history.test.sql`, `attendance-scope.test.sql`, `tests/e2e/scheduling.spec.ts`. Hai buổi liền giờ hợp lệ; đổi phòng/ngày lễ không viết lại quá khứ; buổi cũ xét đúng học sinh dù hiện tại đã nghỉ.
+
+**Bằng chứng local:** tên SQL thực tế theo convention repo là `schedule_history.test.sql`, `attendance_scope.test.sql`; thêm `scheduling-permissions.test.ts` kiểm tra quyền sau chờ khóa. Kết quả và ảnh desktop/mobile/VI-EN/sáng-tối trong biên bản GĐ4. Các checkbox trên là phần chức năng đã triển khai/kiểm chứng local, không đóng gate đối chiếu live Metis cùng viewport hoặc CI/hosted.
 
 ### Giai đoạn 5 — Học vụ, thang điểm, nhận xét và công bố
 

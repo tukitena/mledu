@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-defineProps<{ title: string }>()
+defineProps<{ title: string; wide?: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 const dialog = ref<HTMLElement>()
 
@@ -22,7 +22,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" :aria-label="title">
-    <div ref="dialog" class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div
+      ref="dialog"
+      class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+      :class="{ 'modal-lg': wide }"
+    >
       <div class="modal-content">
         <div class="modal-header">
           <h2 class="modal-title h5">{{ title }}</h2>
