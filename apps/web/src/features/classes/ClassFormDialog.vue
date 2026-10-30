@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import { CatalogEntry } from '@mledu/contracts/catalogs'
-import { ClassSummary, type ClassFields } from '@mledu/contracts/classes'
+import { ClassSummary, SchoolYearStart, type ClassFields } from '@mledu/contracts/classes'
 import { computed, onMounted, reactive, ref } from 'vue'
+import { formatSchoolYear } from '../../lib/format'
 import { useI18n } from 'vue-i18n'
 import { z } from 'zod'
 import { describeError, type DescribedError } from '../../app/errors'
@@ -26,6 +28,18 @@ const form = reactive<ClassFields>({
   note: props.current?.note ?? null,
 })
 const busy = ref(false)
+const schoolYearInput = ref<number | string>(props.current?.schoolYearStart ?? '')
+// A malformed number (e.g. an incomplete exponent) also reports value=''.
+// Only an intentionally empty input may clear the year.
+const schoolYearBadInput = ref(false)
+const schoolYearStart = computed(() =>
+  schoolYearInput.value === '' ? null : Number(schoolYearInput.value),
+)
+const validSchoolYear = computed(
+  () =>
+    !schoolYearBadInput.value &&
+    SchoolYearStart.nullable().safeParse(schoolYearStart.value).success,
+)
 const error = ref<DescribedError | null>(null)
 
 const withCurrent = (
@@ -54,15 +68,21 @@ const valid = computed(
     form.name.trim() !== '' &&
     form.subjectId !== '' &&
     form.gradeId !== '' &&
+    validSchoolYear.value &&
     form.startDate !== '' &&
     form.endDate !== '' &&
     form.endDate >= form.startDate,
 )
 
 async function submit() {
+  if (!valid.value || busy.value) return
   busy.value = true
   error.value = null
-  const body = { ...form, note: form.note?.trim() ? form.note : null }
+  const body = {
+    ...form,
+    schoolYearStart: schoolYearStart.value,
+    note: form.note?.trim() ? form.note : null,
+  }
   try {
     const saved = props.current
       ? await apiRequest(`/v1/classes/${props.current.id}`, {
@@ -94,6 +114,38 @@ async function submit() {
         <label class="form-label" for="class-name">{{ t('classes.fields.name') }}</label>
         <input id="class-name" v-model="form.name" class="form-control" maxlength="200" required />
       </div>
+      <div class="mb-3">
+        <label class="form-label" for="class-school-year">
+          {{ t('classes.fields.schoolYear') }}
+          <span class="text-body-secondary">({{ t('common.optional') }})</span>
+        </label>
+        <input
+          id="class-school-year"
+          v-model="schoolYearInput"
+          type="number"
+          class="form-control"
+          :class="{ 'is-invalid': !validSchoolYear }"
+          min="1000"
+          max="9998"
+          step="1"
+          placeholder="2026"
+          aria-describedby="class-school-year-hint class-school-year-error"
+          :aria-invalid="!validSchoolYear"
+          @input="schoolYearBadInput = ($event.target as HTMLInputElement).validity.badInput"
+        />
+        <div id="class-school-year-hint" class="form-text">
+          {{ t('classes.schoolYearHint') }}
+          <span
+            v-if="validSchoolYear && schoolYearStart !== null"
+            class="fw-medium"
+            data-testid="school-year-preview"
+            >{{ formatSchoolYear(schoolYearStart) }}</span
+          >
+        </div>
+        <div id="class-school-year-error" class="invalid-feedback">
+          {{ t('classes.invalidSchoolYear') }}
+        </div>
+      </div>
       <div class="row g-3 mb-3">
         <div class="col-12 col-sm-6">
           <label class="form-label" for="class-subject">{{ t('classes.fields.subject') }}</label>
@@ -115,20 +167,13 @@ async function submit() {
       <div class="row g-3 mb-3">
         <div class="col-12 col-sm-6">
           <label class="form-label" for="class-start">{{ t('classes.fields.startDate') }}</label>
-          <input
-            id="class-start"
-            v-model="form.startDate"
-            type="date"
-            class="form-control"
-            required
-          />
+          <DateInput id="class-start" v-model="form.startDate" class="form-control" required />
         </div>
         <div class="col-12 col-sm-6">
           <label class="form-label" for="class-end">{{ t('classes.fields.endDate') }}</label>
-          <input
+          <DateInput
             id="class-end"
             v-model="form.endDate"
-            type="date"
             class="form-control"
             :min="form.startDate"
             required

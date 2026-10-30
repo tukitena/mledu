@@ -9,6 +9,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_schedule_change: {
+        Args: { p_change: Json; p_class_id: string; p_token: string }
+        Returns: Json
+      }
       archive_catalog_entry: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
@@ -39,6 +43,7 @@ export type Database = {
           p_grade_id: string
           p_name: string
           p_note?: string
+          p_school_year_start?: number
           p_start_date: string
           p_subject_id: string
         }
@@ -93,7 +98,9 @@ export type Database = {
         Returns: Json
       }
       get_account: { Args: { p_account_id: string }; Returns: Json }
+      get_attendance: { Args: { p_session_id: string }; Returns: Json }
       get_class: { Args: { p_id: string }; Returns: Json }
+      get_class_schedule: { Args: { p_class_id: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       get_student: { Args: { p_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
@@ -112,7 +119,17 @@ export type Database = {
         Returns: Json
       }
       list_classes: {
-        Args: { p_deleted?: boolean; p_limit?: number; p_offset?: number; p_search?: string }
+        Args: {
+          p_deleted?: boolean
+          p_grade_id?: string
+          p_limit?: number
+          p_offset?: number
+          p_school_year?: string
+          p_search?: string
+          p_staff_id?: string
+          p_status?: string
+          p_subject_id?: string
+        }
         Returns: Json
       }
       list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
@@ -156,6 +173,7 @@ export type Database = {
         Args: { p_account_id: string; p_expected_version: number }
         Returns: string
       }
+      preview_schedule_change: { Args: { p_change: Json; p_class_id: string }; Returns: Json }
       rename_catalog_entry: {
         Args: { p_expected_version: number; p_id: string; p_name: string }
         Returns: Json
@@ -179,6 +197,10 @@ export type Database = {
           p_school: string
           p_student_phones: string[]
         }
+        Returns: Json
+      }
+      save_attendance: {
+        Args: { p_fingerprint: string; p_session_id: string; p_students: Json }
         Returns: Json
       }
       set_account_enabled: {
@@ -226,19 +248,34 @@ export type Database = {
         }
         Returns: Json
       }
-      update_class: {
-        Args: {
-          p_end_date: string
-          p_expected_version: number
-          p_grade_id: string
-          p_id: string
-          p_name: string
-          p_note: string
-          p_start_date: string
-          p_subject_id: string
-        }
-        Returns: Json
-      }
+      update_class:
+        | {
+            Args: {
+              p_end_date: string
+              p_expected_version: number
+              p_grade_id: string
+              p_id: string
+              p_name: string
+              p_note: string
+              p_start_date: string
+              p_subject_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_end_date: string
+              p_expected_version: number
+              p_grade_id: string
+              p_id: string
+              p_name: string
+              p_note: string
+              p_school_year_start: number
+              p_start_date: string
+              p_subject_id: string
+            }
+            Returns: Json
+          }
       update_class_assignment: {
         Args: {
           p_end_date: string

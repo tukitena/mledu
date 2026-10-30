@@ -30,7 +30,7 @@ beforeAll(async () => {
 })
 
 describe('students (STU-04)', () => {
-  it('Receptionist creates; a User searches but cannot write', async () => {
+  it('Receptionist creates; an unassigned User searches but cannot create', async () => {
     const name = `Học Sinh ${unique()}`
     const refused = await api('/v1/students', { token: user, method: 'POST', body: fields(name) })
     expect(refused.status).toBe(403)
@@ -50,11 +50,14 @@ describe('students (STU-04)', () => {
     )
     expect(StudentPage.parse(await json(search)).items.map((s) => s.id)).toEqual([student.id])
 
+    const byCode = await api(`/v1/students?search=${student.code}`, { token: user })
+    expect(StudentPage.parse(await json(byCode))).toMatchObject({ items: [], total: 0 })
+
     const archived = await api('/v1/students?status=deleted', { token: user })
     expect(archived.status).toBe(403)
   })
 
-  it('returns the code of the duplicate so staff can find it', async () => {
+  it('keeps the stable duplicate reference in API diagnostics', async () => {
     const name = `Trùng Tên ${unique()}`
     const phone = `09${digits()}`
     const first = Student.parse(

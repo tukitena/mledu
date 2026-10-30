@@ -3,6 +3,10 @@
 Ngày kiểm chứng: **27/10/2026**, trên Supabase local. Hoàn tất phạm vi dữ liệu lõi của GĐ3;
 chưa nghiệm thu toàn bộ CLASS-05 hoặc các xử lý lịch/học phí liên miền ở GĐ4/6/9.
 
+**Bổ sung 29/10/2026:** Quyền User chỉ đọc mô tả trong biên bản lịch sử này đã được
+thay bằng quyền sửa theo quyết định 28/10/2026 tại STU-04/STU-03. Xem
+[triển khai và bằng chứng quyền sửa](student-edit-permissions.md).
+
 ## Phạm vi
 
 Danh mục, hồ sơ học sinh, lớp và phân công đã có trước lần triển khai này. Các bộ kiểm thử

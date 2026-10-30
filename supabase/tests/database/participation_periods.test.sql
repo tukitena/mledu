@@ -126,7 +126,7 @@ select throws_ok(format($$select api.cancel_participation(%L, 'Thử', 3)$$, pg_
 select is(api.cancel_participation((pg_temp.last_part('math', 's1') ->> 'id')::uuid, 'Đổi ý', 1)
           #>> '{participations,0,status}', 'cancelled', 'a future participation is cancelled, not deleted');
 
--- Users read only classes they teach; they never change participations.
+-- Users read/edit only assigned classes; management stays restricted.
 select pg_temp.as_user(3);
 select throws_ok(format($$select api.list_class_students(%L)$$, (select id from ids where key = 'math')),
   'PT404', 'not_found', 'a User without an assignment cannot read the class students');
@@ -140,9 +140,9 @@ select lives_ok(format($$select api.create_class_assignment(%L, '00000000-0000-4
 select pg_temp.as_user(3);
 select is(jsonb_array_length(api.list_class_students((select id from ids where key = 'math'))), 3,
   'an assistant in effect reads the class students');
-select throws_ok(format($$select api.set_participation_note(%L, 'Không được', 3)$$,
+select lives_ok(format($$select api.set_participation_note(%L, 'Cần kèm thêm', 3)$$,
     pg_temp.last_part('math', 's3') ->> 'id'),
-  'PT403', 'forbidden', 'an assistant cannot change participation data');
+  'an assigned assistant may save the participation note (unchanged here)');
 reset role;
 
 -------------------------------------------------------------------------------

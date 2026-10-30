@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import {
   AssignableAccount,
   Assignment,
@@ -22,7 +23,7 @@ import { assignmentBadge } from './labels'
 // and date rules.
 const props = defineProps<{ klass: ClassDetail; canManage: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const items = ref<Assignment[]>([])
 const loading = ref(false)
@@ -177,7 +178,7 @@ function onAction(item: Assignment, key: string) {
 }
 
 const dates = (item: Assignment) =>
-  `${formatIsoDate(item.startDate, locale.value)} – ${formatIsoDate(item.endDate, locale.value)}`
+  `${formatIsoDate(item.startDate)} – ${formatIsoDate(item.endDate)}`
 </script>
 
 <template>
@@ -297,10 +298,9 @@ const dates = (item: Assignment) =>
             <label class="form-label" for="assignment-start">{{
               t('assignments.fields.startDate')
             }}</label>
-            <input
+            <DateInput
               id="assignment-start"
               v-model="form.startDate"
-              type="date"
               class="form-control"
               :min="props.klass.startDate"
               :max="props.klass.endDate"
@@ -312,10 +312,9 @@ const dates = (item: Assignment) =>
             <label class="form-label" for="assignment-end">{{
               t('assignments.fields.endDate')
             }}</label>
-            <input
+            <DateInput
               id="assignment-end"
               v-model="form.endDate"
-              type="date"
               class="form-control"
               :min="form.startDate"
               :max="props.klass.endDate"

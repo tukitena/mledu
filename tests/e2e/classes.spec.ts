@@ -1,10 +1,153 @@
+import { displayDate } from '../ui/date-support'
 import { expect, test } from '@playwright/test'
-import { FIXTURE_PASSWORD, readyAccount, signInThroughUi } from './support'
+import { accessToken, apiCall, FIXTURE_PASSWORD, readyAccount, signInThroughUi } from './support'
 
 // GĐ 3 classes and assignments in the browser (CLASS-01/02/03, AUTH-04).
 const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`
 const day = (offset: number) =>
   new Date(Date.now() + 7 * 3600_000 + offset * 86_400_000).toISOString().slice(0, 10)
+
+test('class filters combine and preserve length-first ordering', async ({
+  page,
+  isMobile,
+}, testInfo) => {
+  const prefix = `Bộ lọc ${unique()}`
+  const token = await accessToken('receptionist@example.com', FIXTURE_PASSWORD)
+  const teacher = await readyAccount('filters')
+  const ids: string[] = []
+  for (const suffix of ['10', '7', '6']) {
+    const response = await apiCall<{ id: string }>(token, '/v1/classes', 'POST', {
+      name: `${prefix} ${suffix}`,
+      subjectId: '10000000-0000-4000-8000-000000000001',
+      gradeId: '10000000-0000-4000-8000-000000000011',
+      startDate: day(-3),
+      endDate: day(60),
+      schoolYearStart: 2026,
+      note: null,
+    })
+    expect(response.status).toBe(201)
+    ids.push(response.body.id)
+  }
+  expect(
+    (
+      await apiCall(token, `/v1/classes/${ids[2]}/assignments`, 'POST', {
+        accountId: teacher.id,
+        role: 'assistant',
+        startDate: day(-1),
+        endDate: day(30),
+        subjectNote: null,
+      })
+    ).status,
+  ).toBe(201)
+  await signInThroughUi(page, 'receptionist@example.com', FIXTURE_PASSWORD)
+  await expect(page.getByTestId('welcome')).toBeVisible()
+  await page.goto('/classes')
+  await page.getByPlaceholder('Tìm theo tên lớp').fill(prefix)
+  await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()
+  const names = page.getByTestId('classes-table').locator('tbody tr[data-name] td:first-child')
+  await expect(names).toHaveText([`${prefix} 6`, `${prefix} 7`, `${prefix} 10`])
+  await page.getByLabel('Lọc theo khối').selectOption('10000000-0000-4000-8000-000000000011')
+  await page.getByLabel('Lọc theo môn').selectOption('10000000-0000-4000-8000-000000000001')
+  await page.getByLabel('Lọc theo năm học').selectOption('2026')
+  await page.getByLabel('Lọc theo trạng thái').selectOption('running')
+  await page.getByLabel('Lọc theo nhân sự').selectOption(teacher.id)
+  await expect(names).toHaveText([`${prefix} 6`])
+  await page.screenshot({ path: testInfo.outputPath('class-filters-vi-light.png'), fullPage: true })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.getByLabel('Lọc theo trạng thái').selectOption('closed')
+  await expect(page.getByTestId('classes-table')).toContainText('Chưa có lớp phù hợp.')
+  // Empty results must retain options so filters can be changed without clearing everything.
+  await expect(page.getByLabel('Lọc theo nhân sự')).toHaveValue(teacher.id)
+  await page.getByLabel('Lọc theo trạng thái').selectOption('all')
+  await expect(names).toHaveText([`${prefix} 6`])
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByTestId('locale-select').selectOption('en')
+  await page.getByTestId('theme-select').selectOption('dark')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await expect(page.getByLabel('Filter by grade')).toBeVisible()
+  await page.getByLabel('Filter by current staff').selectOption('')
+  await expect(names).toHaveCount(3)
+  await page.screenshot({ path: testInfo.outputPath('class-filters-en-dark.png'), fullPage: true })
+})
+
+test('optional school year can be created, filtered, edited and cleared', async ({
+  page,
+  isMobile,
+}, testInfo) => {
+  const prefix = `Năm học E2E ${unique()}`
+  const name = `${prefix} biên chế`
+  const otherName = `${prefix} tự do`
+  const token = await accessToken('receptionist@example.com', FIXTURE_PASSWORD)
+  expect(
+    (
+      await apiCall(token, '/v1/classes', 'POST', {
+        name: otherName,
+        subjectId: '10000000-0000-4000-8000-000000000001',
+        gradeId: '10000000-0000-4000-8000-000000000011',
+        startDate: day(-3),
+        endDate: day(60),
+        note: null,
+      })
+    ).status,
+  ).toBe(201)
+  await signInThroughUi(page, 'receptionist@example.com', FIXTURE_PASSWORD)
+  await expect(page.getByTestId('welcome')).toBeVisible()
+  await page.goto('/classes')
+  await page.getByTestId('class-create').click()
+  await page.getByLabel('Tên lớp').fill(name)
+  await page.getByLabel('Môn', { exact: true }).selectOption({ label: 'Toán' })
+  await page.getByLabel('Khối', { exact: true }).selectOption({ label: 'Lớp 6' })
+  await page.getByLabel('Ngày mở').fill(displayDate(day(-3)))
+  await page.getByLabel('Ngày kết thúc').fill(displayDate(day(60)))
+  await expect(page.getByRole('dialog').getByLabel('Năm học', { exact: false })).toBeVisible({
+    timeout: 5000,
+  })
+  await page.getByRole('dialog').getByLabel('Năm học', { exact: false }).fill('9999')
+  await expect(page.getByTestId('class-submit')).toBeDisabled()
+  await page.getByRole('dialog').getByLabel('Năm học', { exact: false }).fill('2026')
+  await expect(page.getByTestId('school-year-preview')).toHaveText('2026–2027')
+  await page.screenshot({ path: testInfo.outputPath('school-year-form-vi-light.png') })
+  await page.getByTestId('class-submit').click()
+  await expect(page.getByTestId('class-school-year')).toHaveText('2026–2027')
+  await page.getByRole('link', { name: 'Danh sách lớp' }).click()
+  await page.getByPlaceholder('Tìm theo tên lớp').fill(prefix)
+  await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()
+  await expect(page.getByTestId('classes-table').locator('tbody tr[data-name]')).toHaveCount(2)
+  await page.getByLabel('Lọc theo năm học').selectOption('2026')
+  await expect(page.getByTestId('classes-table')).toContainText(name)
+  await expect(page.getByTestId('classes-table')).not.toContainText(otherName)
+  await page.screenshot({ path: testInfo.outputPath('school-year-list-vi-light.png') })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.getByLabel('Lọc theo năm học').selectOption('none')
+  await expect(page.getByTestId('classes-table')).toContainText(otherName)
+  await expect(page.getByTestId('classes-table')).not.toContainText(name)
+  await page.getByLabel('Lọc theo năm học').selectOption('all')
+  await page.getByRole('link', { name, exact: true }).click()
+  await page.getByTestId('class-edit').click()
+  await expect(page.getByRole('dialog').getByLabel('Năm học', { exact: false })).toHaveValue('2026')
+  // A number input exposes value='' for a malformed number as well as a cleared field.
+  // Malformed input must not silently clear an existing school year.
+  await page.getByRole('dialog').getByLabel('Năm học', { exact: false }).press('ControlOrMeta+A')
+  await page.getByRole('dialog').getByLabel('Năm học', { exact: false }).press('e')
+  await expect(page.getByTestId('class-submit')).toBeDisabled()
+  await page.getByRole('dialog').getByLabel('Năm học', { exact: false }).fill('2027')
+  await page.getByTestId('class-submit').click()
+  await expect(page.getByTestId('class-school-year')).toHaveText('2027–2028')
+  await page.getByTestId('class-edit').click()
+  await page.getByRole('dialog').getByLabel('Năm học', { exact: false }).fill('')
+  await page.getByTestId('class-submit').click()
+  await expect(page.getByTestId('class-school-year')).toHaveText('Không thuộc năm học')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByTestId('locale-select').selectOption('en')
+  await page.getByTestId('theme-select').selectOption('dark')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByRole('link', { name: 'All classes' }).click()
+  await page.getByLabel('Filter by school year').selectOption('none')
+  await page.getByPlaceholder('Search by class name').fill(prefix)
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await expect(page.getByTestId('classes-table').locator('tbody tr[data-name]')).toHaveCount(2)
+  await page.screenshot({ path: testInfo.outputPath('school-year-list-en-dark.png') })
+})
 
 test('Receptionist creates a class and assigns a teacher who then sees it', async ({
   browser,
@@ -20,14 +163,14 @@ test('Receptionist creates a class and assigns a teacher who then sees it', asyn
   await page.getByLabel('Tên lớp').fill(name)
   await page.getByLabel('Môn', { exact: true }).selectOption({ label: 'Toán' })
   await page.getByLabel('Khối', { exact: true }).selectOption({ label: 'Lớp 6' })
-  await page.getByLabel('Ngày mở').fill(day(-3))
-  await page.getByLabel('Ngày kết thúc').fill(day(60))
+  await page.getByLabel('Ngày mở').fill(displayDate(day(-3)))
+  await page.getByLabel('Ngày kết thúc').fill(displayDate(day(60)))
   await page.getByTestId('class-submit').click()
   await expect(page.getByTestId('class-title')).toHaveText(name)
 
   await page.getByTestId('assignment-create').click()
   await page.getByRole('dialog').getByLabel('Nhân sự').selectOption({ value: teacher.id })
-  await page.getByLabel('Ngày bắt đầu').fill(day(-1))
+  await page.getByLabel('Ngày bắt đầu').fill(displayDate(day(-1)))
   await page.getByTestId('assignment-submit').click()
   const row = page.locator(`tr[data-email="${teacher.email}"]`)
   await expect(row.getByTestId('assignment-status')).toHaveText('Đang hiệu lực')

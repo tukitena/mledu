@@ -16,7 +16,7 @@ Quy mô dự kiến: **1.500 học sinh, 100 lớp, 100 người dùng**. Đây 
 | --- | --- | --- |
 | Admin | Quản trị trung tâm; xem tổng tài chính/audit; quản lý học vụ, học phí và tài khoản thường; có thể tham gia giảng dạy. | Không quản trị tài khoản Admin hoặc cấp quyền Admin qua ứng dụng; tuân thủ các khóa/quy tắc nghiệp vụ ở phần C. |
 | Receptionist | Quản lý học sinh/lớp, phòng/địa điểm, lịch, điểm danh, xác nhận thu và khoản ngoài học phí. | Không tổng tài chính/audit, không sửa học vụ độc lập, không cấu hình mức học phí hoặc khoản điều chỉnh, không gỡ thu sai; xóa hồ sơ tại lớp là xóa mềm theo XLS-02. |
-| User | Giáo viên hoặc trợ giảng theo từng lớp; tra cứu hồ sơ toàn trung tâm; thao tác học vụ/điểm danh trong lớp có phân công hiệu lực. | Một người một vai trò trong cùng lớp tại cùng thời điểm. Giáo viên được quản lý lịch, công bố/hủy công bố, xóa/khôi phục bài/đợt và sửa trang lớp; trợ giảng không có các quyền đó. Cả hai không xem chi tiết tài chính hoặc in giấy báo học phí. |
+| User | Giáo viên hoặc trợ giảng theo từng lớp; tra cứu hồ sơ toàn trung tâm; sửa thông tin học sinh và lần tham gia trong phạm vi STU-04/STU-03, thao tác học vụ/điểm danh trong lớp có phân công hiệu lực. | Không tạo mới, thêm vào lớp, xóa hoặc khôi phục học sinh/hồ sơ lớp. Một người một vai trò trong cùng lớp tại cùng thời điểm. Giáo viên được quản lý lịch, công bố/hủy công bố, xóa/khôi phục bài/đợt và sửa trang lớp; trợ giảng không có các quyền đó. Cả hai không xem chi tiết tài chính hoặc in giấy báo học phí. |
 | Chưa xác thực | Đăng nhập, quên mật khẩu; phụ huynh tra cứu bằng số điện thoại tại liên kết lớp. | Không truy cập chức năng nội bộ; chỉ nhận dữ liệu đúng học sinh/lớp/thời gian và trạng thái công bố. |
 
 Admin có ba workspace Admin/Receptionist/User; giao diện hiển thị đúng bộ chức năng của workspace đang chọn. Backend vẫn xác định loại tài khoản và kiểm tra các giới hạn nghiệp vụ tương ứng, không dựa riêng vào việc ẩn nút.
@@ -39,14 +39,14 @@ Admin có ba workspace Admin/Receptionist/User; giao diện hiển thị đúng 
 | Danh mục | Môn/khối, địa điểm, phòng và điều kiện xóa. | C.5 |
 | Lịch | Lịch tuần, đổi buổi, buổi nghỉ/bù, nghỉ lễ, kiểm tra trùng lịch. | C.6 |
 | Chuyên cần | Đánh dấu Vắng, lưu Có mặt cho phần còn lại, sửa và tra cứu theo ngày tham gia. | C.7 |
-| Bài kiểm tra | Thang số/phân số/chữ, Vắng, mẫu chữ, điểm thành phần và đổi cấu hình. | C.8 |
+| Bài kiểm tra | Thang số/phân số/chữ và IELTS, Vắng, thư viện template chung do Admin quản lý, cấu hình riêng theo bài và lịch sử thay đổi. | C.8 |
 | Nhận xét | Văn bản thuần tối đa 1.000 ký tự, theo bài hoặc đợt riêng. | C.9 |
 | Công bố | Điểm/nhận xét riêng biệt, theo học sinh/cả lớp; khóa sửa/xóa dữ liệu đã công bố. | C.10 |
 | Phụ huynh | Trang lớp, tra cứu số điện thoại, giới hạn sau nghỉ, quản lý liên kết. | C.11 |
 | Tài chính | Thu học phí tháng/kỳ nhiều tháng, điều chỉnh cố định chỉ Admin cấu hình, thu trước, khoản ngoài học phí và gỡ bản thu sai. | C.12 |
 | Excel | Mẫu xlsx, đối chiếu, xem trước, xác nhận, chặn lỗi/xung đột/nhập lại. | C.13 |
 | Audit | Chi tiết trước/sau, một audit cho lần đồng bộ, chỉ Admin tra cứu. | C.14 |
-| In/dashboard | Điểm danh A4, báo học phí A5; preview/in trình duyệt; dashboard theo quyền. | C.15 |
+| In/dashboard | Điểm danh A4, báo học phí A5 và biên nhận; mẫu Word do Admin quản lý, tải Word/preview/in trình duyệt; dashboard theo quyền. | C.15 |
 | Trải nghiệm | Điện thoại/máy tính, Việt/Anh, sáng/tối/theo hệ thống lưu local, thông báo trong ứng dụng. | C.16 |
 
 ## C. Đặc tả chức năng
@@ -284,7 +284,8 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 
 #### STU-04. Hồ sơ tổng, liên hệ và chuẩn hóa tra cứu
 
-- **Quyền:** Admin/Receptionist tạo, sửa, xóa mềm, khôi phục. Mọi tài khoản nội bộ được tra cứu hồ sơ toàn trung tâm; quyền này không bao gồm học vụ, ghi chú lớp hoặc tài chính ngoài phạm vi được cấp.
+- **Quyền (cập nhật 28/10/2026):** Admin/Receptionist tạo, sửa, xóa mềm, khôi phục. User là giáo viên hoặc trợ giảng có phân công đang hiệu lực được sửa các trường thông tin học sinh như Admin/Receptionist, khi học sinh có hồ sơ chưa xóa trong ít nhất một lớp chưa xóa mà User đang được phân công. User không tạo mới, xóa mềm hoặc khôi phục học sinh. Mọi tài khoản nội bộ vẫn được tra cứu hồ sơ toàn trung tâm; quyền tra cứu không tự cấp quyền sửa ngoài phạm vi trên, học vụ, ghi chú lớp hoặc tài chính ngoài phạm vi được cấp.
+- **Phạm vi sửa của User:** Tên học sinh, tên phụ huynh, số phụ huynh/học sinh, ngày sinh, trường và ghi chú tổng quan theo cùng kiểm tra dữ liệu/chống trùng như Admin/Receptionist; không đổi mã/định danh hoặc trạng thái lưu trữ. Đây là hồ sơ tổng dùng chung, sửa có hiệu lực ở mọi lớp liên quan; giao diện phải nêu rõ tác động này, không tạo bản thông tin riêng của User/lớp. Không sửa hồ sơ tổng đã xóa. Backend kiểm tra lại tài khoản, phân công và quan hệ học sinh–lớp khi ghi, kể cả sau preview hoặc khi gọi trực tiếp API/Excel; thành công ghi audit cùng transaction.
 - **Dữ liệu:** Chỉ tên học sinh bắt buộc. Tên phụ huynh, nhiều số phụ huynh/học sinh, ngày sinh, trường, ghi chú tổng quan đều tùy chọn. Giữ nguyên tên có dấu để hiển thị; các giá trị chuẩn hóa chỉ dùng đối chiếu/tìm kiếm.
 - **Chuẩn hóa tên:** Unicode NFD, bỏ dấu kết hợp, đổi đ/Đ thành d, chuyển chữ thường, bỏ khoảng trắng đầu/cuối và gộp khoảng trắng liên tiếp thành một. Không bỏ hoặc thay dấu câu. Ví dụ `Đặng  Thị Ánh` và `dang thi anh` cùng khóa tên.
 - **Chuẩn hóa số:** Bỏ khoảng trắng và ký tự phân cách `.`, `-`, `(`, `)`; đổi đầu `+84` hoặc `0084` về `0` cho số Việt Nam, giữ số 0 đầu. Chấp nhận số Việt Nam 10 hoặc 11 chữ số bắt đầu bằng 0; số nước ngoài giữ dấu `+` và 8–15 chữ số. Từ chối chuỗi không hợp lệ, không sửa ngầm chữ thành số. Loại trùng số trong cùng hồ sơ theo loại liên hệ.
@@ -292,25 +293,27 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 - **Sửa hồ sơ:** Đổi tên sang khóa tên đã có áp dụng cùng điều kiện số phụ huynh. Không cho bỏ hết số phụ huynh đã có khi còn hồ sơ khác cùng khóa tên. Hồ sơ ban đầu được tạo không có số khi tên còn duy nhất vẫn được giữ và sửa trường khác; không bắt bổ sung số chỉ vì sau đó có học sinh cùng tên được thêm hợp lệ.
 - **Hồ sơ đã xóa:** Trùng cả tên chuẩn hóa và số phụ huynh với hồ sơ xóa mềm thì hướng tới khôi phục; không tạo bản sao hoặc tự khôi phục qua Excel.
 - **Tra cứu:** Tìm tên nội bộ không phân biệt dấu/hoa thường theo khóa chuẩn hóa; tìm số dùng số chuẩn hóa. Thêm qua Excel phải xác định duy nhất hồ sơ theo XLS-06. Phụ huynh vẫn chỉ tra bằng số tại PORTAL-02.
+- **Hiển thị/tra cứu mã (chốt 30/10/2026):** Không hiện mã học sinh tại trang học sinh tổng hoặc trang Học sinh trong lớp, kể cả chi tiết, hộp thoại chọn/thao tác và thông báo. Không tra cứu/lọc bằng mã học sinh; danh sách tổng và chọn hồ sơ tìm theo tên/số điện thoại, bộ lọc danh sách trong lớp tìm theo tên. Mã vẫn được cấp và giữ ổn định trong dữ liệu, lịch sử và cột ẩn Excel theo XLS-05; không xóa hoặc đổi mã khi sửa/khôi phục.
 - **Ghi chú:** Ghi chú tổng quan thấy trong hồ sơ tổng; ghi chú lớp chỉ người có quyền lớp được xem, không trả công khai.
-- **Nghiệm thu:** Tên chưa trùng được tạo không cần số; thêm tên không dấu trùng khóa phải có số phụ huynh khác; `0912 345 678` và `+84 912345678` được đối chiếu như nhau. Một lỗi trùng trên Excel chặn toàn bộ file; thao tác thành công có audit.
+- **Nghiệm thu:** Tên chưa trùng được tạo không cần số; thêm tên không dấu trùng khóa phải có số phụ huynh khác; `0912 345 678` và `+84 912345678` được đối chiếu như nhau. Một lỗi trùng trên Excel chặn toàn bộ file; thao tác thành công có audit. Giáo viên và trợ giảng sửa được hồ sơ đúng phạm vi, các lớp cùng học sinh thấy cùng dữ liệu; ngoài phạm vi, phân công đã hết/thu hồi hoặc yêu cầu tạo/xóa/khôi phục của User đều bị chặn ở backend. Lỗi audit không để lại thay đổi hồ sơ.
 
 #### STU-03. Hồ sơ học sinh tại lớp và các lần tham gia
 
-- **Quyền:** Admin/Receptionist quản lý; User chỉ đọc trong lớp có phân công đang hiệu lực, không được sửa thông tin tham gia.
+- **Quyền (cập nhật 28/10/2026):** Admin/Receptionist quản lý. User là giáo viên hoặc trợ giảng có phân công đang hiệu lực được sửa ghi chú lần tham gia và ghi ngày nghỉ lần đầu, với cùng ràng buộc như Admin/Receptionist, trong đúng lớp được phân công. Chỉ sửa hồ sơ tổng/hồ sơ lớp chưa xóa; lớp đã xóa chỉ đọc lịch sử đúng quyền. User không thêm học sinh vào lớp, tạo lần tham gia, xóa/lưu trữ hồ sơ, hủy đăng ký hoặc khôi phục; không dùng quyền sửa để chuyển lớp/học lại theo CLASS-04. Quyền sửa hồ sơ tổng theo STU-04; quyền học vụ/điểm danh theo ATT-01, TEST-01 và COMMENT-01 vẫn độc lập.
 - **Hồ sơ tại lớp:** Một học sinh có tối đa một hồ sơ học sinh–lớp chưa xóa trong một lớp. Hồ sơ có định danh riêng, chứa nhiều lần tham gia có định danh riêng; dùng chung mã học sinh tổng. Xóa mềm hồ sơ tại lớp rồi thêm lại tạo hồ sơ mới theo XLS-02, khác với học lại trong hồ sơ cũ theo CLASS-04.
 - **Mỗi lần tham gia:** Ngày vào bắt buộc; ngày nghỉ tùy chọn; ghi chú lớp tùy chọn. Trạng thái hiển thị là Chưa bắt đầu, Đang học hoặc Nghỉ, tính từ thời gian thực tế, không nhập đè qua giao diện/API/Excel.
+- **Bộ lọc Học sinh trong lớp (bổ sung theo yêu cầu 31/10/2026):** Mặc định Đang học; cho chọn Tất cả hoặc từng trạng thái hiện có, gồm lần đã hủy. Kết hợp với tìm tên và tùy chọn hiện hồ sơ đã xóa; lọc theo trạng thái backend trả về của từng lần tham gia, không đổi dữ liệu hay quyền đọc lịch sử.
 - **Mốc ngày:** Ngày vào có hiệu lực 00:00; ngày nghỉ là ngày sau ngày học cuối và loại trừ từ 00:00. Ngày vào không trước ngày mở lớp, không sau ngày kết thúc lớp; ngày nghỉ phải sau ngày vào. Không cho các lần tham gia trong cùng hồ sơ chồng thời gian. Thêm lại sau xóa hồ sơ được phép cùng ngày; mốc tham gia thực tế của hồ sơ mới không trước thời điểm xóa hồ sơ cũ, dù ngày vào cùng ngày. Không lấy giao ngày với hồ sơ lưu trữ để chặn trường hợp thêm lại này.
-- **Khóa ngày:** Ngày vào đã lưu không đổi; ngày nghỉ chỉ ghi lần đầu và không được sửa/xóa sau đó. Sai ngày được xử lý bằng hủy lần tham gia chưa bắt đầu hoặc lưu trữ hồ sơ và thêm lại, giữ bản cũ; không sửa lịch sử để né kiểm tra.
+- **Khóa ngày (giữ nguyên theo xác nhận 28/10/2026):** Ngày vào đã lưu không đổi; ngày nghỉ chỉ ghi lần đầu và không được sửa/xóa sau đó, áp dụng như nhau cho Admin, Receptionist và User. Không ghi ngày nghỉ để mở lại lần đã kết thúc hoặc thay mốc hủy/lưu trữ. Sai ngày được Admin/Receptionist xử lý bằng hủy lần tham gia chưa bắt đầu hoặc lưu trữ hồ sơ và thêm lại, giữ bản cũ; User không tự thực hiện các thao tác này. Không sửa lịch sử để né kiểm tra.
 - **Trạng thái:** Trước ngày vào là Chưa bắt đầu; từ ngày vào đến trước ngày nghỉ hoặc hết ngày kết thúc lớp là Đang học; sau mốc kết thúc là Nghỉ. Nếu lớp đóng tạm, giữ trạng thái tính từ các ngày, hiển thị thêm nhãn Lớp đóng; đóng không tự đặt ngày nghỉ. Lần bị hủy hoặc kết thúc do xóa mềm hiển thị Nghỉ kèm lý do, không sửa ngày đã khóa.
 - **Kết thúc bằng sự kiện:** Xóa mềm hồ sơ tổng/hồ sơ tại lớp hoặc hủy tham gia lưu mốc thời điểm riêng. Khoảng hiệu lực kết thúc tại mốc sớm nhất giữa ngày nghỉ, hết ngày kết thúc lớp đã ghi cho lần tham gia và sự kiện kết thúc. Giữ mốc kết thúc đã xảy ra; gia hạn lớp sau đó không hồi sinh lần đã Nghỉ.
 - **Hủy đăng ký chưa bắt đầu:** Admin/Receptionist chọn lần tham gia tương lai, nhập lý do và xác nhận hủy; lưu lần tham gia cùng trạng thái hủy, không xóa cứng. Hủy nghĩa vụ chưa thu chỉ phục vụ lần bị hủy nếu không còn khoảng tham gia thực tế/đăng ký hợp lệ khác cho nghĩa vụ đó, kể cả tháng hiện tại đã tạo trước ngày vào. Khoản đã thu và nợ thuộc thời gian đã thực sự tham gia giữ nguyên. Không tự hủy nghĩa vụ còn dùng cho lần tham gia khác trong cùng hồ sơ. Một lỗi dữ liệu/audit hủy cả thao tác.
 - **Tra cứu lịch sử:** Ngày, ghi chú và sự kiện cũ vẫn được tra đúng quyền; không lấy trạng thái hiện tại thay khoảng tham gia khi điểm danh, phát sinh phí hoặc tra cứu phụ huynh.
-- **Nghiệm thu:** Đăng ký tương lai không Đang học sớm; đóng lớp không làm mất lịch sử; đến ngày nghỉ tự Nghỉ. UI/API/Excel cùng chặn sửa ngày đã khóa, chồng khoảng và cập nhật trực tiếp trạng thái.
+- **Nghiệm thu:** Đăng ký tương lai không Đang học sớm; đóng lớp không làm mất lịch sử; đến ngày nghỉ tự Nghỉ. UI/API/Excel cùng chặn sửa ngày đã khóa, chồng khoảng và cập nhật trực tiếp trạng thái. Giáo viên/trợ giảng sửa ghi chú và ghi ngày nghỉ lần đầu trong đúng lớp; cả ba loại tài khoản đều không đổi ngày vào đã lưu hoặc sửa/xóa ngày nghỉ đã ghi. User không được sửa lần tham gia ở lớp khác dù cùng học sinh. Thu hồi/hết phân công giữa lúc xem và lưu phải chặn; tạo/thêm/xóa/hủy/khôi phục trái quyền bị chặn; lỗi audit rollback toàn bộ.
 
 #### STU-01. Xóa mềm học sinh tại danh sách tổng
 
-- **Quyền/phạm vi:** Admin hoặc Receptionist, trực tiếp hoặc qua XLS-01. Xóa tổng không gọi xóa hồ sơ học sinh tại lớp tại XLS-02.
+- **Quyền/phạm vi:** Admin hoặc Receptionist, trực tiếp hoặc qua XLS-01; User không được xóa, kể cả học sinh trong lớp được phân công. Xóa tổng không gọi xóa hồ sơ học sinh tại lớp tại XLS-02.
 - **Thao tác:** Xem ảnh hưởng và xác nhận; ghi thời điểm/lý do xóa mềm, kết thúc các lần tham gia đang hiệu lực tại thời điểm đó, hủy đăng ký chưa bắt đầu theo STU-03. Thay đổi hồ sơ, sự kiện tham gia, nghĩa vụ tương lai và audit cùng thành công/thất bại.
 - **Lịch sử:** Giữ mã học sinh, hồ sơ, liên hệ, các lần tham gia, điểm, nhận xét, chuyên cần và tài chính. Không sửa các ngày đã khóa; sự kiện kết thúc được lưu riêng. Không có tác vụ tự xóa vĩnh viễn hồ sơ hoặc lịch sử sau 60 ngày.
 - **Công nợ:** Cho xóa mềm dù còn nợ vì dữ liệu được giữ. Khoản đã thu và khoản chưa thu đã phát sinh trước mốc kết thúc vẫn có hiệu lực, tiếp tục thu/gỡ thu đúng quyền tại danh sách tài chính có hồ sơ lưu trữ. Chỉ hủy nghĩa vụ chưa thu có ngày áp dụng sau mốc kết thúc và không còn khoảng tham gia phù hợp. Không coi nghĩa vụ thiếu cấu hình/lỗi tác vụ là đã thu; vẫn chạy bù phần lịch sử đủ điều kiện theo FEE-07.
@@ -331,10 +334,14 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 
 - **Quyền:** Admin/Receptionist tạo, sửa thông tin lớp. Mô tả/thông báo công khai chỉ Admin hoặc giáo viên đang có phân công hiệu lực sửa theo PORTAL-01.
 - **Thông tin bắt buộc:** Tên lớp, một môn, một khối, ngày mở và ngày kết thúc; ngày kết thúc không trước ngày mở. Ghi chú tùy chọn. Chuyên môn phụ trách của nhân sự lưu tùy chọn trên phân công, không bắt buộc trùng môn lớp.
+- **Năm học (bổ sung được duyệt 30/10/2026):** Tùy chọn, dạng chuẩn hai năm liên tiếp `2026–2027`. Lưu năm bắt đầu là số nguyên 1000–9998; để trống (`NULL`) nghĩa là lớp không thuộc biên chế năm học. Không suy diễn năm học từ ngày lớp và không ràng buộc ngày mở/kết thúc theo năm học. Admin/Receptionist được gán, đổi hoặc bỏ năm học khi tạo/sửa lớp theo quyền hiện có; mọi thay đổi giữ lịch sử và audit nguyên khối. Lớp có sẵn giữ `NULL` khi thêm trường.
+- **Hiển thị/lọc năm học:** Danh sách có cột Năm học; form tạo/sửa và chi tiết lớp hiển thị cùng giá trị. Bộ lọc mặc định **Tất cả năm học**, cho chọn một năm học cụ thể hoặc **Không thuộc năm học**, kết hợp với tìm tên lớp trước khi đếm/phân trang; đổi bộ lọc quay về trang 1. Danh sách năm học lấy từ toàn bộ lớp trong phạm vi người gọi được phép đọc (cùng trạng thái xóa), không giới hạn bởi trang/tên/năm đang lọc và không tiết lộ năm từ lớp ngoài quyền. User chỉ lọc trong lớp có phân công hiệu lực; bộ lọc không cấp thêm quyền.
+- **Sắp xếp và bộ lọc danh sách (bổ sung theo yêu cầu 30/10/2026):** Mặc định tên ngắn hơn đứng trước; cùng số ký tự thì so từ điển theo khóa tên chuẩn hóa, rồi tên hiển thị/ID để ổn định phân trang. Kết hợp tìm tên, năm học, khối, môn, trạng thái và nhân sự trước khi đếm/phân trang; đổi bộ lọc về trang 1. Trạng thái cho chọn Mở/Đóng hoặc Chưa mở/Đang diễn ra/Đã kết thúc theo ngày nghiệp vụ. Nhân sự gồm giáo viên/trợ giảng có phân công đang hiệu lực. Lựa chọn khối/môn/nhân sự lấy từ toàn bộ lớp được đọc cùng trạng thái xóa, độc lập bộ lọc/trang, giữ danh mục lưu trữ còn được lớp tham chiếu; không mở rộng quyền hoặc lộ lựa chọn từ lớp ngoài quyền. Nghiệm thu trên desktop/mobile, Việt/Anh, cả kết quả rỗng và phân công/phiên bị thu hồi.
 - **Đa môn:** Lớp có nhiều giáo viên/trợ giảng; không bắt buộc mọi lớp có ba giáo viên. Mỗi lớp có nhiều lịch/phòng/địa điểm khác nhau.
 - **Sửa ngày:** Trước khi lớp bắt đầu và chưa có lịch sử tham gia/buổi đã bắt đầu, được sửa ngày nếu vẫn bao phủ mọi ngày vào đã lưu. Khi đã có hoạt động, khóa ngày mở; ngày kết thúc chỉ được thay từ hôm nay trở đi, không hồi tố để cắt lịch sử. Rút ngắn ngày kết thúc phải xem trước và xử lý buổi chưa bắt đầu nằm ngoài phạm vi trong cùng giao dịch; không thay ngày vào/nghỉ đã khóa.
 - **Gia hạn:** Giữ lịch sử kết thúc đã xảy ra của học sinh/phân công. Người đã kết thúc muốn học/dạy tiếp phải có lần tham gia/phân công mới; các khoảng chưa kết thúc được kéo dài phạm vi lớp nhưng không vượt ngày nghỉ/kết thúc riêng đã lưu. Kỳ thu đã cấu hình không tự đổi theo ngày lớp mới, theo FEE-02.
 - **Nghiệm thu:** Bộ trường hợp lệ tạo được lớp; môn khác chuyên môn không chặn phân công; sửa/gia hạn không hồi sinh khoảng đã kết thúc hoặc viết lại dữ liệu quá khứ; mọi thay đổi có audit.
+- **Nghiệm thu năm học:** Tạo được lớp có/không năm học; sửa/đổi/bỏ năm học giữ lịch sử và kiểm tra phiên bản; lỗi audit rollback toàn bộ. Từ chối năm sai định dạng/ngoài phạm vi. Lọc Tất cả/Không thuộc năm học/một năm cho đúng bản ghi, tổng số và phân trang; không mở rộng quyền hoặc bỏ qua phiên/phân công bị thu hồi. UI Việt/Anh và desktop/mobile đều thao tác được; ngày lớp có thể nằm ngoài năm học đã gán.
 - **Trạng thái quản trị:** Lớp mới mặc định Mở; ngày mở/kết thúc vẫn giới hạn thời gian tham gia/lịch/thu trước. Lớp Mở chưa tới ngày mở không làm học sinh Đang học sớm; lớp hết ngày kết thúc không phát sinh buổi mới.
 
 #### CLASS-01. Thời hạn phân công giáo viên/trợ giảng
@@ -396,7 +403,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 
 #### CLASS-04. Chuyển lớp và học lại
 
-- **Quyền:** Admin/Receptionist.
+- **Quyền:** Admin/Receptionist. User không chuyển lớp, học lại hoặc thêm lại; quyền sửa hồ sơ/lần tham gia tại STU-04/STU-03 không cấp quyền tạo hồ sơ hoặc lần tham gia mới.
 - **Chuyển lớp:** Ghi ngày nghỉ lần đầu ở nguồn hoặc dùng ngày đã lưu; thêm lần tham gia ở đích với ngày vào hợp lệ. Nguồn và đích cùng thành công/thất bại; không chuyển tiền, điểm hoặc nhận xét sang lớp đích.
 - **Học lại thông thường:** Nếu hồ sơ học sinh–lớp chưa xóa, tạo lần tham gia mới trong hồ sơ đó; không chồng thời gian, không sửa ngày cũ và không phát sinh trùng học phí cùng hồ sơ/tháng hoặc kỳ.
 - **Thêm lại sau xóa hồ sơ tại lớp:** Tạo hồ sơ mới và khoản phải thu mới theo XLS-02/FEE-07, kể cả cùng tháng/kỳ đã thu ở hồ sơ cũ. Giữ các khoản và lần thu của hồ sơ cũ riêng; không tự coi khoản mới là đã thu hoặc chuyển tiền cũ sang.
@@ -424,6 +431,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 
 - **Quyền:** Chỉ Admin tạo/sửa/xóa mềm/khôi phục; Receptionist chọn khi quản lý lớp. User chỉ đọc theo chức năng liên quan.
 - **Dữ liệu:** Tên bắt buộc, tối đa 100 ký tự; tên chuẩn hóa theo STU-04 phải duy nhất trong từng loại môn hoặc khối, kể cả bản lưu trữ. Trùng bản đã xóa thì khôi phục thay vì tạo mới.
+- **Sắp xếp mặc định (bổ sung theo yêu cầu 30/10/2026):** So số ký tự của tên hiển thị, tên ngắn hơn đứng trước; nếu bằng nhau, so từ điển theo khóa tên chuẩn hóa, rồi tên hiển thị/ID để ổn định. Áp dụng cả danh mục môn, khối, địa điểm và phòng; phòng so tên trước, không nhóm địa điểm trước. Ví dụ: Lớp 6 → Lớp 7 → Lớp 10 → Lớp 11.
 - **Xóa:** Xóa mềm dù đã có lớp sử dụng; ẩn khỏi lựa chọn mới, giữ tham chiếu và tên lịch sử của lớp cũ. Không xóa lớp hoặc học vụ. Khôi phục dùng lại định danh cũ.
 - **Nghiệm thu:** Chỉ Admin ghi được; lớp dùng môn/khối đã lưu trữ vẫn xem lịch sử đúng tên; tạo lớp mới không chọn được bản lưu trữ. Mọi thay đổi có audit.
 
@@ -497,6 +505,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   - Lớp có lịch cố định theo thứ và giờ hằng tuần.
   - Cho phép đổi lịch từng buổi, ghi nhận buổi nghỉ và tổ chức học bù.
 - **Dữ liệu nghiệp vụ:** Lịch tuần của lớp gồm thứ, giờ bắt đầu, giờ kết thúc và phòng học; ngày mở/kết thúc lớp; các buổi học cụ thể với ngày, giờ và phòng tương ứng; các thay đổi lịch từng buổi.
+- **Bộ lọc Lịch / Điểm danh (bổ sung theo yêu cầu 31/10/2026):** Tháng và năm là hai ô số riêng, vẫn nhập tay; có nút giảm/tăng tháng trên desktop và mobile, chuyển năm khi qua tháng 1/12. Kết hợp tháng/năm, địa điểm và trạng thái buổi; trạng thái mặc định Có lịch, cho chọn Tất cả hoặc từng trạng thái nghỉ/lễ/đã gỡ để tra cứu đúng quyền.
 - **Quy tắc nghiệp vụ:**
   - Buổi học cụ thể được xác định theo lịch tuần trong thời gian hoạt động của lớp.
   - Đổi lịch một buổi chỉ tác động buổi được chọn, không tự đổi toàn bộ lịch tuần.
@@ -607,15 +616,15 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   | Tên bài | Bắt buộc. Tên hiển thị của bài kiểm tra. |
   | Ngày kiểm tra | Bắt buộc. Ngày thực hiện bài kiểm tra. |
   | Mô tả | Tùy chọn. Nội dung mô tả bài kiểm tra; cho phép để trống. |
-  | Loại thang điểm | Bắt buộc. Số, phân số hoặc chữ theo TEST-01. |
-  | Cấu hình thang/điểm thành phần | Bắt buộc theo loại thang và chế độ nhập đã chọn. Điểm tối đa, tổng số câu hoặc mẫu chữ; chế độ nhập trực tiếp/theo phần và cấu hình các phần nếu dùng, theo TEST-02 đến TEST-04. |
+  | Loại đánh giá | Bắt buộc. Số, phân số, chữ hoặc IELTS theo TEST-01. |
+  | Cấu hình đánh giá | Bắt buộc theo loại và chế độ nhập. Cấu hình riêng hoặc khởi tạo từ template TEST-02 rồi chỉnh riêng cho bài; gồm điểm tối đa, số câu, bộ mức chữ, các phần hoặc kỹ năng IELTS và chế độ nhập tương ứng. |
 
 - **Quy tắc nghiệp vụ:**
   - Bài kiểm tra thuộc một lớp; thông tin bài dùng chung cho các kết quả học sinh của bài đó.
   - Nhập và kiểm tra kết quả theo cấu hình của bài, không dùng cấu hình của bài khác.
-  - Thay đổi thang/mẫu sau khi có kết quả tuân theo TEST-03; thay đổi mẫu chung không tự thay đổi bài cũ.
+  - Chọn template là tùy chọn, không phải điều kiện để tạo bài. Cấu hình riêng hoặc sửa bản sao từ template không tạo/sửa template trong thư viện. Thay đổi cấu hình sau khi có kết quả tuân theo TEST-03; sửa template không tự thay đổi bài cũ.
   - Tạo/sửa thông tin bài thành công được ghi audit theo AUD-01.
-- **Tiêu chí nghiệm thu:** Tạo được bài với mô tả để trống khi các thông tin bắt buộc hợp lệ; thiếu tên, ngày kiểm tra, loại thang hoặc cấu hình bắt buộc thì từ chối tạo và chỉ rõ thông tin thiếu. Hiển thị được đủ năm nhóm thông tin trên; hỗ trợ cả ba thang và hai chế độ nhập của thang số/phân số; cấu hình được áp dụng đúng khi nhập kết quả.
+- **Tiêu chí nghiệm thu:** Tạo được bài với mô tả để trống khi các thông tin bắt buộc hợp lệ; thiếu tên, ngày kiểm tra, loại đánh giá hoặc cấu hình bắt buộc thì từ chối tạo và chỉ rõ thông tin thiếu. Hỗ trợ số/phân số/chữ và IELTS, tạo không dùng template hoặc chỉnh bản sao từ template; nhập kết quả theo đúng cấu hình đã lưu của bài.
 - **Quyền sửa thông tin:** Cho phép sửa tên, ngày kiểm tra và mô tả khi đã có kết quả công bố; không làm thay đổi trạng thái công bố hoặc kết quả. Thay đổi cấu hình đánh giá vẫn theo TEST-03.
 - **Khóa/mốc:** Mỗi học sinh có tối đa một kết quả và một nhận xét cho một bài, không phụ thuộc hồ sơ/lần tham gia. Nhập cho học sinh có ngày bài giao với ít nhất một khoảng tham gia trong lớp, kể cả lịch sử; không lấy danh sách Đang học hiện tại để thay điều kiện theo ngày.
 - **Ngày bài:** Nằm trong thời gian lớp đã có hiệu lực tại ngày bài; được sửa tên/ngày/mô tả khi đã công bố nhưng không cho chuyển ngày ra ngoài hợp khoảng tham gia của bất kỳ học sinh đang có kết quả/nhận xét. Chặn cả thay đổi và chỉ rõ học sinh bị ảnh hưởng, không tự xóa hoặc hủy công bố.
@@ -624,19 +633,20 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 #### TEST-01. Cấu hình thang điểm theo từng bài kiểm tra
 
 - **Mục đích:** Hỗ trợ cách đánh giá khác nhau cho từng bài kiểm tra.
-- **Quyền thao tác:** Admin và giáo viên/trợ giảng có phân công đang hiệu lực được tạo và nhập kết quả theo TEST-05 và ACAD-01. Quyền tùy chỉnh mẫu thang chữ của giáo viên/trợ giảng được quy định tại TEST-02.
-- **Cấu hình:** Mỗi bài kiểm tra có thang điểm riêng, hỗ trợ ba loại:
+- **Quyền thao tác:** Admin và giáo viên/trợ giảng có phân công đang hiệu lực được cấu hình bài và nhập kết quả theo TEST-05 và ACAD-01. Chỉ Admin quản lý thư viện template theo TEST-02; quyền sửa cấu hình một bài không cấp quyền lưu template.
+- **Cấu hình:** Mỗi bài kiểm tra có cấu hình đánh giá riêng, hỗ trợ các loại:
 
   | Loại | Cấu trúc kết quả | Cấu hình theo bài |
   | --- | --- | --- |
   | Số | Điểm số học sinh đạt được. | Điểm tối đa riêng, ví dụ 10, 20 hoặc 100; không cố định thang 10. |
   | Phân số | Số câu đúng / tổng số câu. | Tổng số câu của bài kiểm tra. |
-  | Chữ | Một mức đánh giá trong danh sách của thang chữ. | Mẫu mặc định hoặc mẫu được giáo viên tùy chỉnh theo TEST-02. |
+  | Chữ | Một mức đánh giá trong danh sách của bài. | Bộ mức cấu hình riêng hoặc sao chép từ template chung theo TEST-02. |
+  | IELTS | Điểm band theo các kỹ năng được chọn; Overall khi đủ bốn kỹ năng. | L/R/W/S tùy chọn, chế độ nhập riêng từng kỹ năng nhưng thống nhất cho cả bài; quy tắc IELTS bên dưới. |
 
 - **Trạng thái Vắng:**
   - Có trạng thái riêng Vắng, nghĩa là học sinh không thực hiện bài kiểm tra đó.
   - Vắng không phải điểm 0, phân số 0/tổng số câu hoặc mức Chưa đạt; không quy đổi tự động thành các giá trị này.
-  - Trạng thái Vắng độc lập với loại thang điểm và được hỗ trợ cho cả ba loại.
+  - Trạng thái Vắng độc lập với loại đánh giá, áp dụng cả số/phân số/chữ và IELTS. Vắng của cả bài không được chuyển thành band 0 hoặc các điểm thành phần giả.
   - Vắng không đồng nghĩa chưa nhập kết quả. Được công bố Vắng như một kết quả xác định của học sinh trong bài kiểm tra, theo quyền và phạm vi công bố điểm tại ACAD-01.
   - Khi đã công bố, trang phụ huynh hiển thị “Vắng – Không thực hiện bài kiểm tra”; khi chưa công bố hoặc đã hủy công bố, ẩn kết quả Vắng như các kết quả chưa công bố khác.
   - Vắng không yêu cầu có điểm tổng hoặc đủ điểm thành phần để được công bố; không tạo điểm 0 hoặc các điểm thành phần giả để hoàn tất dữ liệu.
@@ -662,31 +672,42 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   - Lưu được Vắng như trạng thái riêng; không thay thành điểm 0 hoặc mức Chưa đạt.
   - Công bố được Vắng, kể cả bài có điểm thành phần nhưng học sinh không có điểm các phần; phụ huynh thấy đúng thông báo khi công bố và không thấy kết quả này sau khi hủy công bố.
   - Excel hỗ trợ đúng loại kết quả và Vắng; dữ liệu không hợp lệ chặn toàn bộ lần đồng bộ.
-- **Đã làm rõ:** Excel dùng mẫu của từng chức năng theo XLS-06; thay thang hoặc điểm tối đa/tổng số câu phải hủy công bố, nhập lại điểm, công bố lại theo TEST-03; Vắng giữ nguyên.
+- **Đã làm rõ:** Excel dùng mẫu của từng chức năng theo XLS-06; thay thang hoặc điểm tối đa/tổng số câu phải hủy công bố, nhập lại điểm, công bố lại theo TEST-03; Vắng giữ nguyên. Các quy tắc cộng phần của thang số/phân số không áp dụng thay công thức IELTS.
 
-#### TEST-02. Mẫu thang điểm chữ
+**IELTS — mở rộng được người dùng chốt ngày 28/10/2026:**
 
-- **Mục đích:** Có sẵn bộ đánh giá để dùng ngay và cho phép giáo viên tùy chỉnh phù hợp với lớp.
-- **Mẫu mặc định:** Chưa đạt, Đạt, Tốt, Xuất sắc.
-- **Quyền tùy chỉnh:** Giáo viên và trợ giảng có phân công đang hiệu lực trong lớp đều được tạo/sửa mẫu thang chữ dùng chung của lớp; Admin có quyền quản lý theo quyền học vụ chung. Receptionist không có quyền tạo/sửa mẫu. Quyền này không cấp cho trợ giảng quyền công bố/hủy công bố điểm hoặc nhận xét.
-- **Phạm vi mẫu:** Mẫu thang chữ tùy chỉnh được lưu chung trong lớp để chọn dùng lại cho nhiều bài kiểm tra, không chỉ lưu riêng từng bài. Mẫu thuộc lớp nào được quản lý trong phạm vi lớp đó; không có mẫu liên kết dùng chung trực tiếp giữa các lớp.
-- **Quy tắc:** Không bắt buộc mọi bài kiểm tra dùng nguyên bộ mức mặc định. Khi tạo/cấu hình bài kiểm tra thang chữ, chọn mẫu của lớp; hệ thống lưu bộ mức tại thời điểm chọn riêng cho bài đó. Nhập, đồng bộ và hiển thị kết quả phải nhất quán với bộ mức đã lưu cho bài.
-- **Thay đổi mẫu:**
-  - Sửa mẫu chung của lớp không tự cập nhật bộ mức của các bài kiểm tra đã chọn mẫu, kể cả bài chưa nhập kết quả.
-  - Kết quả đã nhập và nội dung đã công bố của các bài cũ giữ nguyên, không bị đổi tên mức hoặc quy đổi theo mẫu mới.
-  - Phiên bản mẫu mới chỉ được dùng khi chọn mẫu sau thời điểm thay đổi; không tự áp dụng ngược cho các bài cũ.
-- **Tiêu chí nghiệm thu:** Dùng được mẫu mặc định; giáo viên và trợ giảng có phân công đang hiệu lực tạo/sửa được mẫu dùng chung trong lớp; Receptionist hoặc User không có phân công đang hiệu lực trong lớp không được thực hiện. Nhiều bài kiểm tra chọn dùng được cùng một mẫu; khi nhập kết quả chỉ nhận mức thuộc bộ mức đang áp dụng cho bài.
-- **Tiêu chí nghiệm thu khi sửa mẫu:** Hai bài chọn cùng mẫu trước và sau khi sửa có thể giữ hai bộ mức khác nhau; bài cũ, kết quả và trạng thái công bố không thay đổi. Excel kiểm tra theo bộ mức đã lưu của từng bài, không theo mẫu chung mới nhất.
-- **Quản lý mức:** Từ 1 đến 20 mức, mỗi tên 1–100 ký tự và duy nhất theo chuẩn hóa tên trong mẫu. Cho thêm/xóa/đổi tên/sắp xếp; không lưu mẫu rỗng. Mẫu chỉ dùng trong lớp, không có liên kết dùng chung trực tiếp giữa lớp. Xóa mềm mẫu không thay bộ mức đã chụp vào bài cũ.
+- **Kỹ năng:** Bài IELTS chọn một hoặc nhiều kỹ năng Listening (L), Reading (R), Writing (W), Speaking (S), không bắt buộc đủ bốn. Kỹ năng không được chọn là Không áp dụng, không phải thiếu điểm hoặc Vắng. Không tạo bài IELTS rỗng.
+- **Chế độ nhập:** Cấu hình riêng từng kỹ năng là nhập band trực tiếp hoặc nhập chi tiết; chế độ đó thống nhất cho mọi học sinh trong bài, không chọn khác nhau theo học sinh. Được lưu dữ liệu chưa đầy đủ nhưng không tự điền 0 hoặc tự chuyển chế độ để hoàn tất. Chuyển chế độ sau khi có kết quả theo TEST-03.
+- **L/R:** Chế độ chi tiết lưu số câu đúng và band do người dùng nhập; cấu hình số câu tối đa nguyên dương theo bài. Số câu đúng là số nguyên từ 0 đến tối đa. Hệ thống không quy đổi số câu đúng sang band, không suy ngược số câu từ band. Chế độ trực tiếp chỉ cần band, không bắt nhập số câu đúng.
+- **Writing:** Chế độ chi tiết có Task 1 và Task 2, mỗi Task gồm bốn tiêu chí trọng số bằng nhau: Task Achievement (Task 1) / Task Response (Task 2), Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy. Mỗi Task cần đủ bốn tiêu chí để có điểm; Writing cần đủ hai Task. Chế độ trực tiếp chỉ nhập band Writing, không bắt có điểm Task/tiêu chí.
+- **Công thức Writing:** `Task1 = roundBand((TA + CC1 + LR1 + GRA1) / 4)`; `Task2 = roundBand((TR + CC2 + LR2 + GRA2) / 4)`; `Writing = roundBand((Task1 + 2 × Task2) / 3)`. Làm tròn từng Task trước khi tính trọng số, đúng thứ tự người dùng yêu cầu; không thay ngầm bằng cách chỉ làm tròn ở bước cuối.
+- **Speaking:** Chế độ chi tiết gồm bốn tiêu chí trọng số bằng nhau: Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, Pronunciation. Khi đủ bốn tiêu chí, `Speaking = roundBand(tổng bốn tiêu chí / 4)`; chế độ trực tiếp chỉ nhập band Speaking. Không cho ghi đè band tự tính trong chế độ chi tiết.
+- **Miền điểm/làm tròn:** Band nhập trực tiếp và điểm tiêu chí từ 0 đến 9, bước 0,5; giá trị ngoài miền hoặc sai bước bị từ chối, không tự sửa đầu vào. Với giá trị tính toán không âm, `roundBand(x) = floor(2 × x + 0,5) / 2`: phần lẻ nhỏ hơn 0,25 về số nguyên dưới; từ 0,25 đến dưới 0,75 về nửa band; từ 0,75 lên số nguyên tiếp theo. Không làm tròn trung bình về hai số lẻ trước khi áp dụng công thức. Đây là quy tắc chấm nội bộ MLedu; riêng thứ tự làm tròn Task rồi Writing được chốt theo yêu cầu người dùng, không tuyên bố đã kiểm chứng là toàn bộ quy trình chấm thi IELTS chính thức.
+- **Overall:** Chỉ tính khi bài có đủ L/R/W/S và học sinh có band hợp lệ của cả bốn: `Overall = roundBand((L + R + W + S) / 4)`. Nếu bài chỉ chọn một đến ba kỹ năng thì không có Overall và không tự lấy trung bình các kỹ năng đó làm Overall. Nếu bài chọn đủ bốn nhưng thiếu band thì Overall để trống; không quy thiếu thành 0. Overall do backend tính, không nhập/ghi đè.
+- **Hoàn tất/công bố:** Kết quả không Vắng hoàn tất khi tất cả kỹ năng được chọn đủ dữ liệu theo chế độ; L/R chi tiết cần cả số câu đúng và band, W/S chi tiết cần đủ tiêu chí. Bài chỉ có một đến ba kỹ năng vẫn được công bố khi đủ dữ liệu đã chọn, dù không có Overall. Bài chọn đủ bốn nhưng thiếu kỹ năng không được công bố. Vắng cả bài vẫn là kết quả hợp lệ theo quy tắc chung. Công bố theo học sinh/bài, không tạo công bố độc lập từng kỹ năng/Task/tiêu chí.
+- **Hiển thị:** Khi đã công bố, phụ huynh thấy band từng kỹ năng đã chọn và Overall nếu có. Số câu đúng L/R, điểm Task và tiêu chí W/S là chi tiết chịu tùy chọn hiện/ẩn toàn bài theo TEST-04; ẩn chi tiết phải loại chúng khỏi phản hồi API. Chưa công bố thì ẩn toàn bộ kết quả; không ảnh hưởng trạng thái nhận xét.
+- **Lịch sử/Excel:** Lưu điểm đầu vào, cấu hình và phiên bản công thức với kết quả; backend tính lại, không tin band tự tính/Overall do client hoặc Excel gửi. L/R vẫn dùng band do người dùng nhập. Đổi tập kỹ năng, chế độ, số câu tối đa hoặc cấu hình chấm theo TEST-03; không tính lại bài cũ chỉ vì sửa template/công thức mặc định.
+- **Nghiệm thu:** Bài chỉ L/R công bố được khi đủ dữ liệu và không có Overall; bài đủ bốn thiếu S không công bố. `6,125 → 6,0`, `6,25 → 6,5`, `6,75 → 7,0`. Task 1 có `6; 6; 6; 6,5` cho 6,0; Task 2 có `6; 6; 6,5; 6,5` cho 6,5; Writing là 6,5 theo thứ tự làm tròn đã chốt. L/R nhập 30 câu đúng và band 6,5 phải giữ đúng band 6,5, không tự quy đổi. Thiếu tiêu chí khác 0; chế độ chi tiết không được ghi đè điểm tự tính; UI/API/Excel cho cùng kết quả.
 
-#### TEST-03. Đổi thang điểm hoặc chọn lại mẫu khi bài đã có kết quả
+#### TEST-02. Thư viện template bài kiểm tra dùng chung
+
+- **Quyết định thay thế ngày 28/10/2026:** Gộp mẫu thang chữ vào template bài kiểm tra; bỏ chức năng thư viện mẫu thang chữ riêng theo lớp và quyền giáo viên/trợ giảng quản lý mẫu chung trước đây. Giữ nguyên mã TEST-02.
+- **Quyền quản lý:** Chỉ Admin được tạo, lưu, sửa, xóa mềm/khôi phục template. Giáo viên/trợ giảng chỉ chọn dùng template khi có quyền tạo/cấu hình bài trong lớp; không lưu cấu hình bài thành template. Receptionist không được quản lý template hoặc tạo/sửa bài kiểm tra; quyền sử dụng template không mở rộng quyền học vụ.
+- **Phạm vi:** Một thư viện chung toàn trung tâm, dùng cho nhiều lớp; không có quyền theo cơ sở. Template chứa tên/mô tả và cấu hình đánh giá số/phân số/chữ/IELTS, chế độ nhập, các phần/kỹ năng/tiêu chí và tùy chọn hiện chi tiết phù hợp loại bài. Không chứa ngày kiểm tra thực tế, danh sách học sinh, kết quả, nhận xét hoặc trạng thái công bố; không phải ngân hàng câu hỏi/đáp án hoặc mẫu đề thi.
+- **Dùng mẫu:** Người có quyền có thể tạo bài từ đầu hoặc chọn template rồi chỉnh riêng. Mỗi bài lưu bản sao cấu hình đầy đủ, định danh/phiên bản nguồn nếu có; template chỉ là nguồn tham khảo, không liên kết cập nhật tự động. Tên/ngày thực tế của bài do người tạo nhập theo TEST-05.
+- **Thang chữ:** Chọn template có bộ mức chữ hoặc cấu hình riêng bộ mức của bài; không có bước chọn mẫu thang chữ độc lập. Bộ mặc định Chưa đạt, Đạt, Tốt, Xuất sắc được cung cấp trong template chữ. Mỗi bộ có 1–20 mức, tên 1–100 ký tự và duy nhất theo chuẩn hóa tên; cho thêm/xóa/đổi tên/sắp xếp trong cấu hình được phép, không lưu bộ rỗng.
+- **Phiên bản:** Sửa template tạo phiên bản mới, không đổi bất kỳ bài đã sao chép, kể cả chưa có kết quả; xóa mềm ngừng lựa chọn cho bài mới nhưng giữ lịch sử và bản sao trong bài cũ. Muốn áp dụng lại template cho một bài phải chủ động chọn lại; khi đã có kết quả áp dụng TEST-03.
+- **Nguyên khối:** Quản lý template kiểm tra quyền hiện hành, phiên bản và audit trong một transaction. Lỗi audit không tạo phiên bản hoặc thay mẫu; không xóa vĩnh viễn cấu hình/lịch sử.
+- **Nghiệm thu:** Chỉ Admin quản lý qua UI/API; giáo viên/trợ giảng sửa cấu hình riêng của bài mà template không đổi; cùng template dùng được ở hai lớp. Sửa/xóa template không đổi bài cũ hoặc kết quả đã công bố. Bài chọn template trước/sau lần sửa giữ được hai cấu hình khác nhau; Excel luôn đối chiếu cấu hình của bài.
+
+#### TEST-03. Đổi cấu hình đánh giá hoặc chọn lại template khi bài đã có kết quả
 
 - **Mục đích:** Cho phép thay đổi cách đánh giá của bài kiểm tra đã có kết quả, với yêu cầu hủy công bố và nhập lại toàn bộ kết quả.
 - **Người thực hiện:** Admin hoặc giáo viên/trợ giảng có phân công đang hiệu lực trong lớp, theo quyền cấu hình và chỉnh sửa học vụ. Trợ giảng không được hủy công bố; phải chờ Admin hoặc giáo viên thực hiện nếu bài đang có điểm công bố.
 - **Điều kiện trước:** Điểm của tất cả học sinh trong bài kiểm tra đã được chủ động hủy công bố hoặc chưa từng công bố; không còn điểm đang công bố trong bài.
 - **Luồng chính:**
   1. Nếu bài còn điểm đang công bố, Admin hoặc giáo viên chủ động hủy công bố điểm cho toàn bộ phạm vi cần thiết.
-  2. Người có quyền đổi loại thang điểm hoặc chủ động chọn lại mẫu thang chữ cho bài.
+  2. Người có quyền đổi cấu hình đánh giá hoặc chủ động chọn lại template cho bài (kể cả template chữ/IELTS).
   3. Hệ thống áp dụng thang mới; các kết quả cũ không được tiếp tục sử dụng như kết quả hợp lệ của thang mới.
   4. Người có quyền nhập lại toàn bộ kết quả theo thang mới.
   5. Admin hoặc giáo viên kiểm tra và chủ động công bố lại khi phù hợp.
@@ -695,7 +716,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   - Nhập lại toàn bộ kết quả có điểm; giữ nguyên trạng thái Vắng vì trạng thái này không phụ thuộc thang điểm, không yêu cầu nhập lại Vắng.
   - Thao tác đổi thang/chọn lại mẫu không tự công bố kết quả.
   - Không tự sửa hoặc hủy công bố nhận xét gắn bài kiểm tra, vì nhận xét có trạng thái công bố độc lập; thao tác riêng đối với nhận xét vẫn tuân theo ACAD-01.
-  - Sửa mẫu chung của lớp vẫn không ảnh hưởng bài cũ theo TEST-02; chỉ khi chủ động chọn lại mẫu cho bài mới áp dụng quy trình này.
+  - Sửa template chung không ảnh hưởng bài cũ theo TEST-02; chỉ khi chủ động áp dụng cấu hình khác/chọn lại template cho bài mới áp dụng quy trình này. Đổi tập kỹ năng, chế độ nhập hoặc số câu tối đa L/R của bài IELTS cũng là đổi cấu hình; không tự bảo lưu điểm cũ thành điểm hiện hành của cấu hình mới. Công thức IELTS tại TEST-01 là cố định, không phải trường tùy chỉnh của template/bài; phiên bản công thức chỉ để bảo toàn lịch sử. Muốn thay công thức phải có quyết định cập nhật đặc tả riêng, không cấp quyền tự đổi công thức cho người cấu hình bài.
   - Thay đổi thành công được audit với chi tiết trước/sau; lỗi ghi audit hủy toàn bộ thay đổi.
 - **Xử lý lỗi:** Chặn đổi thang/chọn lại mẫu nếu còn bất kỳ điểm đang công bố trong bài hoặc người thực hiện không có quyền; không tự hủy công bố để tiếp tục.
 - **Tiêu chí nghiệm thu:**
@@ -709,8 +730,8 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 #### TEST-04. Điểm thành phần cho thang số và phân số
 
 - **Mục đích:** Nhập kết quả theo từng phần của bài kiểm tra và kiểm soát việc công bố chi tiết điểm thành phần.
-- **Phạm vi:** Áp dụng cho bài kiểm tra thang số hoặc phân số; chưa áp dụng cho thang chữ.
-- **Chế độ nhập:**
+- **Phạm vi:** Quy tắc cộng tổng phần bên dưới áp dụng cho bài thang số hoặc phân số; không áp dụng cho thang chữ. IELTS có cấu trúc và công thức riêng tại TEST-01, dùng chung quyền/khóa và tùy chọn hiện/ẩn chi tiết ở mục này.
+- **Chế độ nhập số/phân số:**
   - Điểm thành phần không bắt buộc. Mỗi bài thang số/phân số chọn một trong hai chế độ: nhập điểm tổng trực tiếp hoặc nhập theo các phần.
   - Chế độ nhập trực tiếp: nhập một kết quả tổng theo thang của bài, không yêu cầu tạo hoặc nhập điểm thành phần; tùy chọn hiện/ẩn thành phần không áp dụng.
   - Chế độ theo phần: cấu hình các phần và tự tính tổng theo TEST-04; không nhập hoặc ghi đè tổng độc lập.
@@ -827,6 +848,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   - Với nhận xét, chọn từng bài kiểm tra hoặc từng đợt nhận xét, rồi công bố/hủy công bố cho một học sinh hoặc cả lớp trong phạm vi đã chọn.
   - Trạng thái công bố nhận xét được quản lý theo từng học sinh trong từng bài kiểm tra/đợt; thao tác không làm thay đổi nhận xét của bài kiểm tra hoặc đợt khác.
   - Với điểm, đơn vị công bố là điểm của từng học sinh trong từng bài kiểm tra. Khi công bố/hủy công bố, chọn một bài kiểm tra và phạm vi một học sinh hoặc cả lớp cho bài đó.
+  - Với IELTS, đơn vị vẫn là kết quả học sinh/bài: kiểm tra hoàn tất theo những kỹ năng đã chọn tại TEST-01. Không đòi Overall cho bài chỉ có một đến ba kỹ năng; không công bố riêng từng kỹ năng hoặc từng Task.
   - Công bố/hủy công bố điểm của một bài kiểm tra không thay đổi trạng thái công bố điểm của các bài kiểm tra khác.
   - Cho phép công bố/hủy công bố theo từng học sinh trong lớp hoặc theo cả lớp.
   - Thao tác đối với điểm không tự công bố/hủy công bố nhận xét, và ngược lại.
@@ -919,7 +941,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 
 #### FEE-01. Hình thức và mức học phí theo lớp
 
-- **Quyền:** Chỉ Admin cấu hình hình thức thu, mức học phí và khoản điều chỉnh; Admin/Receptionist theo dõi, xác nhận thu. User không được xem chi tiết tiền, thu, cấu hình hoặc in giấy báo học phí qua giao diện/API/Excel.
+- **Quyền:** Chỉ Admin cấu hình hình thức thu, mức học phí và khoản điều chỉnh; Admin/Receptionist theo dõi, xác nhận thu. User không được xem chi tiết tiền, thu, cấu hình hoặc xem/tải/in giấy báo học phí, biên nhận qua giao diện/API/Excel.
 - **Theo tháng:** Cấu hình mức cho từng tháng/năm của lớp, có thể khác giữa các tháng; chọn một hoặc nhiều tháng để thu cùng lúc.
 - **Theo kỳ nhiều tháng:** Cấu hình tên kỳ, ngày bắt đầu/kết thúc và tổng tiền cả kỳ; một khoản cho cả kỳ, không đồng thời sinh học phí tháng trong cùng lớp. Hình thức của lớp không đổi sau khi thiết lập.
 - **Giá trị:** VND nguyên đồng, mức gốc không âm; không nhận số thập phân, không tự tính theo buổi/ngày. Mức bằng 0 hoặc sau điều chỉnh bằng 0 mang trạng thái Không phải thu, không ghi nhận tiền thực nhận.
@@ -966,6 +988,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 - **Số tiền:** Mỗi khoản được chọn thu đủ số phải thu đang có hiệu lực, không nhập một phần, không chia một khoản thành nhiều lần đóng và không có trạng thái Đã thu một phần. Khoản học phí bao gồm điều chỉnh gắn kèm, không được chọn bỏ riêng dòng điều chỉnh.
 - **Kiểm tra:** Khoản còn hiệu lực, số phải thu lớn hơn 0, chưa có chi tiết thu hiệu lực; kiểm tra quyền và phiên bản cả số tiền/điều chỉnh lúc xác nhận. Một lần thu không chứa nhiều học sinh hoặc nhiều lớp, không nhận khoản đã hủy nghĩa vụ hoặc Không phải thu.
 - **Lưu:** Ghi lần thu và chi tiết từng khoản (mức gốc, điều chỉnh nếu có, số tiền thực thu), cập nhật Đã thu và audit trong cùng giao dịch. Lỗi một khoản hủy toàn bộ lựa chọn, kể cả tạo khoản khi thu trước.
+- **Biên nhận:** Trong cùng transaction thu thành công, cấp mã biên nhận duy nhất gắn một lần thu và giữ bản chụp thông tin giao dịch để in lại theo REPORT-01. Gửi lại cùng lệnh không sinh mã/lần thu mới. Tạo/tải/in file là bước sau commit; lỗi dựng file không hủy hoặc ghi thu lần hai. Thiếu mẫu in không được biến lần thu đã thành công thành thất bại tài chính.
 - **Lịch sử:** Không sửa/xóa trực tiếp lần thu hoặc số tiền từng thu. Sửa bản thu sai bằng FEE-06; thu lại lập lần mới, liên kết đúng khoản và giữ lần cũ.
 - **Nghiệm thu:** Thu riêng/chung đúng chi tiết và tổng; khoản trả đủ chuyển Đã thu, không thu trùng khi nhấn lại hoặc gửi đồng thời. Lỗi dữ liệu/audit không có thu một phần; thông tin người/ngày/phương thức truy vết được.
 
@@ -976,6 +999,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 - **Luồng:** Xem các khoản, tổng tiền loại khỏi Tổng thu và tác động trạng thái; nhập lý do bắt buộc → xác nhận → kiểm tra lại quyền, hiệu lực và phiên bản → hủy hiệu lực các chi tiết được chọn, ghi người/thời điểm/lý do cùng audit.
 - **Tác động:** Khoản còn nghĩa vụ trở về Chưa thu với mức gốc và điều chỉnh hiện hành giữ nguyên; có thể thu lại bằng lần mới. Nếu tháng/kỳ/ngày áp dụng không còn giao khoảng tham gia thực tế hoặc đăng ký còn hiệu lực của đúng hồ sơ, đánh dấu hủy nghĩa vụ thay vì tạo nợ mới. Khoản đã hủy nghĩa vụ giữ cờ hủy, không tự khôi phục công nợ. Không tạo hồ sơ, khoản mới hoặc dữ liệu học vụ chỉ vì gỡ thu.
 - **Lịch sử/Tổng thu:** Giữ nguyên nội dung lần thu cũ, thêm sự kiện hủy. Chi tiết bị gỡ mang nhãn Đã hủy, loại khỏi Tổng thu của ngày thu gốc; chi tiết không chọn giữ nguyên. Lần thu thể hiện còn hiệu lực toàn bộ/đã hủy một số khoản/đã hủy toàn bộ theo chi tiết. Thời điểm hủy không được ghi lùi.
+- **Biên nhận sau gỡ:** Trạng thái biên nhận theo chi tiết thu có hiệu lực, cập nhật cùng transaction gỡ. Gỡ một phần phải hiện các khoản bị hủy và nhãn biên nhận gốc không còn hiệu lực nguyên trạng; không coi những khoản còn lại đã bị gỡ. Gỡ toàn bộ thể hiện Không còn hiệu lực. Mọi lần preview/tải/in lại kiểm tra trạng thái hiện hành; giữ thông tin giao dịch gốc và sự kiện hủy, không tái sử dụng mã cũ cho lần thu lại.
 - **Nguyên khối:** Toàn bộ lựa chọn cùng thành công/thất bại; một chi tiết đã hủy, xung đột hoặc lỗi audit chặn cả thao tác. Gỡ lần cũ không tác động chi tiết của lần thu lại.
 - **Nghiệm thu:** Gỡ riêng tháng hoặc tiền tài liệu không đổi khoản khác; gỡ cả lần cộng đúng số bị loại. Gỡ trên hồ sơ lưu trữ vẫn giữ lịch sử và không mở lại quyền tra cứu phụ huynh. Sau 60 ngày vẫn xem được sự kiện hủy từ lịch sử thu độc lập với audit.
 
@@ -1031,18 +1055,18 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 #### XLS-01. Đồng bộ học sinh tại danh sách tổng
 
 - **Mục đích:** Thêm, xóa, sửa thông tin học sinh hàng loạt bằng Excel tại trang danh sách tổng.
-- **Người thực hiện:** Admin hoặc Receptionist.
+- **Người thực hiện:** Admin/Receptionist được thêm/sửa/xóa; User chỉ sửa hồ sơ hiện có trong phạm vi STU-04, không thêm/xóa/khôi phục.
 - **Phạm vi dữ liệu:** Hồ sơ học sinh trong danh sách tổng; các trường và kiểm tra trùng theo STU-04.
 - **Luồng nghiệp vụ:** Người có quyền cung cấp dữ liệu Excel; hệ thống kiểm tra quyền, đối chiếu bản ghi và thực hiện các thao tác thêm/xóa/sửa theo quy tắc đồng bộ được thống nhất.
 - **Kết quả:** Danh sách tổng được cập nhật theo các thao tác hợp lệ.
-- **Tiêu chí nghiệm thu:** Admin và Receptionist thực hiện được cả ba thao tác bằng Excel; User không được thay đổi hồ sơ học sinh qua Excel.
+- **Tiêu chí nghiệm thu:** Admin và Receptionist thực hiện được cả ba thao tác bằng Excel; User chỉ sửa đúng phạm vi STU-04. File của User có dòng thêm, xóa hoặc sửa học sinh ngoài phạm vi phải bị từ chối toàn bộ ở preview/apply; phân công bị thu hồi sau preview phải chặn apply. Không coi dòng thiếu mã là yêu cầu tạo mới được phép cho User.
 - **Khóa nhận diện:** Dùng mã học sinh duy nhất theo XLS-05; cột mã trong file xuất được ẩn mặc định.
 - **Quy tắc xóa:** Xóa mềm và tự đưa học sinh khỏi mọi lớp, giữ toàn bộ lịch sử theo STU-01. Áp dụng cả khi xóa qua Excel tại danh sách tổng.
 - **Kiểm tra hồ sơ:** Chỉ tên học sinh bắt buộc; trường khác được trống; kiểm tra trùng theo STU-04.
 
 #### XLS-02. Đồng bộ học sinh tại lớp học
 
-- **Quyền:** Admin/Receptionist; User không thêm/sửa/xóa hồ sơ tại lớp. Lớp phải không xóa mềm; lớp Đóng chỉ cho sửa ghi chú, ghi nghỉ hoặc lưu trữ hồ sơ, không nhập học mới.
+- **Quyền:** Admin/Receptionist thêm/sửa/xóa theo nghiệp vụ; User có phân công đang hiệu lực chỉ sửa lần tham gia theo STU-03 trong đúng lớp, không thêm/xóa/hủy/khôi phục. Lớp phải không xóa mềm; lớp Đóng chỉ cho sửa ghi chú, ghi nghỉ hoặc lưu trữ hồ sơ theo quyền từng vai trò, không nhập học mới.
 - **Thêm:** Chỉ liên kết học sinh tổng chưa xóa mềm; có mã thì đối chiếu mã, mã sai không rơi về tra tên. Không có mã thì dùng tên chuẩn hóa, bổ sung số phụ huynh nếu tên trùng theo STU-04/XLS-06. Không tự tạo hoặc khôi phục hồ sơ tổng từ file lớp.
 - **Hồ sơ/lần tham gia:** Nếu còn hồ sơ tại lớp chưa xóa, thêm lần tham gia mới không chồng thời gian. Nếu mọi hồ sơ cũ tại lớp đã xóa mềm, tạo hồ sơ mới và lần tham gia mới; sinh khoản mới theo FEE-07, không tự lấy khoản đã đóng của hồ sơ cũ.
 - **Sửa:** Chỉ ghi chú lớp và ngày nghỉ lần đầu; ngày vào đã lưu hoặc ngày nghỉ đã có không đổi/xóa; trạng thái tự tính. Dòng sửa phải có mã học sinh, mã hồ sơ lớp, mã lần tham gia và phiên bản đúng. Không sửa tên/liên hệ/ngày sinh/trường/ghi chú tổng quan qua file lớp.
@@ -1051,7 +1075,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 - **Sau xóa:** Ẩn học sinh khỏi danh sách hoạt động và tra cứu phụ huynh ở lớp nếu không còn hồ sơ chưa xóa. Admin/Receptionist truy hồ sơ lưu trữ; User có phân công hiện hành chỉ đọc học vụ/chuyên cần lịch sử của lớp, không đọc tài chính. Hồ sơ tổng/lớp khác không thay đổi.
 - **Thêm lại:** Không khôi phục hồ sơ lớp cũ; tạo hồ sơ mới theo CLASS-04/D07. Cần giữ tên/lịch sử hồ sơ cũ để đối chiếu. Phụ huynh được tra hợp các khoảng tham gia cũ/mới khi đã có hồ sơ lớp mới hợp lệ theo PORTAL-02.
 - **Excel:** Xem trước, chặn cả file khi lỗi/xung đột; một thao tác xóa cùng học sinh/hồ sơ không được lặp trong file. Không hỗ trợ Thao tác = Khôi phục; lỗi audit hủy cả lần áp dụng.
-- **Nghiệm thu:** Xóa có nợ vẫn giữ nợ và toàn bộ học vụ; sau thêm lại cùng tháng có khoản mới, khoản cũ/thu cũ còn nguyên. Không cập nhật hồ sơ tổng từ file lớp, không nhận mã hoặc khoảng ngày không hợp lệ.
+- **Nghiệm thu:** Xóa có nợ vẫn giữ nợ và toàn bộ học vụ; sau thêm lại cùng tháng có khoản mới, khoản cũ/thu cũ còn nguyên. Không cập nhật hồ sơ tổng từ file lớp, không nhận mã hoặc khoảng ngày không hợp lệ. User sửa được đúng lớp/phạm vi/trường theo STU-03; một dòng thêm/xóa hoặc ngoài quyền chặn toàn bộ file, kể cả khi quyền thay đổi giữa preview và apply.
 
 #### XLS-03. Đồng bộ điểm và nhận xét trong lớp
 
@@ -1155,6 +1179,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 - **Học sinh tại lớp:** `HoTenDoiChieu`, `SDTPhuHuynhDoiChieu`, `NgayVao`, `NgayNghi`, `GhiChuLop`; thêm mã ẩn `MaHoSoLop` và `MaLanThamGia` cho dòng cũ. Tên/số chỉ dùng nhận diện khi thêm, không sửa hồ sơ tổng. Sửa ngày tuân theo STU-03. Dòng Xóa nhắm hồ sơ lớp và lưu trữ mọi lần tham gia của hồ sơ đó theo XLS-02.
 - **Nhận diện khi thêm:** Tra tên chuẩn hóa trên hồ sơ tổng; một kết quả thì dùng hồ sơ đó, nhiều kết quả phải có số phụ huynh chuẩn hóa để chọn duy nhất. Không có hoặc còn nhiều kết quả thì chặn, không đoán/tạo mới. Học sinh tổng đã xóa mềm phải khôi phục trên giao diện trước.
 - **Điểm:** `Vang` nhận Có/Không; thang số nhập `Diem`, phân số nhập `SoCauDung`, thang chữ nhập `MucChu`; cấu hình của bài nằm trong `_Meta`. Theo phần xuất một cột mỗi phần có mã phần ánh xạ trong `_Meta`, tổng chỉ để hiển thị không làm nguồn cập nhật. Không nhập điểm đồng thời Vắng; thiếu phần được lưu chưa hoàn tất theo TEST-04.
+- **Điểm IELTS:** `_Meta` lưu phiên bản cấu hình bài, tập kỹ năng, chế độ nhập từng kỹ năng và mã tiêu chí/Task. L/R chi tiết có số câu đúng và band nhập tay; trực tiếp chỉ có band. Writing chi tiết có tám ô tiêu chí chia hai Task; Speaking chi tiết có bốn ô tiêu chí; chế độ trực tiếp chỉ có band kỹ năng. Điểm Task, band W/S tự tính và Overall chỉ là cột hiển thị khi được tính tự động, không phải đầu vào ghi đè. Backend tính theo TEST-01; chặn cột/chế độ không khớp phiên bản bài. Thiếu dữ liệu được lưu chưa hoàn tất như UI; Vắng cả bài không kèm điểm; template chung mới không làm thay đổi cách đọc file của bài cũ.
 - **Nhận xét:** Mẫu riêng chứa `NhanXet` cho đúng bài hoặc đợt; không thay điểm hoặc công bố. Khóa kết quả theo học sinh/bài hay học sinh/đợt, không theo lần tham gia.
 - **Xóa/giá trị trống:** Ô trống khi sửa giữ nguyên; `XÓA` yêu cầu xóa giá trị nếu nghiệp vụ cho phép, không thay thao tác Xóa bản ghi. Xóa bản ghi không tồn tại là lỗi, chặn file; không coi là thêm mới hoặc thành công giả. Dữ liệu trước thay đổi giữ trong lịch sử nghiệp vụ theo A.3.
 - **Giới hạn:** Mọi file phải dưới 10.000.000 byte và tối đa 5.000 dòng dữ liệu không tính tiêu đề/dòng trống. Từ chối file đạt 10.000.000 byte hoặc có 5.001 dòng; không tự cắt bớt dòng.
@@ -1182,13 +1207,22 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 
 ### C.15. In ấn và dashboard
 
-#### REPORT-01. In điểm danh và báo học phí
+#### REPORT-01. In điểm danh, giấy báo học phí và biên nhận theo mẫu Word
 
-- **Quyền:** Admin/Receptionist in điểm danh, giấy báo học phí đúng phạm vi; Receptionist không xem/in tổng tiền toàn trung tâm. User chỉ in điểm danh lớp có phân công hiệu lực, không in hoặc xem giấy báo học phí.
+- **Quyết định thay thế ngày 28/10/2026:** Bổ sung biên nhận thu và mẫu Word `.docx` do Admin tải lên cho giấy báo/biên nhận, hỗ trợ cả tải Word đã điền và preview/in ngay trong ứng dụng. Thay quy định cũ không có biên nhận; giữ mã REPORT-01. Chọn xử lý/render tại trình duyệt với tập bố cục DOCX giới hạn được kiểm thử, không yêu cầu tương thích mọi tài liệu Word hoặc một dịch vụ chuyển đổi DOCX → PDF.
+- **Quyền:** Chỉ Admin quản lý mẫu, phiên bản và mẫu mặc định. Admin/Receptionist được chọn mẫu đang dùng để xem/tải/in giấy báo và biên nhận đúng phạm vi; Receptionist không xem/in tổng tiền toàn trung tâm. User chỉ in điểm danh lớp có phân công hiệu lực, không được đọc mẫu tài chính hoặc dữ liệu/file giấy báo, biên nhận qua UI/API/Storage. Quyền được kiểm tra lại khi lấy dữ liệu và template, không chỉ khi mở màn hình.
 - **Điểm danh A4:** Theo lớp/tháng, danh sách xét đúng khoảng tham gia; lịch sau điều chỉnh, kết quả hiện hành, ô chưa điểm danh để trống. Phân biệt buổi nghỉ/lễ với học sinh Vắng; dữ liệu lưu trữ có nhãn khi được chọn xem lịch sử.
 - **Giấy báo A5:** Theo học sinh/lớp và tháng hoặc kỳ được chọn; liệt kê mức gốc học phí, điều chỉnh có dấu và lý do ngắn, khoản ngoài học phí, số phải thu/trạng thái và tổng cần đóng của các nghĩa vụ còn hiệu lực. Không cộng các khoản đã thu/Không phải thu vào tổng cần đóng. Có tên trung tâm, tên lớp/học sinh, kỳ, ngày in; không tự thêm thông tin tài khoản ngân hàng chưa cấu hình.
-- **Thao tác:** Preview và in trực tiếp bằng trình duyệt; lô nhiều học sinh mỗi học sinh/kỳ một phần giấy riêng, ngắt trang rõ. Không yêu cầu xuất/lưu PDF riêng, in biên nhận thu hoặc giấy báo công nợ riêng.
-- **Nghiệm thu:** A4/A5 đúng khổ, không cắt mất cột/tên/khoản khi phân trang; preview và bản in dùng cùng số tiền, User bị chặn giấy học phí qua cả giao diện/API.
+- **Biên nhận:** Một biên nhận cho một lần thu thành công của một học sinh/một lớp theo FEE-05; không phát hành cho khoản chưa thu hoặc Không phải thu. Có mã biên nhận, tên trung tâm/học sinh/lớp, thời điểm thu, người thu, phương thức, các khoản/tháng/kỳ, mức gốc/điều chỉnh/số thực thu và tổng đã thu. In lại dùng mã và dữ liệu giao dịch gốc, phân biệt ngày thu với ngày in lại, không tạo lần thu mới.
+- **Gỡ thu/in lại:** Theo FEE-06, khi gỡ một phần phải hiện rõ khoản nào bị hủy, tổng giao dịch gốc và phần còn hiệu lực, cùng nhãn không còn hiệu lực nguyên trạng; khi gỡ toàn bộ hiện Không còn hiệu lực. Nội dung trạng thái là bắt buộc, mẫu không được bỏ để in một biên nhận có vẻ còn nguyên hiệu lực. Không thể thu hồi/sửa từ xa bản giấy hoặc file đã tải; trạng thái đúng được bảo đảm trên hệ thống và những lần lấy bản mới.
+- **Thư viện mẫu in:** Có nhiều mẫu cho mỗi loại Giấy báo học phí/Biên nhận, dùng chung toàn trung tâm; mỗi loại có một mẫu mặc định đang hoạt động do Admin chọn, được chọn sẵn khi tạo bản in mới. Người có quyền in được chọn mẫu hoạt động khác. Tải lên/thay mẫu tạo phiên bản mới; xóa mềm ngừng dùng mới nhưng giữ phiên bản đã tham chiếu. Không xóa mềm mẫu mặc định mà chưa chọn mẫu thay thế hợp lệ trong cùng thao tác.
+- **Định dạng và bố cục:** Chỉ `.docx`, không `.doc`/`.docm`, macro hoặc tài liệu có mật khẩu. Hỗ trợ bộ bố cục đã kiểm chứng gồm đoạn văn, định dạng chữ, bảng, logo/ảnh nhúng trong dòng, header/footer và ngắt trang rõ. Không hỗ trợ tùy ý hộp chữ/shape nổi, đối tượng nhúng, tài nguyên ngoài hoặc field/mã thực thi. Giấy báo giữ A5; khổ biên nhận được khai báo trong mẫu thuộc tập khổ A4/A5 đã kiểm chứng. Phần không hỗ trợ phải báo cho Admin trước khi kích hoạt, không âm thầm làm mất nội dung.
+- **Marker:** Dùng danh mục marker có kiểu/phạm vi do hệ thống công bố; ví dụ `{{ten_hoc_sinh}}`, `{{ten_lop}}`, `{{ma_bien_nhan}}`, `{{tong_tien}}` và vùng lặp dòng khoản thu. Marker là vị trí nội dung trong tài liệu, không phải tọa độ tuyệt đối; văn bản dài/số dòng tăng có thể làm dịch chuyển và ngắt trang. Không chạy biểu thức tùy ý, công thức hoặc mã từ file; số tiền/tổng/trạng thái do backend cung cấp. Marker sai/thiếu dữ liệu bắt buộc, vùng lặp không hợp lệ hoặc sai loại mẫu phải chặn kích hoạt/tạo file và chỉ rõ lỗi, không để `undefined` hoặc marker sót trên bản in.
+- **Kích hoạt mẫu:** Admin xem thử bằng dữ liệu giả cả tên dài, nhiều khoản và nhiều trang rồi xác nhận. Chỉ mẫu qua kiểm tra mới được dùng/mặc định. Upload file và transaction DB riêng: commit metadata/phiên bản/default và audit nguyên khối; lỗi kiểm tra/commit giữ mẫu cũ, chỉ dọn file mới không còn tham chiếu. File mẫu ở Storage private, không công khai link chứa dữ liệu học sinh/tài chính.
+- **Một bộ dữ liệu cho hai đầu ra:** API trả bản dữ liệu được cấp quyền cùng phiên bản mẫu xác định; trình duyệt điền một DOCX dùng để tải và làm nguồn preview/in. Preview/tải/in cùng lần phát hành phải dùng cùng số tiền, chi tiết và trạng thái. Nếu dữ liệu/phiên bản thay đổi trước khi lấy bản mới, tải lại và thông báo thay đổi; không trộn phần cũ/mới. Dữ liệu đã tải xuống có thể được sửa ngoài ứng dụng, không được coi file Word là chứng từ chống chỉnh sửa hoặc nguồn dữ liệu tài chính.
+- **Phiên bản bản in:** Lưu bản chụp dữ liệu/định danh phiên bản mẫu cho lần phát hành đầu của biên nhận; in lại giữ dữ liệu giao dịch và phiên bản mẫu đó, đồng thời bổ sung trạng thái gỡ thu hiện hành bắt buộc. Đổi mẫu mặc định không thay biên nhận đã phát hành; giữ nguồn để dựng lại độc lập với audit 60 ngày. Giấy báo là thông tin nghĩa vụ ở lần lấy dữ liệu, không phải xác nhận đã thu.
+- **Thao tác lô:** Preview và in trực tiếp bằng trình duyệt; giấy báo nhiều học sinh chia riêng theo học sinh/kỳ; biên nhận chia riêng theo lần thu. Không cắt mất cột/tên/khoản, không trộn người. Không bắt buộc xuất/lưu PDF riêng hoặc thêm giấy báo công nợ. Đặt giới hạn kỹ thuật cho file nén/giải nén, ảnh và số phiếu mỗi lượt sau kiểm chứng mẫu thực tế theo techstack; không suy giới hạn này từ Excel và không chia transaction thu tiền để phục vụ in lô.
+- **Nghiệm thu:** Tải DOCX đã điền và preview/in đều hoạt động với bộ mẫu được hỗ trợ; giữ đúng dữ liệu, khổ giấy và không cắt nội dung trong tên dài/nhiều khoản/nhiều trang. Đổi default/xóa mẫu không làm hỏng in lại; marker lỗi bị chặn; User bị chặn API/file. Biên nhận chỉ sau commit, in lại không thu lần hai; gỡ một phần/toàn bộ hiển thị đúng, lỗi audit không để lại mẫu/default hoặc trạng thái tài chính thay đổi một phần. Chưa tuyên bố giữ bố cục như Microsoft Word trên mọi file/trình duyệt nếu chưa có bằng chứng render/print.
 
 #### DASH-01. Dashboard và tổng hợp tài chính theo vai trò
 
@@ -1212,6 +1246,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 
 - **Thiết bị:** Tối ưu cả điện thoại và máy tính, gồm bảng dữ liệu, bộ lọc, điểm danh, xác nhận thu và trang phụ huynh. Thao tác có cùng quy tắc trên hai loại thiết bị.
 - **Tùy chọn:** Tiếng Việt/tiếng Anh; sáng/tối/theo hệ thống. Lưu cục bộ theo thiết bị/trình duyệt, không đồng bộ theo tài khoản sang máy khác.
+- **Ngày tháng trên UI (chốt 30/10/2026):** Toàn bộ ngày hiển thị và nhập theo **dd-mm-yyyy**, năm 4 chữ số, ở cả giao diện Việt và Anh; tên tháng/bộ chọn lịch theo ngôn ngữ ứng dụng, không theo ngôn ngữ mặc định trình duyệt. Giá trị API/DB vẫn dùng ISO; thời điểm chính xác hiển thị theo `Asia/Ho_Chi_Minh`. Nhãn năm học không phải ngày và giữ dạng năm–năm.
 - **Hành vi:** Tải lại trang giữ lựa chọn còn lưu; chế độ theo hệ thống bám tùy chọn hệ điều hành. Xóa dữ liệu trình duyệt không làm mất dữ liệu nghiệp vụ nhưng có thể mất tùy chọn cục bộ.
 - **Nghiệm thu:** Thiết bị khác có lựa chọn độc lập; thao tác cốt lõi dùng được trên màn hình nhỏ; không đổi quyền theo giao diện.
 
@@ -1243,10 +1278,11 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 
 - **Tài khoản:** Giao mật khẩu tạm qua kênh ngoài sẵn có; cấp lại làm mất hiệu lực phiên/link cũ. Email lỗi không đổi mật khẩu. Quản trị Admin qua công cụ vận hành có audit, không qua ứng dụng.
 - **Hồ sơ/lớp:** Không có trường riêng tùy biến ngoài bộ đã nêu. Lớp bắt buộc tên/môn/khối/ngày mở/kết thúc; ngày/khoảng đã kết thúc không tự mở lại khi gia hạn. Phân công không giới hạn số người, không chồng cùng người/lớp; môn phụ trách tùy chọn.
+- **Quyền sửa học sinh (cập nhật 28/10/2026):** User gồm giáo viên/trợ giảng được sửa thông tin học sinh và lần tham gia trong lớp có phân công hiệu lực theo STU-04/STU-03, cùng các khóa nghiệp vụ như Admin/Receptionist. Không tạo học sinh, thêm vào lớp/tạo lần tham gia, xóa/hủy/khôi phục hoặc chuyển lớp/học lại. Áp dụng thống nhất UI/API/Excel; sửa hồ sơ tổng cập nhật dữ liệu dùng chung, không cấp quyền sửa lần tham gia ở lớp khác hoặc xem tài chính.
 - **Danh mục/lịch:** Xóa mềm danh mục đã dùng; phòng/địa điểm có buổi đang diễn ra hoặc lịch tương lai phải xử lý lịch trước. Hai buổi liền giờ hợp lệ, không thêm khoảng đệm di chuyển. Buổi đã tới giờ bắt đầu không tạo/khôi phục lại; chỉ tương lai được dựng khi bỏ lễ/mở lớp.
-- **Học vụ:** Mẫu chữ 1–20 mức dùng trong lớp; bài theo phần 1–50 phần; cho trùng tên bài/đợt nhưng dùng mã để đối chiếu. Xóa bài/đợt là lưu trữ; khôi phục về Chưa công bố. Kết quả/cấu hình cũ giữ phiên bản nghiệp vụ; công bố không có dữ liệu không tạo thay đổi giả.
+- **Học vụ (cập nhật 28/10/2026):** Template số/phân số/chữ/IELTS dùng chung toàn trung tâm, chỉ Admin quản lý; bộ chữ 1–20 mức nằm trong template hoặc cấu hình riêng của bài, không còn thư viện chữ theo lớp. Bài số/phân số theo phần có 1–50 phần; IELTS theo kỹ năng/chế độ và công thức TEST-01. Bản sao của bài không bị thay bởi template mới. Cho trùng tên bài/đợt nhưng dùng mã đối chiếu; xóa là lưu trữ, khôi phục về Chưa công bố, giữ phiên bản nghiệp vụ độc lập audit.
 - **Phụ huynh:** Chỉ nhân sự hiện còn phân công và tài khoản hoạt động được hiện công khai. Bật/tắt/reroll có xác nhận; link khôi phục giữ cấu hình đã lưu nhưng chỉ dùng sau mở lớp. Không khớp số không trả gợi ý hồ sơ.
-- **Tài chính/in:** Không hạn thanh toán hoặc trạng thái quá hạn. A5 liệt kê học phí, điều chỉnh, khoản ngoài và tổng còn cần đóng; A4 là điểm danh. User không in giấy tiền, không có biên nhận/giấy công nợ riêng hoặc xuất PDF bắt buộc.
+- **Tài chính/in (cập nhật 28/10/2026):** Không hạn thanh toán/quá hạn. A4 điểm danh; A5 báo học phí; bổ sung biên nhận theo lần thu, giữ dữ liệu gốc và thể hiện gỡ thu. Admin quản lý nhiều mẫu Word/phiên bản và một default mỗi loại giấy tiền; hỗ trợ tải DOCX và preview/in trình duyệt trong tập bố cục giới hạn. User không xem/tải/in giấy tiền; không thêm giấy công nợ riêng hoặc bắt buộc xuất/lưu PDF.
 - **Excel:** Sheet/cột/định danh tại XLS-06, file dưới 10.000.000 byte và tối đa 5.000 dòng mọi chức năng; xóa bản ghi không tồn tại là lỗi, dấu file đã nhập giữ không thời hạn. Chỉ một audit cho lần nhập thành công.
 - **Thông báo/lịch sử:** Thông báo/audit giữ 60 ngày riêng; dữ liệu nghiệp vụ không bị xóa theo. Hết quyền mở thông báo thì báo không còn truy cập, không lộ chi tiết; giữ quyền đọc lịch sử theo đối tượng tại C.1.1.
 

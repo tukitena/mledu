@@ -25,12 +25,21 @@ export const ClassStudent = z.object({
   className: z.string(),
   classDeleted: z.boolean(),
   classAdminState: z.enum(['open', 'closed']),
-  student: z.object({ id: z.uuid(), code: z.string(), fullName: z.string(), deleted: z.boolean() }),
+  student: z.object({
+    id: z.uuid(),
+    code: z.string(),
+    fullName: z.string(),
+    deleted: z.boolean(),
+    parentPhones: z.array(z.string()),
+    birthDate: IsoDate.nullable(),
+  }),
   deleted: z.boolean(),
   deletedAt: z.string().nullable(),
   deletedReason: z.string().nullable(),
   createdAt: z.string(),
   participations: z.array(Participation),
+  /** Note/first leave date only; never grants enrollment or lifecycle actions. */
+  canEdit: z.boolean(),
   rowVersion: RowVersion,
 })
 export type ClassStudent = z.infer<typeof ClassStudent>

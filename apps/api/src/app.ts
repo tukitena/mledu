@@ -13,6 +13,7 @@ import { assignmentRoutes, classRoutes } from './modules/classes/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
 import { studentRoutes } from './modules/students/routes'
+import { attendanceRoutes, holidayRoutes, schedulingClassRoutes } from './modules/scheduling/routes'
 import {
   enrollmentClassRoutes,
   enrollmentStudentRoutes,
@@ -74,6 +75,9 @@ export function createApp() {
   app.route(`/${API_VERSION}/students`, enrollmentStudentRoutes)
   app.route(`/${API_VERSION}/class-students`, classStudentRoutes)
   app.route(`/${API_VERSION}/participations`, participationRoutes)
+  app.route(`/${API_VERSION}/classes`, schedulingClassRoutes)
+  app.route(`/${API_VERSION}/holidays`, holidayRoutes)
+  app.route(`/${API_VERSION}/sessions`, attendanceRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

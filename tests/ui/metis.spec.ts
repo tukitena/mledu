@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { pickMonth } from './date-support'
 
 const account = {
   id: '10000000-0000-4000-8000-000000000001',
@@ -231,4 +232,358 @@ test('320px header fits and switching workspace removes admin statistics', async
   await expect(page.getByText('Tổng tài khoản', { exact: true })).toHaveCount(0)
   await expect(page.getByTestId('dashboard-stats')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('narrow-workspace.png'), fullPage: true })
+})
+
+test('dates use dd-mm-yyyy with an English browser and keep ISO API values', async ({
+  page,
+  isMobile,
+}, testInfo) => {
+  const bodies: { birthDate: string | null }[] = []
+  await page.route('**/v1/me', async (route) => {
+    if (route.request().method() !== 'PATCH') return route.fallback()
+    const body = route.request().postDataJSON()
+    bodies.push(body)
+    await route.fulfill({
+      json: {
+        ...account,
+        ...body,
+        accountType: 'admin',
+        avatarPath: null,
+        rowVersion: bodies.length + 1,
+      },
+    })
+  })
+  await page.goto('/profile')
+  const birth = page.locator('#profile-birth')
+  await birth.fill('31-02-2026')
+  await page.getByRole('button', { name: 'Lưu', exact: true }).click()
+  await expect(birth).toHaveAttribute('aria-invalid', 'true')
+  expect(bodies).toHaveLength(0)
+  await birth.fill('29-02-2024')
+  await page.getByRole('button', { name: 'Lưu', exact: true }).click()
+  await expect.poll(() => bodies.length).toBe(1)
+  expect(bodies[0]!.birthDate).toBe('2024-02-29')
+  await expect(birth).toHaveValue('29-02-2024')
+  await birth.locator('..').getByRole('button', { name: 'Mở lịch' }).click()
+  const calendar = page.locator(`[id="${await birth.getAttribute('aria-controls')}"]`)
+  await expect(calendar.getByLabel('Tháng', { exact: true })).toHaveValue('2')
+  await expect(calendar).toContainText('Tháng 2')
+  await expect(calendar.getByRole('button', { name: '29-02-2024', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await page.screenshot({ path: testInfo.outputPath('date-calendar-light-vi.png'), fullPage: true })
+  await calendar.getByLabel('Tháng', { exact: true }).selectOption('9')
+  await expect
+    .poll(() =>
+      calendar.evaluate((el) => {
+        const bounds = el.getBoundingClientRect()
+        return (
+          bounds.top >= 0 &&
+          bounds.bottom <= innerHeight &&
+          bounds.left >= 0 &&
+          bounds.right <= innerWidth
+        )
+      }),
+    )
+    .toBe(true)
+  await calendar.getByRole('button', { name: 'Xóa ngày' }).click()
+  await page.getByRole('button', { name: 'Lưu', exact: true }).click()
+  await expect.poll(() => bodies.length).toBe(2)
+  expect(bodies[1]!.birthDate).toBeNull()
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByTestId('locale-select').selectOption('en')
+  await page.getByTestId('theme-select').selectOption('dark')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await birth.fill('05-03-1990')
+  await birth.locator('..').getByRole('button', { name: 'Open calendar' }).click()
+  await expect(calendar.getByLabel('Month', { exact: true })).toHaveValue('3')
+  await expect(birth).toHaveValue('05-03-1990')
+  await page.screenshot({ path: testInfo.outputPath('date-calendar-dark-en.png'), fullPage: true })
+  await page.keyboard.press('Escape')
+  await expect(calendar).not.toBeVisible()
+  await expect(birth).toBeFocused()
+})
+
+test('schedule numeric month and year, status filters and dates work across locales', async ({
+  page,
+  isMobile,
+}, testInfo) => {
+  await page.clock.setFixedTime(new Date('2026-10-30T05:00:00Z'))
+  const id = '20000000-0000-4000-8000-000000000001'
+  const catalog = { id, name: 'Toán', archived: false }
+  const klass = {
+    id,
+    name: 'Lớp Toán',
+    subject: catalog,
+    grade: catalog,
+    schoolYearStart: 2026,
+    startDate: '2026-01-01',
+    endDate: '2027-12-31',
+    note: null,
+    adminState: 'open',
+    period: 'running',
+    deleted: false,
+    deletedAt: null,
+    deletedReason: null,
+    currentStaff: [],
+    rowVersion: 1,
+    myRole: null,
+  }
+  const sessions = ['2026-11-01', '2026-11-30', '2026-12-01', '2027-11-01'].map((date, i) => ({
+    id: `30000000-0000-4000-8000-00000000000${i}`,
+    classId: id,
+    className: klass.name,
+    kind: 'weekly',
+    date,
+    startTime: '14:00',
+    endTime: '15:30',
+    startsAt: `${date}T07:00:00Z`,
+    endsAt: `${date}T08:30:00Z`,
+    roomId: null,
+    roomName: null,
+    siteName: 'Cơ sở A',
+    siteAddress: null,
+    status: 'scheduled',
+    isException: false,
+    rowVersion: 1,
+    attendanceVersion: 0,
+  }))
+  for (const [i, status] of ['off', 'holiday', 'removed_schedule', 'removed_class'].entries()) {
+    sessions.push({ ...sessions[0]!, id: `30000000-0000-4000-8000-00000000001${i}`, status })
+  }
+  await page.route(`**/v1/classes/${id}`, (route) => route.fulfill({ json: klass }))
+  await page.route(`**/v1/classes/${id}/schedule`, (route) =>
+    route.fulfill({
+      json: {
+        sessions,
+        weekly: [],
+        holidays: [{ date: '2026-11-20', name: 'Ngày lễ' }],
+        warnings: [],
+      },
+    }),
+  )
+  await page.route('**/v1/rooms', (route) => route.fulfill({ json: [] }))
+  await page.goto(`/classes/${id}?tab=schedule`)
+  const month = page.getByLabel('Tháng', { exact: true })
+  await expect(month).toHaveAttribute('type', 'number')
+  await expect(page.getByLabel('Năm', { exact: true })).toHaveValue('2026')
+  await expect(page.getByLabel('Trạng thái', { exact: true })).toHaveValue('scheduled')
+  await pickMonth(page, month, '2026-11')
+  await expect(month).toHaveValue('11')
+  const table = page.getByTestId('sessions-table')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(2)
+  await expect(table).toContainText('01-11-2026')
+  await expect(table).toContainText('30-11-2026')
+  const year = page.getByLabel('Năm', { exact: true })
+  await year.fill('2027')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(1)
+  await expect(table).toContainText('01-11-2027')
+  await year.fill('')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(0)
+  await year.fill('1')
+  await month.fill('1')
+  await expect(page.getByRole('button', { name: 'Tháng trước', exact: true })).toBeDisabled()
+  await year.fill('9999')
+  await month.fill('12')
+  await expect(page.getByRole('button', { name: 'Tháng sau', exact: true })).toBeDisabled()
+  await year.fill('2026')
+  await month.fill('11')
+  for (const status of ['off', 'holiday', 'removed_schedule', 'removed_class']) {
+    await page.getByLabel('Trạng thái', { exact: true }).selectOption(status)
+    await expect(table.locator('tbody tr[data-session]')).toHaveCount(1)
+  }
+  await page.getByLabel('Trạng thái', { exact: true }).selectOption('all')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(6)
+  await page.getByLabel('Địa điểm', { exact: true }).selectOption('Cơ sở A')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(6)
+  await page.getByLabel('Trạng thái', { exact: true }).selectOption('scheduled')
+  await month.fill('13')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Tháng sau', exact: true })).toBeDisabled()
+  await month.fill('12')
+  await page.getByRole('button', { name: 'Tháng sau', exact: true }).click()
+  await expect(month).toHaveValue('1')
+  await expect(page.getByLabel('Năm', { exact: true })).toHaveValue('2027')
+  await page.getByRole('button', { name: 'Tháng trước', exact: true }).click()
+  await expect(month).toHaveValue('12')
+  await expect(page.getByLabel('Năm', { exact: true })).toHaveValue('2026')
+  await month.fill('11')
+  await expect(page.locator('.schedule-panel')).toContainText('20-11-2026')
+  await expect(page.getByTestId('class-title')).toBeVisible()
+  await expect(page.locator('.page-header')).toContainText('01-01-2026 – 31-12-2027')
+  await page.screenshot({
+    path: testInfo.outputPath('schedule-header-light-vi.png'),
+    fullPage: true,
+  })
+  const row = table.locator('tbody tr[data-session]').first()
+  const rowBefore = await row.boundingBox()
+  const tableBefore = await table.boundingBox()
+  await row.getByRole('button', { name: /Thao tác/ }).click()
+  const menu = row.locator('.account-action-menu')
+  await expect(menu).toBeVisible()
+  await expect(menu.getByRole('button')).toHaveText(['Đổi buổi', 'Ghi nghỉ'])
+  expect((await row.boundingBox())?.height).toBe(rowBefore?.height)
+  expect((await table.boundingBox())?.width).toBe(tableBefore?.width)
+  await page.screenshot({
+    path: testInfo.outputPath('schedule-month-light-vi.png'),
+    fullPage: true,
+  })
+  await menu.getByRole('button', { name: 'Đổi buổi', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.locator('#session-date')).toHaveValue('01-11-2026')
+  await page.getByRole('dialog').locator('.btn-close').click()
+  // min/max must apply even though this form uses novalidate.
+  await page.getByTestId('class-edit').click()
+  await page.locator('#class-start').fill('01-01-2026')
+  await page.locator('#class-end').fill('31-12-2025')
+  await expect(page.locator('#class-end')).toHaveAttribute('aria-invalid', 'true')
+  await page.locator('#class-end').fill('31-12-2027')
+  await page.locator('#class-start').locator('..').getByRole('button', { name: 'Mở lịch' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Hủy', exact: true }).click()
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByTestId('locale-select').selectOption('en')
+  await page.getByTestId('theme-select').selectOption('dark')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await expect(page.getByLabel('Month', { exact: true })).toHaveValue('11')
+  await expect(page.getByLabel('Year', { exact: true })).toHaveValue('2026')
+  await expect(table).toContainText('01-11-2026')
+  await pickMonth(page, page.getByLabel('Month', { exact: true }), '2026-12')
+  await expect(table.locator('tbody tr[data-session]')).toHaveCount(1)
+  await expect(table).toContainText('01-12-2026')
+  await page.screenshot({ path: testInfo.outputPath('schedule-month-dark-en.png'), fullPage: true })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  if (isMobile) {
+    await page.setViewportSize({ width: 320, height: 700 })
+    await page.getByRole('button', { name: 'Previous month', exact: true }).click()
+    await expect(page.getByLabel('Month', { exact: true })).toHaveValue('11')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath('schedule-320-dark-en.png'), fullPage: true })
+  }
+})
+
+test('class student status defaults to attending and combines with name and archived filters', async ({
+  page,
+  isMobile,
+}, testInfo) => {
+  const id = '20000000-0000-4000-8000-000000000001'
+  const catalog = { id, name: 'Toán', archived: false }
+  await page.route(`**/v1/classes/${id}/schedule`, (route) =>
+    route.fulfill({
+      json: { sessions: [], weekly: [], holidays: [], warnings: [] },
+    }),
+  )
+  await page.route(`**/v1/classes/${id}`, (route) =>
+    route.fulfill({
+      json: {
+        id,
+        name: 'Lớp Toán',
+        subject: catalog,
+        grade: catalog,
+        schoolYearStart: 2026,
+        startDate: '2026-01-01',
+        endDate: '2027-12-31',
+        note: null,
+        adminState: 'open',
+        period: 'running',
+        deleted: false,
+        deletedAt: null,
+        deletedReason: null,
+        currentStaff: [],
+        rowVersion: 1,
+        myRole: null,
+      },
+    }),
+  )
+  const records = ['An', 'Bình'].map((name, i) => {
+    const recordId = `40000000-0000-4000-8000-00000000000${i}`
+    return {
+      id: recordId,
+      classId: id,
+      className: 'Lớp Toán',
+      classDeleted: false,
+      classAdminState: 'open',
+      student: {
+        id: recordId,
+        code: `hidden-${i}`,
+        fullName: name,
+        deleted: false,
+        parentPhones: [],
+        birthDate: null,
+      },
+      deleted: i === 1,
+      deletedAt: i === 1 ? '2026-10-01T00:00:00Z' : null,
+      deletedReason: i === 1 ? 'Test archive' : null,
+      createdAt: '2026-01-01T00:00:00Z',
+      canEdit: i === 0,
+      rowVersion: 1,
+      participations: (i === 0 ? ['active', 'not_started', 'ended', 'cancelled'] : ['ended']).map(
+        (status, n) => ({
+          id: `50000000-0000-4000-8000-0000000000${i}${n}`,
+          classStudentId: recordId,
+          joinDate: '2026-01-01',
+          leaveDate: null,
+          classEndDate: '2027-12-31',
+          note: null,
+          status,
+          effectiveFrom: null,
+          effectiveUntil: null,
+          endedAt: null,
+          endKind: null,
+          endReason: null,
+          rowVersion: 1,
+        }),
+      ),
+    }
+  })
+  await page.route(`**/v1/classes/${id}/students?**`, (route) =>
+    route.fulfill({
+      json:
+        new URL(route.request().url()).searchParams.get('includeDeleted') === 'true'
+          ? records
+          : records.slice(0, 1),
+    }),
+  )
+  await page.goto(`/classes/${id}?tab=students`)
+  const status = page.getByLabel('Trạng thái', { exact: true })
+  const table = page.getByTestId('enrollments-table')
+  const rows = table.locator('[data-participation-id]')
+  await expect(status).toHaveValue('active')
+  await expect(rows).toHaveCount(1)
+  await expect(table).toContainText('Đang học')
+  await page.screenshot({
+    path: testInfo.outputPath('students-filter-light-vi.png'),
+    fullPage: true,
+  })
+  for (const state of ['not_started', 'ended', 'cancelled']) {
+    await status.selectOption(state)
+    await expect(rows).toHaveCount(1)
+  }
+  await page.getByLabel('Hiện hồ sơ đã xóa', { exact: true }).check()
+  await status.selectOption('ended')
+  await expect(rows).toHaveCount(2)
+  await page.getByPlaceholder('Tìm tên học sinh', { exact: true }).fill('binh')
+  await expect(rows).toHaveCount(1)
+  await expect(table).toContainText('Bình')
+  await status.selectOption('active')
+  await expect(rows).toHaveCount(0)
+  await page.getByPlaceholder('Tìm tên học sinh', { exact: true }).fill('')
+  await status.selectOption('all')
+  await expect(rows).toHaveCount(5)
+  await page.getByLabel('Hiện hồ sơ đã xóa', { exact: true }).uncheck()
+  await expect(rows).toHaveCount(4)
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByTestId('locale-select').selectOption('en')
+  await page.getByTestId('theme-select').selectOption('dark')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByLabel('Status', { exact: true }).selectOption('active')
+  await expect(rows).toHaveCount(1)
+  await expect(table).toContainText('Attending')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({
+    path: testInfo.outputPath('students-filter-dark-en.png'),
+    fullPage: true,
+  })
 })

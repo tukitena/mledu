@@ -9,7 +9,7 @@ import { describeError, type DescribedError } from '../../app/errors'
 import ErrorAlert from '../../components/ErrorAlert.vue'
 import { formatIsoDate } from '../../lib/format'
 const props = defineProps<{ studentId: string }>()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const items = ref<ClassStudent[]>([])
 const error = ref<DescribedError | null>(null)
 const loading = ref(false)
@@ -58,8 +58,8 @@ watch(
         t('classes.closed')
       }}</span>
       <div v-for="part in record.participations" :key="part.id" class="small mt-1">
-        {{ formatIsoDate(part.joinDate, locale) }} –
-        {{ part.leaveDate ? formatIsoDate(part.leaveDate, locale) : '…' }} ·
+        {{ formatIsoDate(part.joinDate) }} –
+        {{ part.leaveDate ? formatIsoDate(part.leaveDate) : '…' }} ·
         {{ t(`enrollments.status.${part.status}`) }}
         <div v-if="part.endReason">{{ part.endReason }}</div>
         <div v-if="part.note" class="text-preline text-body-secondary">{{ part.note }}</div>

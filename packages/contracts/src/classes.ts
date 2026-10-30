@@ -9,6 +9,9 @@ import { AccountType, IsoDate, RowVersion } from './common'
 export const ClassRole = z.enum(['teacher', 'assistant'])
 export type ClassRole = z.infer<typeof ClassRole>
 
+/** Start of a standard consecutive school year, displayed as YYYY–YYYY+1. */
+export const SchoolYearStart = z.number().int().min(1000).max(9998)
+
 /** Catalog entry referenced by a class; archived entries keep their name (CAT-01). */
 export const CatalogRef = z.object({ id: z.uuid(), name: z.string(), archived: z.boolean() })
 
@@ -17,6 +20,7 @@ export const ClassSummary = z.object({
   name: z.string(),
   subject: CatalogRef,
   grade: CatalogRef,
+  schoolYearStart: SchoolYearStart.nullable(),
   startDate: IsoDate,
   endDate: IsoDate,
   note: z.string().nullable(),
@@ -42,12 +46,33 @@ export const ClassPage = z.object({
   page: z.number().int().min(1),
   pageSize: z.number().int().min(1),
   total: z.number().int().min(0),
+  /** Years in the caller's readable classes, independent of search/year/page. */
+  schoolYears: z.array(SchoolYearStart),
+  /** Options from all readable classes, independent of the active filters/page. */
+  filterOptions: z.object({
+    grades: z.array(CatalogRef),
+    subjects: z.array(CatalogRef),
+    staff: z.array(z.object({ id: z.uuid(), fullName: z.string() })),
+  }),
 })
 export type ClassPage = z.infer<typeof ClassPage>
 
 /** GET /v1/classes — `deleted=true` lists soft-deleted classes (Admin/Receptionist). */
 export const ListClassesQuery = z.object({
   search: z.string().trim().max(200).optional(),
+  gradeId: z.uuid().optional(),
+  subjectId: z.uuid().optional(),
+  staffId: z.uuid().optional(),
+  status: z.enum(['all', 'open', 'closed', 'upcoming', 'running', 'ended']).default('all'),
+  schoolYear: z
+    .union([
+      z.enum(['all', 'none']),
+      z
+        .string()
+        .regex(/^[1-9]\d{3}$/)
+        .refine((value) => Number(value) <= 9998),
+    ])
+    .default('all'),
   deleted: z
     .enum(['true', 'false'])
     .optional()
@@ -60,6 +85,8 @@ export const ClassFields = z.strictObject({
   name: z.string().trim().min(1).max(200),
   subjectId: z.uuid(),
   gradeId: z.uuid(),
+  /** Omitted by older clients: create without year, preserve year on update. */
+  schoolYearStart: SchoolYearStart.nullable().optional(),
   startDate: IsoDate,
   endDate: IsoDate,
   note: z.string().trim().max(1000).nullable(),

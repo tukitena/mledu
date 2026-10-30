@@ -26,7 +26,7 @@ Tài liệu này ghi lại lựa chọn kỹ thuật đã được chấp nhận
 
 Lựa chọn backend chính là **Workers + Supabase**. Supabase Edge Functions là phương án thay thế lớp API để so sánh, không triển khai song song mặc định. Hono hỗ trợ [Workers](https://hono.dev/docs/getting-started/cloudflare-workers); Supabase cung cấp [database functions/RPC](https://supabase.com/docs/guides/database/functions).
 
-Lộ trình và cấu trúc thư mục đề xuất được mô tả tại [kế hoạch triển khai MLedu](Implementation-plan.md). Đây là đề xuất tổ chức triển khai; repository hiện chưa có source ứng dụng hoặc migration đã chạy.
+Lộ trình và cấu trúc thư mục được mô tả tại [kế hoạch triển khai MLedu](Implementation-plan.md). Repository đã có source ứng dụng và migration được áp dụng local; xem [schema PostgreSQL hiện tại](schema.md) để phân biệt cấu trúc đã triển khai với thiết kế của các giai đoạn sau. Trạng thái local không xác nhận CI hoặc hosted/staging/production.
 
 ### 1.1. Ranh giới giao tiếp frontend
 
@@ -62,7 +62,7 @@ Thư mục đang có trong workspace là `metis-v1.0.0/`. Lần ghi nhận tài 
 - Vue quản lý trạng thái và vòng đời component. Không đưa Alpine của template vào làm lớp quản lý trạng thái thứ hai cho cùng vùng DOM.
 - Tách giao diện nội bộ và trang phụ huynh theo route/layout; quyền dữ liệu luôn được kiểm tra phía backend.
 - Lựa chọn ngôn ngữ Việt/Anh và giao diện sáng/tối/theo hệ thống lưu theo trình duyệt. Lưu riêng lựa chọn `system` với màu thực tế đang áp dụng.
-- In A4/A5 bằng HTML, CSS dành cho in và chức năng in trình duyệt theo REPORT-01.
+- In điểm danh A4 bằng HTML/CSS. Giấy báo học phí và biên nhận dùng mẫu Word `.docx` do Admin tải lên, điền marker trong trình duyệt để tải DOCX và preview/in qua HTML/CSS theo REPORT-01 và mục 4.7 (quyết định 28/10/2026). Chỉ hỗ trợ tập bố cục đã kiểm chứng, không cam kết render mọi file như Microsoft Word.
 - Build SPA ra thư mục output riêng, dự kiến `dist/`; cấu hình fallback để tải trực tiếp/reload route con hoạt động. Không mang cơ chế build nhiều trang của Metis sang ứng dụng.
 
 Cloudflare có hướng dẫn [deploy Vue lên Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-vue-site/). Pages mặc định xử lý fallback SPA khi không có `404.html` cấp gốc; khi triển khai cần kiểm tra điều kiện này trên artifact thực tế. [Nguồn routing](https://developers.cloudflare.com/pages/configuration/serving-pages/)
@@ -90,6 +90,7 @@ Các thư viện bổ trợ đã khảo sát gồm FullCalendar Standard cho l�
 
 - Phân biệt loại tài khoản Admin/Receptionist/User với vai trò giáo viên/trợ giảng theo từng lớp.
 - RLS và RPC đọc trạng thái tài khoản, yêu cầu đổi mật khẩu và phân công có hiệu lực tại thời điểm yêu cầu. Không lấy workspace đang hiển thị làm quyền backend.
+- Quyền sửa học sinh ngày 28/10/2026 theo STU-04/STU-03: tách quyền sửa khỏi tạo/thêm/xóa/khôi phục. User sửa hồ sơ tổng qua quan hệ học sinh–lớp chưa xóa thuộc một phân công hiện hành; sửa lần tham gia phải kiểm tra chính lớp của lần đó. Cả giáo viên/trợ giảng dùng cùng phạm vi sửa, vẫn chịu khóa ngày và ràng buộc nghiệp vụ. Không mở rộng helper quản trị chung để vô tình cấp quyền thêm/xóa; API/RPC kiểm tra lại phạm vi, version và audit, kể cả khi apply Excel sau preview. Phần UI/API/RPC đã triển khai và kiểm chứng local ngày 29/10/2026 theo [biên bản quyền sửa](decisions/student-edit-permissions.md); Excel chưa triển khai, vẫn theo GĐ8.
 - Không chỉ dựa vào role trong JWT để áp dụng quyền mới tức thời; JWT có thể chưa phản ánh thay đổi đến khi refresh. [Nguồn RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
 - Bổ sung kiểm tra phiên hiện hành qua helper backend/database được giới hạn quyền để vô hiệu phiên đúng AUTH-02/03/04/08. Supabase hướng dẫn đối chiếu `session_id` với `auth.sessions` khi cần chặn access token còn hạn sau đăng xuất. [Nguồn sessions](https://supabase.com/docs/guides/auth/sessions)
 - SPA dùng publishable key. Secret key chỉ nằm trong backend secrets; thao tác dùng quyền cao phải có kiểm tra quyền rõ ràng vì secret key bỏ qua RLS. Yêu cầu nội bộ thông thường chuyển tiếp JWT người dùng để giữ ngữ cảnh phân quyền. [Nguồn API keys](https://supabase.com/docs/guides/getting-started/api-keys)
@@ -108,7 +109,7 @@ Các thư viện bổ trợ đã khảo sát gồm FullCalendar Standard cho l�
 - Tách học sinh tổng, hồ sơ học sinh–lớp và lần tham gia. Nghĩa vụ tài chính gắn hồ sơ lớp; điểm gắn học sinh/bài; điểm danh gắn học sinh/buổi theo plans.md.
 - Lưu riêng lịch sử phiên bản và sự kiện nghiệp vụ không thời hạn. Audit và thông báo có thời hạn 60 ngày; không dùng log nền tảng làm audit nghiệp vụ.
 - Thời gian nghiệp vụ dùng `Asia/Ho_Chi_Minh`; tách ngày nghiệp vụ với timestamp sự kiện. Quyền và hạn token được kiểm tra tại request, không đợi cron.
-- Tiền VND lưu bằng số nguyên; điểm dùng số chính xác đến 0,01, tránh sai số floating point. Chuẩn hóa tên/số điện thoại theo STU-04 tại backend và dùng thống nhất cho UI/API/Excel/phụ huynh.
+- Tiền VND lưu bằng số nguyên; điểm số thông thường chính xác đến 0,01. IELTS dùng số chính xác cho trung bình/trọng số, không cắt trung gian về 0,01; chỉ làm tròn theo đúng các bước TEST-01. Tránh sai số floating point ở biên 0,25/0,75. Chuẩn hóa tên/số điện thoại theo STU-04 tại backend và dùng thống nhất cho UI/API/Excel/phụ huynh.
 - Lịch phòng kiểm tra theo buổi thực tế và khoảng [bắt đầu, kết thúc); có ràng buộc chống trùng khi gửi đồng thời. Trùng giờ nhân sự chỉ cảnh báo như đặc tả.
 
 ### 4.5. Avatar và luồng lưu file
@@ -121,6 +122,41 @@ Các thư viện bổ trợ đã khảo sát gồm FullCalendar Standard cho l�
 - Khi xem ảnh, API kiểm tra quyền và cấp URL ngắn hạn hoặc tải qua luồng có xác thực. URL được sinh khi cần, không lưu làm định danh lâu dài. Signed URL còn dùng được đến hết hạn; nếu chức năng đòi thu hồi quyền đọc ngay tại từng request thì dùng luồng tải kiểm tra quyền mỗi lần. [Nguồn truy cập bucket private](https://supabase.com/docs/guides/storage/buckets/fundamentals).
 
 Lựa chọn này chỉ áp dụng tham chiếu avatar. Excel không dùng Storage: file được đọc tại trình duyệt theo mục 5.1.
+
+### 4.6. Template bài kiểm tra và IELTS
+
+Quyết định 28/10/2026 thay thư viện mẫu thang chữ riêng trong lớp bằng **thư viện template bài kiểm tra chung toàn trung tâm, chỉ Admin quản lý**. Giáo viên/trợ giảng chọn dùng theo quyền học vụ và chỉnh cấu hình riêng của bài; không có quyền ghi template. Chọn template là tùy chọn, không mở rộng quyền cho Receptionist.
+
+- Template là cấu hình có kiểu, không phải mã/công thức chạy tùy ý: số/phân số/chữ/IELTS, chế độ nhập, phần/kỹ năng và mức/tiêu chí. Bộ mức chữ nằm trong cấu hình đó. Bài lưu snapshot đầy đủ, nguồn/phiên bản nếu có; sửa/xóa template không lan sang bài đã tạo.
+- Cấu hình IELTS chọn kỹ năng L/R/W/S và chế độ riêng từng kỹ năng, thống nhất cả bài. L/R không tự quy đổi; W chi tiết có hai Task với bốn tiêu chí mỗi Task; S chi tiết có bốn tiêu chí. Backend tính Task, W/S và Overall theo TEST-01; client chỉ hiển thị dự tính, RPC tính lại khi ghi. Band đầu vào của L/R hoặc chế độ trực tiếp là dữ liệu người dùng, không phải giá trị suy ra từ số câu.
+- Lưu đầu vào, cấu hình và phiên bản công thức để giữ lịch sử; công thức IELTS cố định theo TEST-01, không cho người dùng/template tùy chỉnh. Đổi cấu hình sau khi có điểm phải qua TEST-03; khóa công bố, Vắng, thiếu dữ liệu và lọc chi tiết phụ huynh vẫn áp dụng. Import Excel gửi đầu vào đúng schema/phiên bản bài, không áp template mới hoặc tin cột tổng/Overall.
+- Công thức làm tròn từng Task rồi Writing là **quy tắc MLedu do người dùng chốt**. Nguồn IELTS xác nhận bốn tiêu chí, trung bình và nguyên tắc Overall; không dùng nguồn này để tuyên bố đã xác minh riêng bước làm tròn trung gian Task. [IELTS scoring](https://ielts.org/take-a-test/your-results/ielts-scoring-in-detail).
+
+### 4.7. Mẫu Word, giấy báo và biên nhận
+
+**Đã chọn ngày 28/10/2026:** xử lý DOCX và preview/in trong trình duyệt với giới hạn bố cục; đồng thời tải được Word đã điền. Phương án bộ chuyển đổi DOCX → PDF riêng chưa được chọn, không thêm dịch vụ, container hoặc Supabase Edge Functions để làm API thứ hai.
+
+**Luồng dự kiến, chưa triển khai:**
+
+1. Admin xin quyền upload mẫu → upload `.docx` vào Storage private → backend kiểm tra file thực tế, cấu trúc/marker và quyền → một RPC lưu metadata/phiên bản và audit. Mẫu chỉ được kích hoạt sau kiểm tra/preview bằng dữ liệu giả; upload chưa commit không thay mẫu đang dùng.
+2. Mỗi loại giấy tiền có nhiều mẫu và một default do Admin quản lý. Ràng buộc DB/khóa đảm bảo thay default nguyên khối; giữ phiên bản được bản in tham chiếu. Không dùng bucket `avatars` hoặc pipeline Excel cho mẫu Word.
+3. Admin/Receptionist lấy phiên bản mẫu và DTO dữ liệu qua API được phân quyền. File mẫu dùng cơ chế tải private có kiểm tra quyền; không công khai file học sinh/tài chính cho dịch vụ viewer bên ngoài. Browser không truy vấn trực tiếp bảng nghiệp vụ.
+4. Trình duyệt điền marker/vùng lặp vào DOCX. Cùng DOCX đã điền là nguồn tải xuống và preview/in HTML/CSS. Công việc ZIP/điền mẫu có thể đưa vào Web Worker phía trình duyệt; render DOM vẫn ở luồng giao diện. Xử lý lô có giới hạn, cho hủy và giải phóng buffer sau mỗi nhóm; không thay đổi tính nguyên khối của giao dịch tiền.
+5. Backend cấp mã biên nhận và snapshot giao dịch cùng transaction thu. Lần phát hành đầu lưu liên kết phiên bản mẫu; bước tạo file độc lập sau commit, có thể thử lại mà không thu lại. In lại dùng dữ liệu gốc/phiên bản mẫu đã ghi, kèm trạng thái hủy hiện hành. Quyền đọc lại được kiểm tra; file đã tải/giấy đã in không thể thu hồi từ xa và không phải nguồn dữ liệu tài chính.
+
+**Khảo sát khả thi:** Docxtemplater hỗ trợ tạo DOCX từ marker trong browser và có ví dụ Vue; thư viện điền mẫu không tự render PDF. `docx-preview` chuyển DOCX thành HTML, bị giới hạn bởi khả năng bố cục HTML. Đây là các ứng viên để thử, chưa cài dependency/chốt phiên bản hoặc nghiệm thu trong MLedu. Core templating có lựa chọn mã nguồn mở; tính năng nâng cao có thể cần module riêng, phải kiểm tra license khi chọn. [Browser templating](https://docxtemplater.com/docs/get-started-browser/), [conversion/licensing](https://docxtemplater.com/faq/), [DOCX preview](https://github.com/VolodymyrBaydalka/docxjs).
+
+**Trần nền tảng:** Workers Free có 10 ms CPU/request; Paid mặc định 30 giây, tối đa 5 phút; cả hai có 128 MB/isolate. Không chạy LibreOffice native trực tiếp trong Worker: `child_process` chỉ là stub. Nâng gói không tự thêm engine Word; Browser Run in HTML thành PDF cũng không phải engine bố cục Word. Supabase Pro không tự cung cấp DOCX renderer; Edge Functions vẫn có trần CPU 2 giây/request và 256 MB. Luồng đã chọn đặt dựng tài liệu ở thiết bị người dùng; Worker vẫn phải có ngân sách kiểm tra mẫu và cấp dữ liệu. [Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [Node compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), [Browser PDF](https://developers.cloudflare.com/api/resources/browser_rendering/subresources/pdf/methods/create/), [Edge limits](https://supabase.com/docs/guides/functions/limits).
+
+**Giới hạn cần kiểm chứng trước GĐ9:**
+
+- Chỉ hỗ trợ tập đoạn văn/bảng/ảnh trong dòng/header-footer/ngắt trang đã thử; không cam kết font, shape nổi hoặc phân trang tùy ý như Word. Giữ đủ dữ liệu quan trọng; nếu mẫu dùng tính năng ngoài tập hỗ trợ thì báo lỗi, không tự làm mất nội dung.
+- Cần chốt mức tối đa byte DOCX nén, byte sau giải nén/số ZIP entry, ảnh, dòng và phiếu mỗi lượt dựa trên fixture giả/mẫu được duyệt ở desktop và mobile. Không áp ngầm giới hạn 10 MB/5.000 dòng của Excel hoặc 5 MB avatar cho DOCX. Chưa có số đo để công bố một trần lô in an toàn.
+- Backend kiểm tra dung lượng/cấu trúc file, danh sách marker và tài nguyên ngoài; không chỉ tin MIME hoặc báo cáo client. Chặn ZIP bomb, macro/đối tượng nhúng, tài liệu mã hóa, XML external entities; marker là dữ liệu thuần có whitelist, không thực thi JS/biểu thức từ mẫu. Preview cô lập kiểu dáng/nội dung, không tải tài nguyên ngoài từ tài liệu.
+- Kiểm chứng tên dài, Unicode, nhiều dòng khoản, nhiều trang, font sẵn có, marker bị Word tách thành nhiều text run, vùng lặp và gỡ thu. Preview/DOCX/bản in cùng dữ liệu; không cắt mất số tiền/trạng thái. Mẫu biên nhận thiếu marker bắt buộc về mã/giao dịch/trạng thái hủy không được kích hoạt.
+- Template file ở Storage không cùng transaction với DB; audit lỗi giữ metadata/default cũ, dọn orphan chỉ khi không được tham chiếu. Bổ sung mẫu và phiên bản vào kế hoạch backup/restore nội dung Storage cùng liên kết DB.
+
+**Hiện trạng khảo sát 28/10/2026:** repo mới có nền Auth, phân quyền, học sinh/lớp/lần tham gia và avatar private; chưa có module học vụ/IELTS, thư viện template, thu tiền/biên nhận, upload DOCX hoặc preview/in. Chưa chạy thử renderer với mẫu thực tế, chưa triển khai dịch vụ chuyển đổi tài liệu và chưa xác nhận tài khoản hosted đang mua gói nào. Các mục trên là thiết kế/điều kiện nghiệm thu, không phải bằng chứng tính năng đã hoàn tất.
 
 ## 5. Excel, tác vụ và thông báo
 

@@ -8,41 +8,72 @@ import { apiRequest, workspace } from '../../app/session'
 import ErrorAlert from '../../components/ErrorAlert.vue'
 import FloatingAlert from '../../components/FloatingAlert.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
-import { formatIsoDate } from '../../lib/format'
+import { formatIsoDate, formatSchoolYear } from '../../lib/format'
 import ClassFormDialog from './ClassFormDialog.vue'
 import { periodBadge } from './labels'
 
 // Classes (CLASS-03). Admin/Receptionist see every class; the API returns a
 // User only the classes in which it has an assignment in effect now.
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const PAGE_SIZE = 20
 
 const canManage = computed(() => workspace.value === 'admin' || workspace.value === 'receptionist')
 const search = ref('')
+const schoolYear = ref('all')
+const gradeId = ref('')
+const subjectId = ref('')
+const status = ref('all')
+const staffId = ref('')
 const page = ref(1)
 const result = ref<ClassPage | null>(null)
 const loading = ref(false)
 const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const pages = computed(() => Math.max(1, Math.ceil((result.value?.total ?? 0) / PAGE_SIZE)))
+const schoolYears = computed(() => {
+  const years = result.value?.schoolYears ?? []
+  // Keep a selected year visible even when its last class is moved to another year.
+  return [
+    ...new Set([...years, ...(/^\d{4}$/.test(schoolYear.value) ? [Number(schoolYear.value)] : [])]),
+  ].sort((a, b) => b - a)
+})
+let loadId = 0
 
 async function load() {
+  const requestId = ++loadId
   loading.value = true
   error.value = null
   try {
     const query = new URLSearchParams({ page: String(page.value), pageSize: String(PAGE_SIZE) })
+    query.set('schoolYear', schoolYear.value)
+    query.set('status', status.value)
+    if (gradeId.value) query.set('gradeId', gradeId.value)
+    if (subjectId.value) query.set('subjectId', subjectId.value)
+    if (staffId.value) query.set('staffId', staffId.value)
     if (search.value.trim()) query.set('search', search.value.trim())
-    result.value = await apiRequest(`/v1/classes?${query}`, { schema: ClassPage })
+    const data = await apiRequest(`/v1/classes?${query}`, { schema: ClassPage })
+    if (requestId === loadId) result.value = data
   } catch (cause) {
-    error.value = describeError(cause)
+    if (requestId === loadId) error.value = describeError(cause)
   } finally {
-    loading.value = false
+    if (requestId === loadId) loading.value = false
   }
 }
 onMounted(load)
 // The list depends on the workspace for an Admin (all classes vs. own classes).
-watch(workspace, () => void load())
+watch([workspace, schoolYear, gradeId, subjectId, status, staffId], ([current], [previous]) => {
+  if (current !== previous) {
+    result.value = null
+    schoolYear.value = 'all'
+    gradeId.value = ''
+    subjectId.value = ''
+    status.value = 'all'
+    staffId.value = ''
+  }
+  page.value = 1
+  void load()
+})
 
 const editing = ref<{ current: ClassSummary | null } | null>(null)
 
@@ -66,7 +97,7 @@ function onAction(item: ClassSummary, key: string) {
 }
 
 const dates = (item: ClassSummary) =>
-  `${formatIsoDate(item.startDate, locale.value)} – ${formatIsoDate(item.endDate, locale.value)}`
+  `${formatIsoDate(item.startDate)} – ${formatIsoDate(item.endDate)}`
 const staffNames = (item: ClassSummary) =>
   item.currentStaff.map((staff) => staff.fullName).join(', ')
 </script>
@@ -93,20 +124,88 @@ const staffNames = (item: ClassSummary) =>
 
     <div class="card data-card">
       <div class="card-body">
-        <form class="row g-3 table-controls" role="search" @submit.prevent="((page = 1), load())">
-          <div class="col-8 col-md-9">
-            <input
-              v-model="search"
-              type="search"
-              class="form-control"
-              :placeholder="t('classes.searchPlaceholder')"
-              :aria-label="t('common.search')"
-            />
+        <form class="row g-2 table-controls" role="search" @submit.prevent="((page = 1), load())">
+          <div class="col-12 col-sm-6 col-lg-4">
+            <div class="input-group">
+              <input
+                v-model="search"
+                type="search"
+                class="form-control"
+                :placeholder="t('classes.searchPlaceholder')"
+                :aria-label="t('common.search')"
+              />
+              <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <span class="visually-hidden">{{ t('common.search') }}</span>
+              </button>
+            </div>
           </div>
-          <div class="col-4 col-md-3 d-grid">
-            <button type="submit" class="btn btn-outline-secondary">
-              {{ t('common.search') }}
-            </button>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select
+              v-model="schoolYear"
+              class="form-select"
+              :aria-label="t('classes.filterSchoolYear')"
+            >
+              <option value="all">{{ t('classes.allSchoolYears') }}</option>
+              <option value="none">{{ t('classes.noSchoolYear') }}</option>
+              <option v-for="year in schoolYears" :key="year" :value="String(year)">
+                {{ formatSchoolYear(year) }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select v-model="gradeId" class="form-select" :aria-label="t('classes.filterGrade')">
+              <option value="">{{ t('classes.allGrades') }}</option>
+              <option
+                v-for="grade in result?.filterOptions.grades ?? []"
+                :key="grade.id"
+                :value="grade.id"
+              >
+                {{ grade.name }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select
+              v-model="subjectId"
+              class="form-select"
+              :aria-label="t('classes.filterSubject')"
+            >
+              <option value="">{{ t('classes.allSubjects') }}</option>
+              <option
+                v-for="subject in result?.filterOptions.subjects ?? []"
+                :key="subject.id"
+                :value="subject.id"
+              >
+                {{ subject.name }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select v-model="status" class="form-select" :aria-label="t('classes.filterStatus')">
+              <option value="all">{{ t('classes.allStatuses') }}</option>
+              <option value="open">{{ t('classes.open') }}</option>
+              <option value="closed">{{ t('classes.closed') }}</option>
+              <option
+                v-for="period in ['upcoming', 'running', 'ended']"
+                :key="period"
+                :value="period"
+              >
+                {{ t(`classes.period.${period}`) }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select v-model="staffId" class="form-select" :aria-label="t('classes.filterStaff')">
+              <option value="">{{ t('classes.allStaff') }}</option>
+              <option
+                v-for="person in result?.filterOptions.staff ?? []"
+                :key="person.id"
+                :value="person.id"
+              >
+                {{ person.fullName }}
+              </option>
+            </select>
           </div>
         </form>
 
@@ -123,6 +222,7 @@ const staffNames = (item: ClassSummary) =>
               <tr>
                 <th scope="col">{{ t('classes.columns.name') }}</th>
                 <th scope="col">{{ t('classes.columns.subjectGrade') }}</th>
+                <th scope="col">{{ t('classes.fields.schoolYear') }}</th>
                 <th scope="col">{{ t('classes.columns.dates') }}</th>
                 <th scope="col">{{ t('classes.columns.staff') }}</th>
                 <th scope="col">{{ t('classes.columns.status') }}</th>
@@ -131,10 +231,10 @@ const staffNames = (item: ClassSummary) =>
             </thead>
             <tbody>
               <tr v-if="loading && !result">
-                <td colspan="6" class="text-body-secondary">{{ t('common.loading') }}</td>
+                <td colspan="7" class="text-body-secondary">{{ t('common.loading') }}</td>
               </tr>
               <tr v-else-if="result && !result.items.length">
-                <td colspan="6" class="text-body-secondary">
+                <td colspan="7" class="text-body-secondary">
                   {{ canManage ? t('classes.empty') : t('classes.myEmpty') }}
                 </td>
               </tr>
@@ -147,6 +247,9 @@ const staffNames = (item: ClassSummary) =>
                   >
                 </td>
                 <td class="small">{{ item.subject.name }} · {{ item.grade.name }}</td>
+                <td class="small text-nowrap">
+                  {{ formatSchoolYear(item.schoolYearStart) || t('classes.noSchoolYear') }}
+                </td>
                 <td class="small text-nowrap">{{ dates(item) }}</td>
                 <td class="small">{{ staffNames(item) || '—' }}</td>
                 <td>

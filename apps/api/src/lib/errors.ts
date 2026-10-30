@@ -84,6 +84,8 @@ export function fromDatabaseError(error: PostgrestLikeError): AppError {
       return new AppError(401, 'session_invalid', 'session_invalid')
     case '23505':
       return new AppError(409, 'conflict', 'conflict')
+    case '23P01':
+      return new AppError(409, 'room_conflict', 'room_conflict')
     case '22023':
     case '23514':
       return new AppError(400, 'validation_failed', 'validation_failed')

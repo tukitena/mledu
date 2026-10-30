@@ -31,6 +31,10 @@ test('Admin creates an account; the new user must change the temporary password 
   const temporaryPassword = await page.getByTestId('temporary-password').inputValue()
   expect(temporaryPassword).toMatch(/^[A-Za-z2-9]{12}$/)
   await page.getByRole('button', { name: 'Đóng', exact: true }).last().click()
+  // The directory is paginated; accumulated fixtures may place this account
+  // after the first page. Find this test's account explicitly.
+  await page.getByRole('searchbox', { name: 'Tìm kiếm', exact: true }).fill(email)
+  await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()
   await expect(page.locator(`tr[data-email="${email}"]`)).toContainText('Chờ đổi mật khẩu')
 
   await page.getByTestId('user-menu').click()

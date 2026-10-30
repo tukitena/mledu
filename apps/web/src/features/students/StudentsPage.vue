@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import { phoneKey } from '@mledu/contracts/normalize'
 import { StudentDeleteImpact } from '@mledu/contracts/enrollments'
 import StudentClassHistory from './StudentClassHistory.vue'
@@ -20,8 +21,8 @@ import PhoneListField from '../../components/PhoneListField.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
 
 // Student master records (STU-04/01/02). Every workspace searches the whole
-// centre; Admin/Receptionist workspaces manage. The API enforces both.
-const { t, locale } = useI18n()
+// centre; management and assignment-scoped editing are separate capabilities.
+const { t } = useI18n()
 const PAGE_SIZE = 20
 
 const canManage = computed(() => workspace.value === 'admin' || workspace.value === 'receptionist')
@@ -63,7 +64,7 @@ watch(canManage, (allowed) => {
   if (!allowed && status.value === 'deleted') status.value = 'active'
 })
 
-const formatDate = (value: string | null) => formatIsoDate(value, locale.value)
+const formatDate = (value: string | null) => formatIsoDate(value)
 
 // --- Detail -------------------------------------------------------------------
 
@@ -149,7 +150,7 @@ async function submitForm() {
               schema: Student,
             },
           )
-    notice.value = t(`students.done.${formMode.value}`, { name: saved.fullName, code: saved.code })
+    notice.value = t(`students.done.${formMode.value}`, { name: saved.fullName })
     formMode.value = null
     await load()
   } catch (cause) {
@@ -177,7 +178,7 @@ async function confirmDelete() {
       body: { reason: reason.value, expectedVersion: student.rowVersion },
       schema: Student,
     })
-    notice.value = t('students.done.delete', { name: student.fullName, code: student.code })
+    notice.value = t('students.done.delete', { name: student.fullName })
     deleting.value = null
     await load()
   } catch (cause) {
@@ -189,14 +190,15 @@ async function confirmDelete() {
 
 function actionsFor(student: Student): RowAction[] {
   const view = { key: 'view', label: t('students.actions.view') }
-  if (!canManage.value) return [view]
-  return student.status === 'deleted'
-    ? [view, { key: 'restore', label: t('students.actions.restore') }]
-    : [
-        view,
-        { key: 'edit', label: t('students.actions.edit') },
-        { key: 'delete', label: t('students.actions.delete'), danger: true },
-      ]
+  const actions: RowAction[] = [view]
+  if (student.status === 'active' && student.canEdit)
+    actions.push({ key: 'edit', label: t('students.actions.edit') })
+  if (canManage.value) {
+    if (student.status === 'deleted')
+      actions.push({ key: 'restore', label: t('students.actions.restore') })
+    else actions.push({ key: 'delete', label: t('students.actions.delete'), danger: true })
+  }
+  return actions
 }
 
 async function onAction(student: Student, key: string) {
@@ -294,7 +296,6 @@ const formatPhones = (phones: string[]) => phones.join(', ')
             <thead>
               <tr>
                 <th scope="col">{{ t('students.columns.name') }}</th>
-                <th scope="col">{{ t('students.columns.code') }}</th>
                 <th scope="col">{{ t('students.columns.parentPhones') }}</th>
                 <th scope="col">{{ t('students.columns.birthDate') }}</th>
                 <th scope="col">{{ t('students.columns.school') }}</th>
@@ -303,15 +304,15 @@ const formatPhones = (phones: string[]) => phones.join(', ')
             </thead>
             <tbody>
               <tr v-if="loading && !result">
-                <td colspan="6" class="text-body-secondary">{{ t('common.loading') }}</td>
+                <td colspan="5" class="text-body-secondary">{{ t('common.loading') }}</td>
               </tr>
               <tr v-else-if="result && !result.items.length">
-                <td colspan="6" class="text-body-secondary">{{ t('students.empty') }}</td>
+                <td colspan="5" class="text-body-secondary">{{ t('students.empty') }}</td>
               </tr>
               <tr
                 v-for="student in result?.items ?? []"
                 :key="student.id"
-                :data-code="student.code"
+                :data-student-id="student.id"
               >
                 <td>
                   <button
@@ -325,7 +326,6 @@ const formatPhones = (phones: string[]) => phones.join(', ')
                     {{ t('students.parentOf', { name: student.parentName }) }}
                   </div>
                 </td>
-                <td class="font-monospace small">{{ student.code }}</td>
                 <td class="small">{{ formatPhones(student.parentPhones) }}</td>
                 <td class="small">{{ formatDate(student.birthDate) }}</td>
                 <td class="small text-break">{{ student.school }}</td>
@@ -376,8 +376,6 @@ const formatPhones = (phones: string[]) => phones.join(', ')
 
     <ModalDialog v-if="viewing" :title="viewing.fullName" @close="viewing = null">
       <dl class="row mb-0 student-detail" data-testid="student-detail">
-        <dt class="col-5">{{ t('students.columns.code') }}</dt>
-        <dd class="col-7 font-monospace">{{ viewing.code }}</dd>
         <dt class="col-5">{{ t('students.fields.parentName') }}</dt>
         <dd class="col-7">{{ viewing.parentName || '—' }}</dd>
         <dt class="col-5">{{ t('students.fields.parentPhones') }}</dt>
@@ -415,6 +413,9 @@ const formatPhones = (phones: string[]) => phones.join(', ')
       </p>
       <p v-else-if="formMode === 'create'" class="small text-body-secondary">
         {{ t('students.createHint') }}
+      </p>
+      <p v-else class="small text-body-secondary" data-testid="student-shared-hint">
+        {{ t('students.sharedEditHint') }}
       </p>
       <ErrorAlert :error="actionError" />
       <form id="student-form" novalidate @submit.prevent="submitForm">
@@ -462,7 +463,7 @@ const formatPhones = (phones: string[]) => phones.join(', ')
               {{ t('students.fields.birthDate') }}
               <span class="text-body-secondary">({{ t('common.optional') }})</span>
             </label>
-            <input id="student-birth" v-model="form.birthDate" type="date" class="form-control" />
+            <DateInput id="student-birth" v-model="form.birthDate" class="form-control" />
           </div>
           <div class="col-12 col-sm-6">
             <label class="form-label" for="student-school">

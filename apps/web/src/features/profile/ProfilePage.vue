@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import {
   AVATAR_MAX_BYTES,
   AvatarContentType,
@@ -219,12 +220,7 @@ async function removeAvatar() {
                     {{ t('profile.birthDate') }}
                     <span class="text-body-secondary">({{ t('common.optional') }})</span>
                   </label>
-                  <input
-                    id="profile-birth"
-                    v-model="form.birthDate"
-                    type="date"
-                    class="form-control"
-                  />
+                  <DateInput id="profile-birth" v-model="form.birthDate" class="form-control" />
                 </div>
               </div>
               <div class="d-flex flex-wrap gap-2 mt-4">
