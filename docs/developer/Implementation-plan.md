@@ -259,7 +259,7 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 
 - [x] Tạo danh mục môn/khối/địa điểm/phòng; chuẩn hóa và kiểm tra duy nhất kể cả bản lưu trữ. Phòng chỉ có tên và địa điểm theo nghiệp vụ.
 
-  Mô hình danh mục hiện tại dùng chung `app.catalog_entries` cho `subject`/`grade`; `classes.subject_id` và `classes.grade_id` cùng tham chiếu bảng này. ERD đã được đồng bộ phần danh mục/lớp ngày 30/10/2026; xem [ghi nhận schema và đánh đổi](decisions/catalog-entries-schema.md). Đây là cập nhật tài liệu, không thêm bằng chứng nghiệm thu hoặc CI.
+  Mô hình danh mục hiện tại dùng chung `app.catalog_entries` cho `subject`/`grade`; `classes.subject_id` và `classes.grade_id` cùng tham chiếu bảng này. Xem [schema hiện tại — danh mục](schema.md#appcatalog_entries) và [đối chiếu ERD thiết kế](schema.md#đối-chiếu-với-erd-thiết-kế). Đây là tham chiếu schema local, không thêm bằng chứng nghiệm thu hoặc CI.
 
 - [x] Tạo hồ sơ học sinh, nhiều số liên hệ, chuẩn hóa tên/SĐT và chống trùng đồng thời theo STU-04; mã học sinh giữ ổn định qua xuất/nhập và khôi phục.
 - [x] Tạo lớp, phân công theo thời hạn và hồ sơ học sinh–lớp chứa nhiều lần tham gia. Kiểm tra không chồng khoảng, khóa ngày đã lưu và cắt khoảng bằng sự kiện.

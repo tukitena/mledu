@@ -48,12 +48,22 @@ export const ClassPage = z.object({
   total: z.number().int().min(0),
   /** Years in the caller's readable classes, independent of search/year/page. */
   schoolYears: z.array(SchoolYearStart),
+  /** Options from all readable classes, independent of the active filters/page. */
+  filterOptions: z.object({
+    grades: z.array(CatalogRef),
+    subjects: z.array(CatalogRef),
+    staff: z.array(z.object({ id: z.uuid(), fullName: z.string() })),
+  }),
 })
 export type ClassPage = z.infer<typeof ClassPage>
 
 /** GET /v1/classes — `deleted=true` lists soft-deleted classes (Admin/Receptionist). */
 export const ListClassesQuery = z.object({
   search: z.string().trim().max(200).optional(),
+  gradeId: z.uuid().optional(),
+  subjectId: z.uuid().optional(),
+  staffId: z.uuid().optional(),
+  status: z.enum(['all', 'open', 'closed', 'upcoming', 'running', 'ended']).default('all'),
   schoolYear: z
     .union([
       z.enum(['all', 'none']),

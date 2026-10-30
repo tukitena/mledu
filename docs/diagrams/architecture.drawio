@@ -7,10 +7,10 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=38;fontColor=#0f172a;" value="&lt;b&gt;MLedu&lt;/b&gt; / Sơ đồ quan hệ dữ liệu" vertex="1">
                     <mxGeometry height="70" width="1820" x="80" y="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=22;fontColor=#334155;" value="51 thực thể logic · 9 trang ERD chi tiết · PostgreSQL / Supabase · danh mục cập nhật 30/10/2026" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=22;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="40" width="1820" x="80" y="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="status" parent="1" style="rounded=1;whiteSpace=wrap;html=1;spacing=20;align=left;fontFamily=Arial;fontSize=18;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt; THIẾT KẾ + PHẦN ĐÃ ĐỐI CHIẾU MIGRATION &lt;/b&gt; — Nền GĐ 1 và danh mục/lớp (catalog_entries, classes) có nguồn migration. Phần khác giữ thiết kế hiện có, chưa đồng bộ toàn bộ; metadata không thay thế kiểm tra trạng thái triển khai." vertex="1">
+                <mxCell id="status" parent="1" style="rounded=1;whiteSpace=wrap;html=1;spacing=20;align=left;fontFamily=Arial;fontSize=18;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;THIẾT KẾ LOGIC, KHÔNG PHẢI SCHEMA VẬT LÝ&lt;/b&gt; — Một số tên bảng/cột/FK khác triển khai. Xem docs/developer/schema.md: đủ 21 bảng app, cột, khóa và đối chiếu tên theo 16 migration local tới 20261030130000. Không suy schema hiện hành từ các trang đề xuất." vertex="1">
                     <mxGeometry height="100" width="1820" x="80" y="190" as="geometry"/>
                 </mxCell>
                 <UserObject label="&lt;b&gt;01 · Hồ sơ &amp; phân quyền&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font style=&quot;font-size:15px&quot;&gt;auth.users&lt;br&gt;account_profiles&lt;br&gt;staff_assignments&lt;br&gt;auth.sessions&lt;br&gt;+ 7 bảng khác&lt;/font&gt;" link="data:page/id,core" id="nav_core">
@@ -100,7 +100,7 @@
                 <mxCell id="swatch_label_ops" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=17;fontColor=#334155;" value="Vận hành" vertex="1">
                     <mxGeometry height="30" width="500" x="1380" y="1710" as="geometry"/>
                 </mxCell>
-                <mxCell id="sources" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=17;fontColor=#334155;" value="&lt;b&gt;Nguồn hiện hành:&lt;/b&gt; docs/developer/plans.md · docs/developer/techstack.md&lt;br&gt;Đọc kèm docs/diagrams/README.md để tra ánh xạ yêu cầu và các lựa chọn mô hình." vertex="1">
+                <mxCell id="sources" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=17;fontColor=#334155;" value="&lt;b&gt;Nguồn:&lt;/b&gt; docs/developer/plans.md · docs/developer/techstack.md&lt;br&gt;&lt;b&gt;Schema hiện tại:&lt;/b&gt; docs/developer/schema.md · SQL triển khai: supabase/migrations/." vertex="1">
                     <mxGeometry height="80" width="1820" x="80" y="1830" as="geometry"/>
                 </mxCell>
             </root>
@@ -114,7 +114,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 01 · Hồ sơ &amp;amp; phân quyền" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic · PostgreSQL / Supabase · danh mục/lớp đối chiếu migration 30/10/2026 · các phần khác chưa đồng bộ đầy đủ" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -1104,7 +1104,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 02 · Lịch &amp;amp; điểm danh" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · 26/10/2026 · Chưa phải schema/migration đã triển khai" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -1719,7 +1719,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 03 · Bài kiểm tra &amp;amp; điểm" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · 26/10/2026 · Chưa phải schema/migration đã triển khai" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -2574,7 +2574,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 04 · Nhận xét &amp;amp; phụ huynh" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · 26/10/2026 · Chưa phải schema/migration đã triển khai" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -3115,7 +3115,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 05 · Học phí &amp;amp; nghĩa vụ" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · 26/10/2026 · Chưa phải schema/migration đã triển khai" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -3759,7 +3759,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 06 · Khoản ngoài học phí" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · 26/10/2026 · Chưa phải schema/migration đã triển khai" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -4286,7 +4286,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 07 · Thu tiền &amp;amp; gỡ sai" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · 26/10/2026 · Chưa phải schema/migration đã triển khai" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -4803,7 +4803,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 08 · Nhập Excel" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic đề xuất · PostgreSQL / Supabase · cập nhật 27/10/2026 · Excel đọc tại trình duyệt; chưa có migration" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">
@@ -5161,7 +5161,7 @@
                 <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=30;fontColor=#0f172a;" value="&lt;b&gt;MLedu / ERD&lt;/b&gt; — 09 · Lịch sử &amp;amp; vận hành" vertex="1">
                     <mxGeometry height="50" width="1900" x="120" y="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic · PostgreSQL / Supabase · cập nhật 27/10/2026 · audit_events, business_entity_versions, outbox_events, outbox_deliveries đã có migration GĐ 1; job/thông báo ở GĐ 9" vertex="1">
+                <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=16;fontColor=#334155;" value="Thiết kế logic toàn hệ thống · Schema vật lý hiện tại (21 bảng app): docs/developer/schema.md" vertex="1">
                     <mxGeometry height="30" width="1900" x="120" y="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=0;fontFamily=Arial;fontSize=14;fontColor=#334155;" value="&lt;b&gt;PK&lt;/b&gt; khóa chính · &lt;b&gt;FK&lt;/b&gt; khóa ngoại · &lt;b&gt;UQ&lt;/b&gt; duy nhất · &lt;b&gt;?&lt;/b&gt; cho phép NULL · &lt;b&gt;C&lt;/b&gt; ràng buộc · chân quạ = nhiều · THAM CHIẾU = bảng rút gọn có liên kết" vertex="1">

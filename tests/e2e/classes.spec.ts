@@ -6,6 +6,69 @@ const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).sli
 const day = (offset: number) =>
   new Date(Date.now() + 7 * 3600_000 + offset * 86_400_000).toISOString().slice(0, 10)
 
+test('class filters combine and preserve length-first ordering', async ({
+  page,
+  isMobile,
+}, testInfo) => {
+  const prefix = `Bộ lọc ${unique()}`
+  const token = await accessToken('receptionist@example.com', FIXTURE_PASSWORD)
+  const teacher = await readyAccount('filters')
+  const ids: string[] = []
+  for (const suffix of ['10', '7', '6']) {
+    const response = await apiCall<{ id: string }>(token, '/v1/classes', 'POST', {
+      name: `${prefix} ${suffix}`,
+      subjectId: '10000000-0000-4000-8000-000000000001',
+      gradeId: '10000000-0000-4000-8000-000000000011',
+      startDate: day(-3),
+      endDate: day(60),
+      schoolYearStart: 2026,
+      note: null,
+    })
+    expect(response.status).toBe(201)
+    ids.push(response.body.id)
+  }
+  expect(
+    (
+      await apiCall(token, `/v1/classes/${ids[2]}/assignments`, 'POST', {
+        accountId: teacher.id,
+        role: 'assistant',
+        startDate: day(-1),
+        endDate: day(30),
+        subjectNote: null,
+      })
+    ).status,
+  ).toBe(201)
+  await signInThroughUi(page, 'receptionist@example.com', FIXTURE_PASSWORD)
+  await expect(page.getByTestId('welcome')).toBeVisible()
+  await page.goto('/classes')
+  await page.getByPlaceholder('Tìm theo tên lớp').fill(prefix)
+  await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()
+  const names = page.getByTestId('classes-table').locator('tbody tr[data-name] td:first-child')
+  await expect(names).toHaveText([`${prefix} 6`, `${prefix} 7`, `${prefix} 10`])
+  await page.getByLabel('Lọc theo khối').selectOption('10000000-0000-4000-8000-000000000011')
+  await page.getByLabel('Lọc theo môn').selectOption('10000000-0000-4000-8000-000000000001')
+  await page.getByLabel('Lọc theo năm học').selectOption('2026')
+  await page.getByLabel('Lọc theo trạng thái').selectOption('running')
+  await page.getByLabel('Lọc theo nhân sự').selectOption(teacher.id)
+  await expect(names).toHaveText([`${prefix} 6`])
+  await page.screenshot({ path: testInfo.outputPath('class-filters-vi-light.png'), fullPage: true })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.getByLabel('Lọc theo trạng thái').selectOption('closed')
+  await expect(page.getByTestId('classes-table')).toContainText('Chưa có lớp phù hợp.')
+  // Empty results must retain options so filters can be changed without clearing everything.
+  await expect(page.getByLabel('Lọc theo nhân sự')).toHaveValue(teacher.id)
+  await page.getByLabel('Lọc theo trạng thái').selectOption('all')
+  await expect(names).toHaveText([`${prefix} 6`])
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await page.getByTestId('locale-select').selectOption('en')
+  await page.getByTestId('theme-select').selectOption('dark')
+  if (isMobile) await page.getByTestId('user-menu').click()
+  await expect(page.getByLabel('Filter by grade')).toBeVisible()
+  await page.getByLabel('Filter by current staff').selectOption('')
+  await expect(names).toHaveCount(3)
+  await page.screenshot({ path: testInfo.outputPath('class-filters-en-dark.png'), fullPage: true })
+})
+
 test('optional school year can be created, filtered, edited and cleared', async ({
   page,
   isMobile,

@@ -11,6 +11,27 @@ const fields = {
 }
 
 describe('CLASS-03 optional school year', () => {
+  it('validates combined class filters without silently discarding them', () => {
+    const query = {
+      gradeId: fields.gradeId,
+      subjectId: fields.subjectId,
+      staffId: fields.subjectId,
+      status: 'running',
+    }
+    expect(ListClassesQuery.parse(query)).toMatchObject(query)
+    expect(ListClassesQuery.parse({}).status).toBe('all')
+    for (const status of ['all', 'open', 'closed', 'upcoming', 'running', 'ended']) {
+      expect(ListClassesQuery.safeParse({ status }).success).toBe(true)
+    }
+    for (const query of [
+      { gradeId: 'bad' },
+      { subjectId: '' },
+      { staffId: 'bad' },
+      { status: 'active' },
+    ]) {
+      expect(ListClassesQuery.safeParse(query).success).toBe(false)
+    }
+  })
   it('accepts a standard year or no year independently of class dates', () => {
     for (const schoolYearStart of [null, 1000, 2026, 9998]) {
       expect(CreateClassRequest.safeParse({ ...fields, schoolYearStart }).success).toBe(true)

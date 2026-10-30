@@ -47,6 +47,49 @@ beforeAll(async () => {
 })
 
 describe('classes and assignments', () => {
+  it('orders before pagination and combines grade, subject, status and current staff filters', async () => {
+    const prefix = `Filters API ${Date.now()}`
+    const teacher = await createReadyAccount(admin, 'class-filters')
+    const longer = await createClass(`${prefix} 10`, -10, 90, 2026)
+    const first = await createClass(`${prefix} 6`, -10, 90, 2026)
+    await createClass(`${prefix} 7`, -10, 90, 2026)
+    const assignment = Assignment.parse(
+      await json(await assign(first.id, teacher.id, 'assistant', -1, 30)),
+    )
+    await assign(longer.id, teacher.id, 'teacher', 1, 30)
+    const list = async (query: string, token = receptionist) => {
+      const response = await api(`/v1/classes?search=${encodeURIComponent(prefix)}&${query}`, {
+        token,
+      })
+      expect(response.status).toBe(200)
+      return ClassPage.parse(await json(response))
+    }
+    const ordered = await list('pageSize=1')
+    expect(ordered.items[0]!.id).toBe(first.id)
+    expect((await list('pageSize=1&page=3')).items[0]!.id).toBe(longer.id)
+    const filters = `gradeId=${GRADE}&subjectId=${SUBJECT}&schoolYear=2026&status=running&staffId=${teacher.id}`
+    const filtered = await list(filters)
+    expect(filtered.total).toBe(1)
+    expect(filtered.items.map((item) => item.id)).toEqual([first.id])
+    expect((await list('status=ended')).total).toBe(0)
+    expect((await list('status=closed')).total).toBe(0)
+    expect((await list('status=open')).total).toBe(3)
+    expect((await list(`${filters}&page=10`)).total).toBe(1)
+    for (const query of ['status=active', 'gradeId=bad', 'subjectId=bad', 'staffId=bad']) {
+      expect((await api(`/v1/classes?${query}`, { token: receptionist })).status).toBe(400)
+    }
+    const mine = await list(filters, teacher.session.accessToken)
+    expect(mine.total).toBe(1)
+    expect(mine.filterOptions.staff.map((person) => person.id)).toEqual([teacher.id])
+    await api(`/v1/assignments/${assignment.id}/end`, {
+      token: receptionist,
+      method: 'POST',
+      body: { reason: 'End filter scope', expectedVersion: 1 },
+    })
+    const revoked = await list(filters, teacher.session.accessToken)
+    expect(revoked.total).toBe(0)
+    expect(revoked.filterOptions).toEqual({ grades: [], subjects: [], staff: [] })
+  })
   it('creates, filters, changes and clears optional school years over HTTP', async () => {
     const prefix = `Năm học API ${Date.now()}`
     const first = await createClass(`${prefix} A`, -10, 90, 2026)

@@ -21,6 +21,10 @@ const PAGE_SIZE = 20
 const canManage = computed(() => workspace.value === 'admin' || workspace.value === 'receptionist')
 const search = ref('')
 const schoolYear = ref('all')
+const gradeId = ref('')
+const subjectId = ref('')
+const status = ref('all')
+const staffId = ref('')
 const page = ref(1)
 const result = ref<ClassPage | null>(null)
 const loading = ref(false)
@@ -43,6 +47,10 @@ async function load() {
   try {
     const query = new URLSearchParams({ page: String(page.value), pageSize: String(PAGE_SIZE) })
     query.set('schoolYear', schoolYear.value)
+    query.set('status', status.value)
+    if (gradeId.value) query.set('gradeId', gradeId.value)
+    if (subjectId.value) query.set('subjectId', subjectId.value)
+    if (staffId.value) query.set('staffId', staffId.value)
     if (search.value.trim()) query.set('search', search.value.trim())
     const data = await apiRequest(`/v1/classes?${query}`, { schema: ClassPage })
     if (requestId === loadId) result.value = data
@@ -54,13 +62,15 @@ async function load() {
 }
 onMounted(load)
 // The list depends on the workspace for an Admin (all classes vs. own classes).
-watch(workspace, () => {
-  result.value = null
-  page.value = 1
-  if (schoolYear.value !== 'all') schoolYear.value = 'all'
-  else void load()
-})
-watch(schoolYear, () => {
+watch([workspace, schoolYear, gradeId, subjectId, status, staffId], ([current], [previous]) => {
+  if (current !== previous) {
+    result.value = null
+    schoolYear.value = 'all'
+    gradeId.value = ''
+    subjectId.value = ''
+    status.value = 'all'
+    staffId.value = ''
+  }
   page.value = 1
   void load()
 })
@@ -114,17 +124,23 @@ const staffNames = (item: ClassSummary) =>
 
     <div class="card data-card">
       <div class="card-body">
-        <form class="row g-3 table-controls" role="search" @submit.prevent="((page = 1), load())">
-          <div class="col-12 col-md-6">
-            <input
-              v-model="search"
-              type="search"
-              class="form-control"
-              :placeholder="t('classes.searchPlaceholder')"
-              :aria-label="t('common.search')"
-            />
+        <form class="row g-2 table-controls" role="search" @submit.prevent="((page = 1), load())">
+          <div class="col-12 col-sm-6 col-lg-4">
+            <div class="input-group">
+              <input
+                v-model="search"
+                type="search"
+                class="form-control"
+                :placeholder="t('classes.searchPlaceholder')"
+                :aria-label="t('common.search')"
+              />
+              <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <span class="visually-hidden">{{ t('common.search') }}</span>
+              </button>
+            </div>
           </div>
-          <div class="col-8 col-md-4">
+          <div class="col-12 col-sm-6 col-lg-4">
             <select
               v-model="schoolYear"
               class="form-select"
@@ -137,10 +153,59 @@ const staffNames = (item: ClassSummary) =>
               </option>
             </select>
           </div>
-          <div class="col-4 col-md-2 d-grid">
-            <button type="submit" class="btn btn-outline-secondary">
-              {{ t('common.search') }}
-            </button>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select v-model="gradeId" class="form-select" :aria-label="t('classes.filterGrade')">
+              <option value="">{{ t('classes.allGrades') }}</option>
+              <option
+                v-for="grade in result?.filterOptions.grades ?? []"
+                :key="grade.id"
+                :value="grade.id"
+              >
+                {{ grade.name }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select
+              v-model="subjectId"
+              class="form-select"
+              :aria-label="t('classes.filterSubject')"
+            >
+              <option value="">{{ t('classes.allSubjects') }}</option>
+              <option
+                v-for="subject in result?.filterOptions.subjects ?? []"
+                :key="subject.id"
+                :value="subject.id"
+              >
+                {{ subject.name }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select v-model="status" class="form-select" :aria-label="t('classes.filterStatus')">
+              <option value="all">{{ t('classes.allStatuses') }}</option>
+              <option value="open">{{ t('classes.open') }}</option>
+              <option value="closed">{{ t('classes.closed') }}</option>
+              <option
+                v-for="period in ['upcoming', 'running', 'ended']"
+                :key="period"
+                :value="period"
+              >
+                {{ t(`classes.period.${period}`) }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <select v-model="staffId" class="form-select" :aria-label="t('classes.filterStaff')">
+              <option value="">{{ t('classes.allStaff') }}</option>
+              <option
+                v-for="person in result?.filterOptions.staff ?? []"
+                :key="person.id"
+                :value="person.id"
+              >
+                {{ person.fullName }}
+              </option>
+            </select>
           </div>
         </form>
 

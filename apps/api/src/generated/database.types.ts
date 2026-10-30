@@ -121,10 +121,14 @@ export type Database = {
       list_classes: {
         Args: {
           p_deleted?: boolean
+          p_grade_id?: string
           p_limit?: number
           p_offset?: number
           p_school_year?: string
           p_search?: string
+          p_staff_id?: string
+          p_status?: string
+          p_subject_id?: string
         }
         Returns: Json
       }

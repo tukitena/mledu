@@ -47,6 +47,7 @@ export const classRoutes = new Hono<AppEnv>()
         total: z.number(),
         items: z.array(z.unknown()),
         schoolYears: z.array(z.number()),
+        filterOptions: ClassPage.shape.filterOptions,
       }),
       await c.get('db').rpc('list_classes', {
         p_search: nullable(query.search || null),
@@ -54,6 +55,10 @@ export const classRoutes = new Hono<AppEnv>()
         p_limit: query.pageSize,
         p_offset: (query.page - 1) * query.pageSize,
         p_school_year: query.schoolYear,
+        p_grade_id: nullable(query.gradeId ?? null),
+        p_subject_id: nullable(query.subjectId ?? null),
+        p_staff_id: nullable(query.staffId ?? null),
+        p_status: query.status,
       }),
     )
     return c.json(expectShape(ClassPage, { ...page, page: query.page, pageSize: query.pageSize }))

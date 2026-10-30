@@ -26,7 +26,7 @@ Tài liệu này ghi lại lựa chọn kỹ thuật đã được chấp nhận
 
 Lựa chọn backend chính là **Workers + Supabase**. Supabase Edge Functions là phương án thay thế lớp API để so sánh, không triển khai song song mặc định. Hono hỗ trợ [Workers](https://hono.dev/docs/getting-started/cloudflare-workers); Supabase cung cấp [database functions/RPC](https://supabase.com/docs/guides/database/functions).
 
-Lộ trình và cấu trúc thư mục đề xuất được mô tả tại [kế hoạch triển khai MLedu](Implementation-plan.md). Đây là đề xuất tổ chức triển khai; repository hiện chưa có source ứng dụng hoặc migration đã chạy.
+Lộ trình và cấu trúc thư mục được mô tả tại [kế hoạch triển khai MLedu](Implementation-plan.md). Repository đã có source ứng dụng và migration được áp dụng local; xem [schema PostgreSQL hiện tại](schema.md) để phân biệt cấu trúc đã triển khai với thiết kế của các giai đoạn sau. Trạng thái local không xác nhận CI hoặc hosted/staging/production.
 
 ### 1.1. Ranh giới giao tiếp frontend
 
