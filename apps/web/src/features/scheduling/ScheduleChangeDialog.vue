@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
+import { formatIsoDate } from '../../lib/format'
 import { ScheduleChange, SchedulePreview, type ClassSchedule } from '@mledu/contracts/scheduling'
 import type { Room } from '@mledu/contracts/catalogs'
 import { computed, ref, toRaw } from 'vue'
@@ -98,7 +100,7 @@ async function confirm() {
           </thead>
           <tbody>
             <tr v-for="item in preview.sessions" :key="item.id">
-              <td>{{ item.className }}<br />{{ item.date }}</td>
+              <td>{{ item.className }}<br />{{ formatIsoDate(item.date) }}</td>
               <td>{{ item.startTime }}–{{ item.endTime }}</td>
               <td>{{ item.roomName ?? t('scheduling.noRoom') }}<br />{{ item.siteName }}</td>
               <td>{{ t(`scheduling.state.${item.status}`) }}</td>
@@ -132,11 +134,10 @@ async function confirm() {
               <label class="form-label" :for="`reopen-date-${index}`">{{
                 t('scheduling.date')
               }}</label
-              ><input
+              ><DateInput
                 :id="`reopen-date-${index}`"
                 v-model="slot.date"
                 class="form-control"
-                type="date"
                 required
               />
             </div>
@@ -187,10 +188,9 @@ async function confirm() {
       </template>
       <template v-if="weeklyForm">
         <label class="form-label" for="applies-on">{{ t('scheduling.appliesOn') }}</label>
-        <input
+        <DateInput
           id="applies-on"
           v-model="weeklyForm.appliesOn"
-          type="date"
           class="form-control mb-3"
           required
           @change="copyWeekly"
@@ -253,7 +253,7 @@ async function confirm() {
       <div v-if="form.op === 'makeup' || form.op === 'move'" class="row g-3">
         <div class="col-12">
           <label class="form-label" for="session-date">{{ t('scheduling.date') }}</label
-          ><input id="session-date" v-model="form.date" class="form-control" type="date" required />
+          ><DateInput id="session-date" v-model="form.date" class="form-control" required />
         </div>
         <div class="col-sm-6">
           <label class="form-label" for="session-start">{{ t('scheduling.start') }}</label
@@ -287,13 +287,7 @@ async function confirm() {
       </div>
       <template v-if="form.op === 'holiday' || form.op === 'remove_holiday'">
         <label class="form-label" for="holiday-date">{{ t('scheduling.holidayDate') }}</label
-        ><input
-          id="holiday-date"
-          v-model="form.date"
-          class="form-control mb-3"
-          type="date"
-          required
-        />
+        ><DateInput id="holiday-date" v-model="form.date" class="form-control mb-3" required />
         <template v-if="form.op === 'holiday'"
           ><label class="form-label" for="holiday-name">{{ t('scheduling.holidayName') }}</label
           ><input

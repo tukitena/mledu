@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import { CatalogEntry } from '@mledu/contracts/catalogs'
 import { ClassSummary, SchoolYearStart, type ClassFields } from '@mledu/contracts/classes'
 import { computed, onMounted, reactive, ref } from 'vue'
@@ -166,20 +167,13 @@ async function submit() {
       <div class="row g-3 mb-3">
         <div class="col-12 col-sm-6">
           <label class="form-label" for="class-start">{{ t('classes.fields.startDate') }}</label>
-          <input
-            id="class-start"
-            v-model="form.startDate"
-            type="date"
-            class="form-control"
-            required
-          />
+          <DateInput id="class-start" v-model="form.startDate" class="form-control" required />
         </div>
         <div class="col-12 col-sm-6">
           <label class="form-label" for="class-end">{{ t('classes.fields.endDate') }}</label>
-          <input
+          <DateInput
             id="class-end"
             v-model="form.endDate"
-            type="date"
             class="form-control"
             :min="form.startDate"
             required

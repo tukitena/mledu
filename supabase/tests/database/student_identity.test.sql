@@ -83,8 +83,8 @@ select is(api.list_students('NGUYEN VAN AN') ->> 'total', '2',
   'every internal account searches names without accents or case');
 select is(api.list_students('+84 900 000 001') #>> '{items,0,code}', 'HS000001',
   'phone search uses the phone key');
-select is(api.list_students('hs000002') #>> '{items,0,fullName}', 'Trần Thị Bích',
-  'search by student code');
+select is(api.list_students('hs000002') ->> 'total', '0',
+  'student codes are internal identifiers, not search keys');
 select throws_ok($$select api.list_students(null, 'deleted')$$, 'PT403', 'forbidden',
   'a User cannot list archived students');
 

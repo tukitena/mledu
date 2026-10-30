@@ -5,13 +5,18 @@ import { ApiError } from '../lib/api-client'
 export interface DescribedError {
   code: ErrorCode
   requestId?: string
-  /** Codes of other records named by a conflict (e.g. the duplicate student). */
+  /** User-facing conflict references; internal student identifiers are omitted. */
   related?: string[]
 }
 
 export function describeError(error: unknown): DescribedError {
   if (error instanceof ApiError) {
-    const related = error.status === 409 ? error.details.map((detail) => detail.message) : []
+    const related =
+      error.status === 409
+        ? error.details
+            .filter((detail) => detail.path !== 'student')
+            .map((detail) => detail.message)
+        : []
     return {
       code: error.code,
       ...(error.requestId ? { requestId: error.requestId } : {}),

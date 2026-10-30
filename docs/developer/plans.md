@@ -293,6 +293,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 - **Sửa hồ sơ:** Đổi tên sang khóa tên đã có áp dụng cùng điều kiện số phụ huynh. Không cho bỏ hết số phụ huynh đã có khi còn hồ sơ khác cùng khóa tên. Hồ sơ ban đầu được tạo không có số khi tên còn duy nhất vẫn được giữ và sửa trường khác; không bắt bổ sung số chỉ vì sau đó có học sinh cùng tên được thêm hợp lệ.
 - **Hồ sơ đã xóa:** Trùng cả tên chuẩn hóa và số phụ huynh với hồ sơ xóa mềm thì hướng tới khôi phục; không tạo bản sao hoặc tự khôi phục qua Excel.
 - **Tra cứu:** Tìm tên nội bộ không phân biệt dấu/hoa thường theo khóa chuẩn hóa; tìm số dùng số chuẩn hóa. Thêm qua Excel phải xác định duy nhất hồ sơ theo XLS-06. Phụ huynh vẫn chỉ tra bằng số tại PORTAL-02.
+- **Hiển thị/tra cứu mã (chốt 30/10/2026):** Không hiện mã học sinh tại trang học sinh tổng hoặc trang Học sinh trong lớp, kể cả chi tiết, hộp thoại chọn/thao tác và thông báo. Không tra cứu/lọc bằng mã học sinh; danh sách tổng và chọn hồ sơ tìm theo tên/số điện thoại, bộ lọc danh sách trong lớp tìm theo tên. Mã vẫn được cấp và giữ ổn định trong dữ liệu, lịch sử và cột ẩn Excel theo XLS-05; không xóa hoặc đổi mã khi sửa/khôi phục.
 - **Ghi chú:** Ghi chú tổng quan thấy trong hồ sơ tổng; ghi chú lớp chỉ người có quyền lớp được xem, không trả công khai.
 - **Nghiệm thu:** Tên chưa trùng được tạo không cần số; thêm tên không dấu trùng khóa phải có số phụ huynh khác; `0912 345 678` và `+84 912345678` được đối chiếu như nhau. Một lỗi trùng trên Excel chặn toàn bộ file; thao tác thành công có audit. Giáo viên và trợ giảng sửa được hồ sơ đúng phạm vi, các lớp cùng học sinh thấy cùng dữ liệu; ngoài phạm vi, phân công đã hết/thu hồi hoặc yêu cầu tạo/xóa/khôi phục của User đều bị chặn ở backend. Lỗi audit không để lại thay đổi hồ sơ.
 
@@ -1243,6 +1244,7 @@ Tài chính gồm thu học phí theo tháng/kỳ nhiều tháng, khoản điề
 
 - **Thiết bị:** Tối ưu cả điện thoại và máy tính, gồm bảng dữ liệu, bộ lọc, điểm danh, xác nhận thu và trang phụ huynh. Thao tác có cùng quy tắc trên hai loại thiết bị.
 - **Tùy chọn:** Tiếng Việt/tiếng Anh; sáng/tối/theo hệ thống. Lưu cục bộ theo thiết bị/trình duyệt, không đồng bộ theo tài khoản sang máy khác.
+- **Ngày tháng trên UI (chốt 30/10/2026):** Toàn bộ ngày hiển thị và nhập theo **dd-mm-yyyy**, năm 4 chữ số, ở cả giao diện Việt và Anh; tên tháng/bộ chọn lịch theo ngôn ngữ ứng dụng, không theo ngôn ngữ mặc định trình duyệt. Giá trị API/DB vẫn dùng ISO; thời điểm chính xác hiển thị theo `Asia/Ho_Chi_Minh`. Nhãn năm học không phải ngày và giữ dạng năm–năm.
 - **Hành vi:** Tải lại trang giữ lựa chọn còn lưu; chế độ theo hệ thống bám tùy chọn hệ điều hành. Xóa dữ liệu trình duyệt không làm mất dữ liệu nghiệp vụ nhưng có thể mất tùy chọn cục bộ.
 - **Nghiệm thu:** Thiết bị khác có lựa chọn độc lập; thao tác cốt lõi dùng được trên màn hình nhỏ; không đổi quyền theo giao diện.
 

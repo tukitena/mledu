@@ -1,6 +1,18 @@
 import type { vi } from './vi'
 
 export const en: typeof vi = {
+  dateInput: {
+    open: 'Open calendar',
+    calendar: 'Choose date or month',
+    month: 'Month',
+    year: 'Year',
+    previous: 'Previous',
+    next: 'Next',
+    today: 'Today',
+    clear: 'Clear date',
+    invalid: 'Enter a valid date as dd-mm-yyyy within the allowed range.',
+    required: 'Please choose a date.',
+  },
   scheduling: {
     reopenWeekly: 'Update the weekly pattern when reopening',
     reopenHint:
@@ -53,8 +65,7 @@ export const en: typeof vi = {
     confirm: 'Confirm changes',
     back: 'Back to editing',
     refresh: 'Refresh',
-    from: 'From',
-    until: 'Until',
+    month: 'Month',
     showRemoved: 'Show removed sessions',
     editHint: 'Only sessions that have not started can change. Preview and confirm before saving.',
     emptyWeekly:
@@ -88,7 +99,7 @@ export const en: typeof vi = {
     joinDate: 'Join date',
     leaveDate: 'Leave date',
     note: 'Class note',
-    filter: 'Search student name or code',
+    filter: 'Search student name',
     showDeleted: 'Include deleted records',
     empty: 'No matching participations.',
     history: 'Class participation history',
@@ -294,8 +305,7 @@ export const en: typeof vi = {
   },
   accounts: {
     title: 'Accounts',
-    subtitle:
-      'Create and manage Receptionist/User accounts. Admin accounts are managed with the operations tool only.',
+    subtitle: 'Create and manage Receptionist/User accounts.',
     create: 'Create account',
     searchPlaceholder: 'Search by name or email',
     statusFilter: 'Status',
@@ -303,7 +313,7 @@ export const en: typeof vi = {
     empty: 'No matching accounts.',
     columns: { name: 'Name', email: 'Email', type: 'Type', status: 'Status' },
     mustChange: 'Password change pending',
-    adminManaged: 'Managed with the operations tool',
+    adminManaged: 'Not modifiable',
     actions: {
       disable: 'Disable',
       enable: 'Enable',
@@ -466,15 +476,13 @@ export const en: typeof vi = {
   },
   students: {
     title: 'Students',
-    subtitle:
-      'Centre-wide student records. Search by name (accents ignored), phone or student code.',
+    subtitle: 'Centre-wide student records. Search by name (accents ignored) or phone.',
     create: 'Add student',
-    searchPlaceholder: 'Name, phone or student code',
+    searchPlaceholder: 'Name or phone',
     statusFilter: 'Record status',
     status: { active: 'Current', deleted: 'Deleted' },
     columns: {
       name: 'Name',
-      code: 'Code',
       parentPhones: 'Parent phones',
       birthDate: 'Date of birth',
       school: 'School',
@@ -498,19 +506,19 @@ export const en: typeof vi = {
     createHint:
       'Only the name is required. If a student with the same name exists, add a parent phone that differs from theirs.',
     restoreHint:
-      'The record comes back with its code and history; old classes and participations are not reopened. Fix any conflicting data in this form.',
+      'The record comes back with its history; old classes and participations are not reopened. Fix any conflicting data in this form.',
     deleteTitle: 'Delete {name}',
     deleteHint:
-      'The record is soft-deleted: code, contacts, grades, attendance and fees are kept; it can be restored later.',
+      'The record is soft-deleted: contacts, grades, attendance and fees are kept; it can be restored later.',
     deletedReason: 'Deletion reason',
     addPhone: 'Add number',
     removePhone: 'Remove this number',
     invalidPhone: 'Invalid number: 10–11 digits starting with 0, or + and 8–15 digits.',
     done: {
-      create: 'Added {name} ({code}).',
+      create: 'Added {name}.',
       edit: 'Saved {name}.',
-      restore: 'Restored {name} ({code}).',
-      delete: 'Deleted {name} ({code}).',
+      restore: 'Restored {name}.',
+      delete: 'Deleted {name}.',
     },
   },
   errors: {

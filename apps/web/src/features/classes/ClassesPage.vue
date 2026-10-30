@@ -14,7 +14,7 @@ import { periodBadge } from './labels'
 
 // Classes (CLASS-03). Admin/Receptionist see every class; the API returns a
 // User only the classes in which it has an assignment in effect now.
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const PAGE_SIZE = 20
 
@@ -97,7 +97,7 @@ function onAction(item: ClassSummary, key: string) {
 }
 
 const dates = (item: ClassSummary) =>
-  `${formatIsoDate(item.startDate, locale.value)} – ${formatIsoDate(item.endDate, locale.value)}`
+  `${formatIsoDate(item.startDate)} – ${formatIsoDate(item.endDate)}`
 const staffNames = (item: ClassSummary) =>
   item.currentStaff.map((staff) => staff.fullName).join(', ')
 </script>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatIsoDate } from '../../lib/format'
 import { Attendance } from '@mledu/contracts/attendance'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -69,7 +70,11 @@ async function save() {
   <ModalDialog :title="t('attendance.title')" wide @close="emit('close')">
     <ErrorAlert :error="error" />
     <template v-if="data">
-      <p>{{ data.session.date }} · {{ data.session.startTime }}–{{ data.session.endTime }}</p>
+      <p>
+        {{ formatIsoDate(data.session.date) }} · {{ data.session.startTime }}–{{
+          data.session.endTime
+        }}
+      </p>
       <p class="text-body-secondary">{{ t('attendance.hint') }}</p>
       <div class="table-responsive">
         <table class="table align-middle" data-testid="attendance-table">

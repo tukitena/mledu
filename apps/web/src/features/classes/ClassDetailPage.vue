@@ -19,7 +19,7 @@ import { ClassSchedule } from '@mledu/contracts/scheduling'
 
 // One class (CLASS-03) with its staff (CLASS-01/02). The API answers 404 when
 // the caller may not read it, including a User whose assignment just ended.
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -59,7 +59,7 @@ function onSaved(saved: ClassSummary) {
   void load()
 }
 
-const date = (value: string) => formatIsoDate(value, locale.value)
+const date = (value: string) => formatIsoDate(value)
 </script>
 
 <template>

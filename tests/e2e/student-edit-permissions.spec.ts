@@ -1,3 +1,4 @@
+import { displayDate } from '../ui/date-support'
 import { expect, test } from '@playwright/test'
 import { apiCall, readyAccount, signInThroughUi } from './support'
 
@@ -60,9 +61,9 @@ for (const role of ['teacher', 'assistant'] as const) {
     await signInThroughUi(page, account.email, account.password)
     await expect(page.getByTestId('welcome')).toBeVisible()
     await page.goto('/students')
-    await page.getByTestId('student-search').fill(student.body.code)
+    await page.getByTestId('student-search').fill(name)
     await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()
-    const row = page.locator(`tr[data-code="${student.body.code}"]`)
+    const row = page.locator(`tr[data-student-id="${student.body.id}"]`)
     await row.getByRole('button', { name: /^Thao tác/ }).click()
     await expect(row.locator('[data-action="edit"]')).toBeVisible()
     await expect(row.locator('[data-action="delete"]')).toHaveCount(0)
@@ -87,7 +88,7 @@ for (const role of ['teacher', 'assistant'] as const) {
     await table.getByRole('button', { name: /^Thao tác/ }).click()
     await table.locator('[data-action="leave"]').click()
     await expect(page.getByLabel('Ngày vào', { exact: true })).toHaveCount(0)
-    await page.getByLabel('Ngày nghỉ', { exact: true }).fill(day(1))
+    await page.getByLabel('Ngày nghỉ', { exact: true }).fill(displayDate(day(1)))
     await page.getByTestId('enrollment-submit').click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await table.getByRole('button', { name: /^Thao tác/ }).click()
@@ -120,7 +121,7 @@ for (const role of ['teacher', 'assistant'] as const) {
     await page.getByTestId('theme-select').selectOption('dark')
     if (compact) await page.getByTestId('user-menu').click()
     await page.goto('/students')
-    await page.getByTestId('student-search').fill(student.body.code)
+    await page.getByTestId('student-search').fill(name)
     await page.getByRole('button', { name: 'Search', exact: true }).click()
     await row.getByRole('button', { name: /^Actions/ }).click()
     await expect(row.locator('[data-action="edit"]')).toHaveCount(0)

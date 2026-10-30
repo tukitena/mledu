@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
+import { formatIsoDate } from '../../lib/format'
 import { ClassSchedule, type ClassSession, type ScheduleChange } from '@mledu/contracts/scheduling'
 import type { ClassDetail } from '@mledu/contracts/classes'
 import { Room } from '@mledu/contracts/catalogs'
@@ -12,6 +14,7 @@ import FloatingAlert from '../../components/FloatingAlert.vue'
 import AttendanceDialog from '../attendance/AttendanceDialog.vue'
 import ScheduleChangeDialog from './ScheduleChangeDialog.vue'
 import StaffWarnings from './StaffWarnings.vue'
+import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
 const props = defineProps<{ klass: ClassDetail }>()
 const { t } = useI18n()
 const data = ref<ClassSchedule | null>(null)
@@ -20,8 +23,7 @@ const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const editing = ref<ScheduleChange | null>(null)
 const attending = ref<ClassSession | null>(null)
-const from = ref(props.klass.startDate)
-const until = ref(props.klass.endDate)
+const month = ref(new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 7))
 const site = ref('')
 const removed = ref(false)
 const now = ref(Date.now())
@@ -36,18 +38,6 @@ onBeforeUnmount(() => clearInterval(clock))
 watch(
   () => props.klass.rowVersion,
   () => void load(),
-)
-watch(
-  () => props.klass.endDate,
-  (value, previous) => {
-    if (until.value === previous) until.value = value
-  },
-)
-watch(
-  () => props.klass.startDate,
-  (value, previous) => {
-    if (from.value === previous) from.value = value
-  },
 )
 const today = () => new Date(now.value + 7 * 3600_000).toISOString().slice(0, 10)
 const canSchedule = computed(
@@ -66,8 +56,7 @@ const sessions = computed(
   () =>
     data.value?.sessions.filter(
       (item) =>
-        item.date >= from.value &&
-        item.date <= until.value &&
+        item.date.slice(0, 7) === month.value &&
         (!site.value || item.siteName === site.value) &&
         (removed.value || !item.status.startsWith('removed_')),
     ) ?? [],
@@ -107,6 +96,27 @@ function move(item: ClassSession) {
     endTime: item.endTime,
     roomId: item.roomId,
   }
+}
+function actionsFor(item: ClassSession): RowAction[] {
+  const actions: RowAction[] = []
+  const startsAt = new Date(item.startsAt).getTime()
+  if (canSchedule.value && startsAt > now.value && ['scheduled', 'off'].includes(item.status)) {
+    const key = item.status === 'off' ? 'resume' : 'off'
+    actions.push(
+      { key: 'move', label: t('scheduling.op.move') },
+      { key, label: t(`scheduling.op.${key}`) },
+    )
+  }
+  if (item.status === 'scheduled' && startsAt < now.value) {
+    actions.push({ key: 'attendance', label: t('attendance.title') })
+  }
+  return actions
+}
+function onAction(item: ClassSession, key: string) {
+  if (key === 'move') move(item)
+  else if (key === 'off' || key === 'resume') {
+    editing.value = { op: key, sessionId: item.id, expectedVersion: item.rowVersion }
+  } else if (key === 'attendance') attending.value = item
 }
 async function saved() {
   editing.value = null
@@ -159,15 +169,11 @@ async function saved() {
     </div>
     <StaffWarnings :warnings="data?.warnings ?? []" />
     <form class="row g-3 mb-3" @submit.prevent="load">
-      <div class="col-sm-4">
-        <label for="schedule-from" class="form-label">{{ t('scheduling.from') }}</label
-        ><input id="schedule-from" v-model="from" type="date" class="form-control" />
+      <div class="col-sm-6">
+        <label for="schedule-month" class="form-label">{{ t('scheduling.month') }}</label
+        ><DateInput id="schedule-month" v-model="month" mode="month" class="form-control" />
       </div>
-      <div class="col-sm-4">
-        <label for="schedule-until" class="form-label">{{ t('scheduling.until') }}</label
-        ><input id="schedule-until" v-model="until" type="date" class="form-control" />
-      </div>
-      <div class="col-sm-4">
+      <div class="col-sm-6">
         <label for="schedule-site" class="form-label">{{ t('scheduling.site') }}</label
         ><select id="schedule-site" v-model="site" class="form-select">
           <option value="">{{ t('scheduling.allSites') }}</option>
@@ -183,20 +189,20 @@ async function saved() {
       </div>
     </form>
     <div class="table-responsive">
-      <table class="table table-hover align-middle" data-testid="sessions-table">
+      <table class="table table-hover align-middle mb-0 data-table" data-testid="sessions-table">
         <thead>
           <tr>
-            <th>{{ t('scheduling.date') }}</th>
-            <th>{{ t('scheduling.time') }}</th>
-            <th>{{ t('scheduling.room') }}</th>
-            <th>{{ t('scheduling.status') }}</th>
-            <th>{{ t('common.actions') }}</th>
+            <th scope="col">{{ t('scheduling.date') }}</th>
+            <th scope="col">{{ t('scheduling.time') }}</th>
+            <th scope="col">{{ t('scheduling.room') }}</th>
+            <th scope="col">{{ t('scheduling.status') }}</th>
+            <th scope="col" class="text-end">{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="item in sessions" :key="item.id" :data-session="item.id">
             <td class="text-nowrap">
-              {{ item.date }}<br /><small class="text-body-secondary">{{
+              {{ formatIsoDate(item.date) }}<br /><small class="text-body-secondary">{{
                 t(`scheduling.kind.${item.kind}`)
               }}</small>
             </td>
@@ -218,46 +224,14 @@ async function saved() {
                 >{{ t(`scheduling.state.${item.status}`) }}</span
               >
             </td>
-            <td>
-              <div class="d-flex flex-wrap gap-1">
-                <template
-                  v-if="
-                    canSchedule &&
-                    new Date(item.startsAt).getTime() > now &&
-                    ['scheduled', 'off'].includes(item.status)
-                  "
-                >
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary"
-                    @click="move(item)"
-                  >
-                    {{ t('scheduling.op.move') }}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary"
-                    @click="
-                      editing = {
-                        op: item.status === 'off' ? 'resume' : 'off',
-                        sessionId: item.id,
-                        expectedVersion: item.rowVersion,
-                      }
-                    "
-                  >
-                    {{ t(item.status === 'off' ? 'scheduling.op.resume' : 'scheduling.op.off') }}
-                  </button>
-                </template>
-                <button
-                  v-if="item.status === 'scheduled' && new Date(item.startsAt).getTime() < now"
-                  type="button"
-                  class="btn btn-sm btn-outline-primary"
-                  data-testid="attendance-open"
-                  @click="attending = item"
-                >
-                  {{ t('attendance.title') }}
-                </button>
-              </div>
+            <td class="text-end">
+              <RowActionMenu
+                v-if="actionsFor(item).length"
+                :id="`session-${item.id}`"
+                :label="`${t('common.actions')}: ${formatIsoDate(item.date)} ${item.startTime}–${item.endTime}`"
+                :items="actionsFor(item)"
+                @select="onAction(item, $event)"
+              />
             </td>
           </tr>
         </tbody>
@@ -272,7 +246,7 @@ async function saved() {
           :key="holiday.date"
           class="list-group-item d-flex flex-wrap gap-2 align-items-center px-0"
         >
-          {{ holiday.date }} · {{ holiday.name }}
+          {{ formatIsoDate(holiday.date) }} · {{ holiday.name }}
           <button
             v-if="workspace === 'admin'"
             type="button"

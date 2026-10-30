@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import { ClassPage, type ClassDetail } from '@mledu/contracts/classes'
 import { ClassStudent, type Participation } from '@mledu/contracts/enrollments'
 import { StudentPage } from '@mledu/contracts/students'
@@ -12,10 +13,10 @@ import ErrorAlert from '../../components/ErrorAlert.vue'
 import FloatingAlert from '../../components/FloatingAlert.vue'
 import ModalDialog from '../../components/ModalDialog.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
-import { formatIsoDate } from '../../lib/format'
+import { formatIsoDate, formatInstant } from '../../lib/format'
 
 const props = defineProps<{ klass: ClassDetail; canManage: boolean }>()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const records = ref<ClassStudent[]>([])
 const includeDeleted = ref(false)
 const search = ref('')
@@ -55,20 +56,13 @@ onBeforeUnmount(() => {
 })
 const rows = computed(() =>
   records.value
-    .filter((r) =>
-      nameKey(`${r.student.fullName} ${r.student.code}`).includes(nameKey(search.value)),
-    )
+    .filter((r) => nameKey(r.student.fullName).includes(nameKey(search.value)))
     .flatMap((record) => record.participations.map((part) => ({ record, part }))),
 )
-const date = (value: string | null) => formatIsoDate(value, locale.value) || '—'
-const instant = (value: string | null) =>
-  value
-    ? new Intl.DateTimeFormat(locale.value === 'vi' ? 'vi-VN' : 'en-GB', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-        timeZone: 'Asia/Ho_Chi_Minh',
-      }).format(new Date(value))
-    : '—'
+const date = (value: string | null) => formatIsoDate(value) || '—'
+const studentDetails = (student: ClassStudent['student']) =>
+  [student.parentPhones.join(', '), formatIsoDate(student.birthDate)].filter(Boolean).join(' · ')
+const instant = (value: string | null) => formatInstant(value) || '—'
 const canEnroll = computed(
   () => props.canManage && !props.klass.deleted && props.klass.adminState === 'open',
 )
@@ -125,7 +119,12 @@ async function findChoices() {
     } else {
       const result = await apiRequest(`/v1/students?${query}`, { schema: StudentPage })
       if (sequence !== lookupSequence || dialog.value !== current) return
-      choices.value = result.items.map((s) => ({ id: s.id, label: `${s.code} · ${s.fullName}` }))
+      choices.value = result.items.map((s) => ({
+        id: s.id,
+        label: [s.fullName, s.parentPhones.join(', '), formatIsoDate(s.birthDate)]
+          .filter(Boolean)
+          .join(' · '),
+      }))
       lookupTotal.value = result.total
     }
   } catch (cause) {
@@ -319,7 +318,9 @@ function close() {
           >
             <td>
               <div class="fw-semibold">{{ record.student.fullName }}</div>
-              <div class="small text-body-secondary">{{ record.student.code }}</div>
+              <div v-if="studentDetails(record.student)" class="small text-body-secondary">
+                {{ studentDetails(record.student) }}
+              </div>
               <span
                 v-if="record.deleted || record.student.deleted"
                 class="badge bg-secondary-subtle text-secondary-emphasis"
@@ -359,7 +360,10 @@ function close() {
     <ModalDialog v-if="dialog" :title="t(`enrollments.actions.${dialog.action}`)" @close="close">
       <ErrorAlert :error="actionError" />
       <p v-if="dialog.record" class="fw-semibold">
-        {{ dialog.record.student.code }} · {{ dialog.record.student.fullName }}
+        {{ dialog.record.student.fullName }}
+        <span class="d-block small text-body-secondary fw-normal">{{
+          studentDetails(dialog.record.student)
+        }}</span>
       </p>
       <p class="small text-body-secondary">{{ t(`enrollments.hint.${dialog.action}`) }}</p>
       <form
@@ -438,10 +442,9 @@ function close() {
           <label for="enrollment-join" class="form-label">{{
             t(dialog.action === 'transfer' ? 'enrollments.targetJoinDate' : 'enrollments.joinDate')
           }}</label
-          ><input
+          ><DateInput
             id="enrollment-join"
             v-model="form.joinDate"
-            type="date"
             required
             class="form-control"
             :min="dialog.action === 'transfer' ? undefined : klass.startDate"
@@ -453,10 +456,9 @@ function close() {
           class="mb-3"
         >
           <label for="enrollment-leave" class="form-label">{{ t('enrollments.leaveDate') }}</label
-          ><input
+          ><DateInput
             id="enrollment-leave"
             v-model="form.leaveDate"
-            type="date"
             class="form-control"
             :readonly="dialog.action === 'transfer' && !!dialog.part?.leaveDate"
             :required="dialog.action === 'leave' || dialog.action === 'transfer'"

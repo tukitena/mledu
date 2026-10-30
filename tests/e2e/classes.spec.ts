@@ -1,3 +1,4 @@
+import { displayDate } from '../ui/date-support'
 import { expect, test } from '@playwright/test'
 import { accessToken, apiCall, FIXTURE_PASSWORD, readyAccount, signInThroughUi } from './support'
 
@@ -96,8 +97,8 @@ test('optional school year can be created, filtered, edited and cleared', async 
   await page.getByLabel('Tên lớp').fill(name)
   await page.getByLabel('Môn', { exact: true }).selectOption({ label: 'Toán' })
   await page.getByLabel('Khối', { exact: true }).selectOption({ label: 'Lớp 6' })
-  await page.getByLabel('Ngày mở').fill(day(-3))
-  await page.getByLabel('Ngày kết thúc').fill(day(60))
+  await page.getByLabel('Ngày mở').fill(displayDate(day(-3)))
+  await page.getByLabel('Ngày kết thúc').fill(displayDate(day(60)))
   await expect(page.getByRole('dialog').getByLabel('Năm học', { exact: false })).toBeVisible({
     timeout: 5000,
   })
@@ -162,14 +163,14 @@ test('Receptionist creates a class and assigns a teacher who then sees it', asyn
   await page.getByLabel('Tên lớp').fill(name)
   await page.getByLabel('Môn', { exact: true }).selectOption({ label: 'Toán' })
   await page.getByLabel('Khối', { exact: true }).selectOption({ label: 'Lớp 6' })
-  await page.getByLabel('Ngày mở').fill(day(-3))
-  await page.getByLabel('Ngày kết thúc').fill(day(60))
+  await page.getByLabel('Ngày mở').fill(displayDate(day(-3)))
+  await page.getByLabel('Ngày kết thúc').fill(displayDate(day(60)))
   await page.getByTestId('class-submit').click()
   await expect(page.getByTestId('class-title')).toHaveText(name)
 
   await page.getByTestId('assignment-create').click()
   await page.getByRole('dialog').getByLabel('Nhân sự').selectOption({ value: teacher.id })
-  await page.getByLabel('Ngày bắt đầu').fill(day(-1))
+  await page.getByLabel('Ngày bắt đầu').fill(displayDate(day(-1)))
   await page.getByTestId('assignment-submit').click()
   const row = page.locator(`tr[data-email="${teacher.email}"]`)
   await expect(row.getByTestId('assignment-status')).toHaveText('Đang hiệu lực')

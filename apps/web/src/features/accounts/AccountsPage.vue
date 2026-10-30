@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DateInput from '../../components/DateInput.vue'
 import {
   AccountPage,
   AccountSummary,
@@ -548,12 +549,7 @@ function initials(name: string) {
               {{ t('profile.birthDate') }}
               <span class="text-body-secondary">({{ t('common.optional') }})</span>
             </label>
-            <input
-              id="create-birth"
-              v-model="createForm.birthDate"
-              type="date"
-              class="form-control"
-            />
+            <DateInput id="create-birth" v-model="createForm.birthDate" class="form-control" />
           </div>
         </div>
       </form>

@@ -1,4 +1,16 @@
 export const vi = {
+  dateInput: {
+    open: 'Mở lịch',
+    calendar: 'Chọn ngày tháng',
+    month: 'Tháng',
+    year: 'Năm',
+    previous: 'Trước',
+    next: 'Sau',
+    today: 'Hôm nay',
+    clear: 'Xóa ngày',
+    invalid: 'Nhập ngày hợp lệ theo dd-mm-yyyy và trong khoảng được phép.',
+    required: 'Vui lòng chọn ngày.',
+  },
   scheduling: {
     reopenWeekly: 'Cập nhật lịch tuần khi mở lại',
     reopenHint:
@@ -51,8 +63,7 @@ export const vi = {
     confirm: 'Xác nhận áp dụng',
     back: 'Quay lại chỉnh sửa',
     refresh: 'Tải lại',
-    from: 'Từ ngày',
-    until: 'Đến ngày',
+    month: 'Tháng',
     showRemoved: 'Hiện buổi đã gỡ',
     editHint: 'Chỉ thay đổi các buổi chưa bắt đầu. Xem trước và xác nhận trước khi lưu.',
     emptyWeekly:
@@ -86,7 +97,7 @@ export const vi = {
     joinDate: 'Ngày vào',
     leaveDate: 'Ngày nghỉ',
     note: 'Ghi chú lớp',
-    filter: 'Tìm tên hoặc mã học sinh',
+    filter: 'Tìm tên học sinh',
     showDeleted: 'Hiện hồ sơ đã xóa',
     empty: 'Chưa có lần tham gia phù hợp.',
     history: 'Lịch sử tham gia lớp',
@@ -288,8 +299,7 @@ export const vi = {
   },
   accounts: {
     title: 'Tài khoản',
-    subtitle:
-      'Tạo và quản lý tài khoản Lễ tân/Người dùng. Tài khoản Admin chỉ được quản trị bằng công cụ vận hành.',
+    subtitle: 'Tạo và quản lý tài khoản Lễ tân/Người dùng.',
     create: 'Tạo tài khoản',
     searchPlaceholder: 'Tìm theo tên hoặc email',
     statusFilter: 'Trạng thái',
@@ -297,7 +307,7 @@ export const vi = {
     empty: 'Không có tài khoản phù hợp.',
     columns: { name: 'Họ tên', email: 'Email', type: 'Loại', status: 'Trạng thái' },
     mustChange: 'Chờ đổi mật khẩu',
-    adminManaged: 'Quản trị qua công cụ vận hành',
+    adminManaged: 'Không thể thao tác',
     actions: {
       disable: 'Vô hiệu hóa',
       enable: 'Kích hoạt lại',
@@ -470,15 +480,13 @@ export const vi = {
   },
   students: {
     title: 'Học sinh',
-    subtitle:
-      'Hồ sơ tổng của học sinh toàn trung tâm. Tìm theo tên không dấu, số điện thoại hoặc mã học sinh.',
+    subtitle: 'Hồ sơ tổng của học sinh toàn trung tâm. Tìm theo tên không dấu hoặc số điện thoại.',
     create: 'Thêm học sinh',
-    searchPlaceholder: 'Tên, số điện thoại hoặc mã HS',
+    searchPlaceholder: 'Tên hoặc số điện thoại',
     statusFilter: 'Trạng thái hồ sơ',
     status: { active: 'Đang lưu hành', deleted: 'Đã xóa' },
     columns: {
       name: 'Họ tên',
-      code: 'Mã HS',
       parentPhones: 'SĐT phụ huynh',
       birthDate: 'Ngày sinh',
       school: 'Trường',
@@ -506,19 +514,19 @@ export const vi = {
     createHint:
       'Chỉ họ tên là bắt buộc. Nếu đã có học sinh cùng họ tên, cần nhập số phụ huynh khác với hồ sơ đó.',
     restoreHint:
-      'Hồ sơ được khôi phục với mã và lịch sử cũ; các lớp và lần tham gia cũ không tự mở lại. Nếu trùng thông tin, hãy sửa ngay trong biểu mẫu này.',
+      'Hồ sơ được khôi phục với lịch sử cũ; các lớp và lần tham gia cũ không tự mở lại. Nếu trùng thông tin, hãy sửa ngay trong biểu mẫu này.',
     deleteTitle: 'Xóa học sinh {name}',
     deleteHint:
-      'Hồ sơ được xóa mềm: giữ mã, liên hệ, điểm, chuyên cần và tài chính; có thể khôi phục sau.',
+      'Hồ sơ được xóa mềm: giữ liên hệ, điểm, chuyên cần và tài chính; có thể khôi phục sau.',
     deletedReason: 'Lý do xóa',
     addPhone: 'Thêm số',
     removePhone: 'Bỏ số này',
     invalidPhone: 'Số không hợp lệ: 10–11 chữ số bắt đầu bằng 0, hoặc + và 8–15 chữ số.',
     done: {
-      create: 'Đã thêm {name} ({code}).',
+      create: 'Đã thêm {name}.',
       edit: 'Đã lưu hồ sơ {name}.',
-      restore: 'Đã khôi phục {name} ({code}).',
-      delete: 'Đã xóa hồ sơ {name} ({code}).',
+      restore: 'Đã khôi phục {name}.',
+      delete: 'Đã xóa hồ sơ {name}.',
     },
   },
   errors: {

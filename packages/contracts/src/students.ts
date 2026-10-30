@@ -40,7 +40,7 @@ export const StudentPage = z.object({
 })
 export type StudentPage = z.infer<typeof StudentPage>
 
-/** GET /v1/students — name (accents ignored), phone or code. */
+/** GET /v1/students — name (accents ignored) or phone; codes are internal/Excel identifiers. */
 export const ListStudentsQuery = z.object({
   search: z.string().trim().max(200).optional(),
   status: StudentStatus.default('active'),
