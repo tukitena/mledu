@@ -66,7 +66,8 @@ export const en: typeof vi = {
     back: 'Back to editing',
     refresh: 'Refresh',
     month: 'Month',
-    showRemoved: 'Show removed sessions',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
     editHint: 'Only sessions that have not started can change. Preview and confirm before saving.',
     emptyWeekly:
       'An empty pattern removes future weekly sessions in scope; manual exceptions remain.',

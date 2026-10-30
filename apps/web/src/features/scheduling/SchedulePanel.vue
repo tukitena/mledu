@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import DateInput from '../../components/DateInput.vue'
 import { formatIsoDate } from '../../lib/format'
 import { ClassSchedule, type ClassSession, type ScheduleChange } from '@mledu/contracts/scheduling'
 import type { ClassDetail } from '@mledu/contracts/classes'
@@ -23,9 +22,34 @@ const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const editing = ref<ScheduleChange | null>(null)
 const attending = ref<ClassSession | null>(null)
-const month = ref(new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 7))
+const initialDate = new Date(Date.now() + 7 * 3600_000)
+const month = ref<number | string>(initialDate.getUTCMonth() + 1)
+const year = ref<number | string>(initialDate.getUTCFullYear())
+const validPeriod = computed(
+  () =>
+    Number.isInteger(month.value) &&
+    Number(month.value) >= 1 &&
+    Number(month.value) <= 12 &&
+    Number.isInteger(year.value) &&
+    Number(year.value) >= 1 &&
+    Number(year.value) <= 9999,
+)
+const period = computed(() =>
+  validPeriod.value
+    ? `${String(year.value).padStart(4, '0')}-${String(month.value).padStart(2, '0')}`
+    : '',
+)
+function shiftMonth(delta: number) {
+  if (!validPeriod.value) return
+  const index = Number(year.value) * 12 + Number(month.value) - 1 + delta
+  const nextYear = Math.floor(index / 12)
+  if (nextYear < 1 || nextYear > 9999) return
+  year.value = nextYear
+  month.value = (index % 12) + 1
+}
 const site = ref('')
-const removed = ref(false)
+const status = ref<ClassSession['status'] | 'all'>('scheduled')
+const statuses = ['scheduled', 'off', 'holiday', 'removed_schedule', 'removed_class'] as const
 const now = ref(Date.now())
 let clock: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
@@ -56,9 +80,9 @@ const sessions = computed(
   () =>
     data.value?.sessions.filter(
       (item) =>
-        item.date.slice(0, 7) === month.value &&
+        item.date.slice(0, 7) === period.value &&
         (!site.value || item.siteName === site.value) &&
-        (removed.value || !item.status.startsWith('removed_')),
+        (status.value === 'all' || item.status === status.value),
     ) ?? [],
 )
 const sites = computed(() => [
@@ -169,23 +193,69 @@ async function saved() {
     </div>
     <StaffWarnings :warnings="data?.warnings ?? []" />
     <form class="row g-3 mb-3" @submit.prevent="load">
-      <div class="col-sm-6">
-        <label for="schedule-month" class="form-label">{{ t('scheduling.month') }}</label
-        ><DateInput id="schedule-month" v-model="month" mode="month" class="form-control" />
+      <div class="col-7 col-sm-6 col-xl-3">
+        <label for="schedule-month" class="form-label">{{ t('scheduling.month') }}</label>
+        <div class="input-group flex-nowrap">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            :aria-label="t('scheduling.previousMonth')"
+            :disabled="!validPeriod || (year === 1 && month === 1)"
+            @click="shiftMonth(-1)"
+          >
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          </button>
+          <input
+            id="schedule-month"
+            v-model.number="month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            step="1"
+            required
+            class="form-control text-center"
+          />
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            :aria-label="t('scheduling.nextMonth')"
+            :disabled="!validPeriod || (year === 9999 && month === 12)"
+            @click="shiftMonth(1)"
+          >
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
-      <div class="col-sm-6">
+      <div class="col-5 col-sm-6 col-xl-2">
+        <label for="schedule-year" class="form-label">{{ t('dateInput.year') }}</label>
+        <input
+          id="schedule-year"
+          v-model.number="year"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="9999"
+          step="1"
+          required
+          class="form-control"
+        />
+      </div>
+      <div class="col-12 col-sm-6 col-xl-4">
         <label for="schedule-site" class="form-label">{{ t('scheduling.site') }}</label
         ><select id="schedule-site" v-model="site" class="form-select">
           <option value="">{{ t('scheduling.allSites') }}</option>
           <option v-for="name in sites" :key="name">{{ name }}</option>
         </select>
       </div>
-      <div class="col-12">
-        <label class="form-check-label"
-          ><input v-model="removed" type="checkbox" class="form-check-input me-2" />{{
-            t('scheduling.showRemoved')
-          }}</label
-        >
+      <div class="col-12 col-sm-6 col-xl-3">
+        <label for="schedule-status" class="form-label">{{ t('scheduling.status') }}</label>
+        <select id="schedule-status" v-model="status" class="form-select">
+          <option value="all">{{ t('common.all') }}</option>
+          <option v-for="value in statuses" :key="value" :value="value">
+            {{ t(`scheduling.state.${value}`) }}
+          </option>
+        </select>
       </div>
     </form>
     <div class="table-responsive">

@@ -20,6 +20,8 @@ const { t } = useI18n()
 const records = ref<ClassStudent[]>([])
 const includeDeleted = ref(false)
 const search = ref('')
+const status = ref<Participation['status'] | 'all'>('active')
+const statuses = ['active', 'not_started', 'ended', 'cancelled'] as const
 const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const loading = ref(false)
@@ -57,7 +59,8 @@ onBeforeUnmount(() => {
 const rows = computed(() =>
   records.value
     .filter((r) => nameKey(r.student.fullName).includes(nameKey(search.value)))
-    .flatMap((record) => record.participations.map((part) => ({ record, part }))),
+    .flatMap((record) => record.participations.map((part) => ({ record, part })))
+    .filter(({ part }) => status.value === 'all' || part.status === status.value),
 )
 const date = (value: string | null) => formatIsoDate(value) || '—'
 const studentDetails = (student: ClassStudent['student']) =>
@@ -261,6 +264,17 @@ function close() {
           :placeholder="t('enrollments.filter')"
           :aria-label="t('enrollments.filter')"
         />
+        <div class="d-flex align-items-center gap-2">
+          <label for="enrollment-status" class="form-label small mb-0">{{
+            t('classes.columns.status')
+          }}</label>
+          <select id="enrollment-status" v-model="status" class="form-select form-select-sm w-auto">
+            <option value="all">{{ t('common.all') }}</option>
+            <option v-for="value in statuses" :key="value" :value="value">
+              {{ t(`enrollments.status.${value}`) }}
+            </option>
+          </select>
+        </div>
         <div class="form-check mb-0">
           <input
             id="enrollment-archived"

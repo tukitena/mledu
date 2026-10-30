@@ -60,6 +60,7 @@ test('manage participation, return, transfer and retained history', async ({ pag
   await table.locator('[data-action="reenroll"]').click()
   await page.getByLabel('Ngày vào', { exact: true }).fill(displayDate(day(1)))
   await page.getByTestId('enrollment-submit').click()
+  await page.getByLabel('Trạng thái', { exact: true }).selectOption('all')
   await expect(table.locator('tbody tr')).toHaveCount(2)
   const future = table.locator('tbody tr').filter({ hasText: 'Chưa bắt đầu' })
   await future.getByRole('button', { name: /^Thao tác/ }).click()
@@ -72,6 +73,7 @@ test('manage participation, return, transfer and retained history', async ({ pag
   await page.getByTestId('enrollment-submit').click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.reload()
+  await page.getByLabel('Trạng thái', { exact: true }).selectOption('all')
   await expect(table.locator('tbody tr')).toHaveCount(2)
   await page.screenshot({
     path: testInfo.outputPath('participations-light-vi.png'),
@@ -81,6 +83,7 @@ test('manage participation, return, transfer and retained history', async ({ pag
     true,
   )
   await page.goto(`/classes/${target.body.id}?tab=students`)
+  await page.getByLabel('Trạng thái', { exact: true }).selectOption('all')
   await expect(table).toContainText(`Học sinh ${suffix}`)
   await table.getByRole('button', { name: /^Thao tác/ }).click()
   await table.locator('[data-action="cancel"]').click()

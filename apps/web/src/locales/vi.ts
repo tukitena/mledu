@@ -64,7 +64,8 @@ export const vi = {
     back: 'Quay lại chỉnh sửa',
     refresh: 'Tải lại',
     month: 'Tháng',
-    showRemoved: 'Hiện buổi đã gỡ',
+    previousMonth: 'Tháng trước',
+    nextMonth: 'Tháng sau',
     editHint: 'Chỉ thay đổi các buổi chưa bắt đầu. Xem trước và xác nhận trước khi lưu.',
     emptyWeekly:
       'Danh sách trống sẽ gỡ các buổi lịch tuần tương lai trong phạm vi áp dụng; ngoại lệ được giữ.',
