@@ -1,8 +1,8 @@
 # ERD MLedu
 
-Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc diagrams.net. File chứa **52 thực thể logic**, một trang mục lục và **9 trang ERD chi tiết**. Bảng, thuộc tính, đường nối và ghi chú đều chỉnh sửa được; mục lục và bảng có phụ đề `THAM CHIẾU` liên kết tới trang tương ứng.
+Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc diagrams.net. File chứa **51 thực thể logic**, một trang mục lục và **9 trang ERD chi tiết**. Bảng, thuộc tính, đường nối và ghi chú đều chỉnh sửa được; mục lục và bảng có phụ đề `THAM CHIẾU` liên kết tới trang tương ứng.
 
-Đây là **thiết kế đề xuất từ đặc tả**, không phải sơ đồ reverse-engineer từ database đang chạy. Nguồn nghiệp vụ là [plans.md](../developer/plans.md); lựa chọn nền tảng theo [techstack.md](../developer/techstack.md), đặc biệt các mục 1, 4, 5 và 6. Tên bảng, kiểu dữ liệu, việc gộp tháng/kỳ và cách lưu phiên bản là lựa chọn mô hình hóa để review. Ngoại lệ: các bảng nền GĐ 1 (`account_profiles`, `audit_events`, `business_entity_versions`, `outbox_events`, `outbox_deliveries`) đã có migration trong `supabase/migrations/`; metadata của chúng ghi `"proposed": false` kèm đường dẫn migration, và migration là nguồn đúng khi hai bên lệch nhau. Các giai đoạn và cấu trúc source được đề xuất trong [kế hoạch triển khai MLedu](../developer/Implementation-plan.md).
+Đây là **thiết kế đề xuất từ đặc tả, có các phần đã đối chiếu migration**, không phải sơ đồ reverse-engineer toàn bộ database đang chạy. Nguồn nghiệp vụ là [plans.md](../developer/plans.md); lựa chọn nền tảng theo [techstack.md](../developer/techstack.md), đặc biệt các mục 1, 4, 5 và 6. Các bảng nền GĐ 1 (`account_profiles`, `audit_events`, `business_entity_versions`, `outbox_events`, `outbox_deliveries`) và phần danh mục/lớp (`catalog_entries`, `classes`) ghi `"proposed": false` kèm đường dẫn migration. Migration là nguồn schema đúng khi hai bên lệch nhau; các miền khác chưa được đồng bộ đầy đủ trong lần cập nhật này, nên nhãn đề xuất của chúng không xác nhận trạng thái triển khai hiện tại. Các giai đoạn và cấu trúc source được mô tả trong [kế hoạch triển khai MLedu](../developer/Implementation-plan.md).
 
 ## Các trang
 
@@ -29,6 +29,7 @@ REPORT-01 và DASH-01 dùng dữ liệu buổi/điểm danh, nghĩa vụ và chi
 - Chỉ hiển thị thuộc tính quan trọng. `phone, birth_date` hoặc `starts_on, ends_on` là cách rút gọn nhiều cột, không phải một cột SQL. Các bảng nghiệp vụ dùng timestamp, actor, lý do và `row_version` theo phạm vi; không suy rằng mọi bảng đều có cùng bộ cột hoặc cùng chính sách xóa mềm.
 - `auth.users` và `auth.sessions` là lược trích các thực thể do Supabase quản lý. Không thiết kế lại schema nội bộ của nền tảng. Avatar dùng `account_profiles.avatar_path` trong bucket private, không tạo FK tới `storage.objects` nên sơ đồ không vẽ bảng này.
 - **Vẽ lại ngày 27/10/2026:** Excel được đọc tại trình duyệt và gửi về API dạng JSON ([tech stack mục 5.1](../developer/techstack.md#51-đồng-bộ-excel)). Trang 08 bỏ `storage.objects`, `import_batches.source_object_id` và `import_staging_rows`; `import_batches` chỉ ghi lần áp dụng thành công (người áp dụng, phạm vi, `payload_hash`, số dòng/thay đổi) cùng transaction với dữ liệu và audit; `import_success_fingerprints` giữ dấu tính từ payload chuẩn hóa + phạm vi. Xem trước không ghi bảng nào.
+- **Đồng bộ danh mục ngày 30/10/2026:** Thay hai thực thể `subjects`/`grade_levels` trong thiết kế cũ bằng `app.catalog_entries`, phân biệt `kind = 'subject'` hoặc `'grade'`. Hai FK của `app.classes` là `subject_id` và `grade_id`, cùng trỏ tới `catalog_entries.id`; metadata tham chiếu lớp trên cả 9 trang chi tiết dùng cùng mô hình này. Xem [quyết định mô hình danh mục](../developer/decisions/catalog-entries-schema.md).
 
 ## Các quyết định mô hình quan trọng
 
@@ -54,6 +55,8 @@ Supabase Auth cần kiểm chứng riêng theo tech stack mục 6: link đặt l
 
 Phụ huynh vẫn chưa xác thực: API Workers nhận link/SĐT, kiểm tra và chỉ trả dữ liệu đúng phạm vi; không tạo bảng tài khoản phụ huynh hoặc mở quyền `anon` đọc dữ liệu học sinh/tài chính. `class_portals.link_token` là tên trường thiết kế, không chứa token thực trong tài liệu; khi triển khai phải loại trường này khỏi audit và payload lịch sử không phù hợp.
 
+13. **Môn và khối dùng chung bảng danh mục (CAT-01).** `app.catalog_entries` có `kind`, tên hiển thị, khóa tên chuẩn hóa, phiên bản và thông tin xóa mềm. `UNIQUE(kind, name_key)` áp dụng cả bản lưu trữ; không có unique riêng trên `name_key`. Chỉ Admin ghi; thay đổi qua RPC có lịch sử và audit trong cùng transaction. `classes.subject_id` cần `kind = 'subject'`, `classes.grade_id` cần `kind = 'grade'`; FK chỉ kiểm tra định danh tồn tại, còn `app_private.check_class_catalog` được RPC tạo/sửa lớp gọi để kiểm tra đúng loại và trạng thái hoạt động khi chọn mới. Tham chiếu cũ không đổi được giữ dù danh mục đã lưu trữ. Khôi phục danh mục dùng lại ID cũ. Gộp bảng giúp dùng chung cấu trúc và luồng CRUD; không coi đây là tối ưu hiệu năng đã được đo.
+
 ## Kiểm tra và cập nhật
 
 ```powershell
@@ -61,6 +64,10 @@ python .agents/skills/drawio-skill/scripts/validate.py docs/diagrams/architectur
 ```
 
 Đã render kiểm tra bằng draw.io Desktop 32.6.1. Đường nối có thể giao nhau ở hành lang nhưng không xuyên bảng; cầu vượt phân biệt giao hình học với quan hệ nối chung. Sau khi thay đổi bảng hoặc quan hệ, chạy kiểm tra cấu trúc và xem lại bản render.
+
+Cập nhật danh mục ngày 30/10/2026: kiểm tra XML đạt (0 lỗi; 28 cảnh báo giao đường như trước sửa; 0 đường xuyên bảng, 0 chồng bảng). Đã xem lại bản render trang mục lục và trang 01; kiểm tra 51 thực thể, metadata lớp trên 9 trang và các liên kết hợp lệ. Bố cục ngoài phần danh mục và hai FK được giữ nguyên.
+
+Bổ sung năm học của lớp ngày 30/10/2026 (CLASS-03): `classes.school_year_start` là integer 1000–9998 hoặc NULL; hiển thị hai năm liên tiếp, NULL là không thuộc năm học, độc lập ngày mở/kết thúc lớp. Nguồn bổ sung: migration `20261030130000_class_school_year.sql`; xem [triển khai và bằng chứng](../developer/decisions/class-school-year.md). Thêm hàng thuộc tính tại trang 01, cập nhật metadata lớp trên 9 trang và giữ điểm nối FK hiện có; đã xem bản render bảng lớp. Validate vẫn 0 lỗi, 28 cảnh báo giao đường cũ, 0 xuyên/chồng bảng.
 
 Danh mục FK bên dưới liệt kê cả các quan hệ không lặp lại trên mọi trang. FK ghép `notifications(event_id, recipient_id)` tới `outbox_deliveries` được ghi riêng ở cuối.
 
@@ -73,9 +80,8 @@ Danh mục FK bên dưới liệt kê cả các quan hệ không lặp lại tr�
 | `account_profiles` | core | `id` → `auth.users` |
 | `students` | core | — |
 | `student_contacts` | core | `student_id` → `students` |
-| `subjects` | core | — |
-| `grade_levels` | core | — |
-| `classes` | core | `subject_id` → `subjects`; `grade_level_id` → `grade_levels` |
+| `catalog_entries` | core | `created_by`, `deleted_by` → `account_profiles` |
+| `classes` | core | `subject_id`, `grade_id` → `catalog_entries.id`; `created_by`, `deleted_by` → `account_profiles` |
 | `class_state_periods` | core | `class_id` → `classes`; `changed_by` → `account_profiles` |
 | `student_class_profiles` | core | `student_id` → `students`; `class_id` → `classes` |
 | `participation_periods` | core | `class_profile_id` → `student_class_profiles` |

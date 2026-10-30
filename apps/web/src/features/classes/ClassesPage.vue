@@ -8,7 +8,7 @@ import { apiRequest, workspace } from '../../app/session'
 import ErrorAlert from '../../components/ErrorAlert.vue'
 import FloatingAlert from '../../components/FloatingAlert.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
-import { formatIsoDate } from '../../lib/format'
+import { formatIsoDate, formatSchoolYear } from '../../lib/format'
 import ClassFormDialog from './ClassFormDialog.vue'
 import { periodBadge } from './labels'
 
@@ -20,29 +20,50 @@ const PAGE_SIZE = 20
 
 const canManage = computed(() => workspace.value === 'admin' || workspace.value === 'receptionist')
 const search = ref('')
+const schoolYear = ref('all')
 const page = ref(1)
 const result = ref<ClassPage | null>(null)
 const loading = ref(false)
 const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const pages = computed(() => Math.max(1, Math.ceil((result.value?.total ?? 0) / PAGE_SIZE)))
+const schoolYears = computed(() => {
+  const years = result.value?.schoolYears ?? []
+  // Keep a selected year visible even when its last class is moved to another year.
+  return [
+    ...new Set([...years, ...(/^\d{4}$/.test(schoolYear.value) ? [Number(schoolYear.value)] : [])]),
+  ].sort((a, b) => b - a)
+})
+let loadId = 0
 
 async function load() {
+  const requestId = ++loadId
   loading.value = true
   error.value = null
   try {
     const query = new URLSearchParams({ page: String(page.value), pageSize: String(PAGE_SIZE) })
+    query.set('schoolYear', schoolYear.value)
     if (search.value.trim()) query.set('search', search.value.trim())
-    result.value = await apiRequest(`/v1/classes?${query}`, { schema: ClassPage })
+    const data = await apiRequest(`/v1/classes?${query}`, { schema: ClassPage })
+    if (requestId === loadId) result.value = data
   } catch (cause) {
-    error.value = describeError(cause)
+    if (requestId === loadId) error.value = describeError(cause)
   } finally {
-    loading.value = false
+    if (requestId === loadId) loading.value = false
   }
 }
 onMounted(load)
 // The list depends on the workspace for an Admin (all classes vs. own classes).
-watch(workspace, () => void load())
+watch(workspace, () => {
+  result.value = null
+  page.value = 1
+  if (schoolYear.value !== 'all') schoolYear.value = 'all'
+  else void load()
+})
+watch(schoolYear, () => {
+  page.value = 1
+  void load()
+})
 
 const editing = ref<{ current: ClassSummary | null } | null>(null)
 
@@ -94,7 +115,7 @@ const staffNames = (item: ClassSummary) =>
     <div class="card data-card">
       <div class="card-body">
         <form class="row g-3 table-controls" role="search" @submit.prevent="((page = 1), load())">
-          <div class="col-8 col-md-9">
+          <div class="col-12 col-md-6">
             <input
               v-model="search"
               type="search"
@@ -103,7 +124,20 @@ const staffNames = (item: ClassSummary) =>
               :aria-label="t('common.search')"
             />
           </div>
-          <div class="col-4 col-md-3 d-grid">
+          <div class="col-8 col-md-4">
+            <select
+              v-model="schoolYear"
+              class="form-select"
+              :aria-label="t('classes.filterSchoolYear')"
+            >
+              <option value="all">{{ t('classes.allSchoolYears') }}</option>
+              <option value="none">{{ t('classes.noSchoolYear') }}</option>
+              <option v-for="year in schoolYears" :key="year" :value="String(year)">
+                {{ formatSchoolYear(year) }}
+              </option>
+            </select>
+          </div>
+          <div class="col-4 col-md-2 d-grid">
             <button type="submit" class="btn btn-outline-secondary">
               {{ t('common.search') }}
             </button>
@@ -123,6 +157,7 @@ const staffNames = (item: ClassSummary) =>
               <tr>
                 <th scope="col">{{ t('classes.columns.name') }}</th>
                 <th scope="col">{{ t('classes.columns.subjectGrade') }}</th>
+                <th scope="col">{{ t('classes.fields.schoolYear') }}</th>
                 <th scope="col">{{ t('classes.columns.dates') }}</th>
                 <th scope="col">{{ t('classes.columns.staff') }}</th>
                 <th scope="col">{{ t('classes.columns.status') }}</th>
@@ -131,10 +166,10 @@ const staffNames = (item: ClassSummary) =>
             </thead>
             <tbody>
               <tr v-if="loading && !result">
-                <td colspan="6" class="text-body-secondary">{{ t('common.loading') }}</td>
+                <td colspan="7" class="text-body-secondary">{{ t('common.loading') }}</td>
               </tr>
               <tr v-else-if="result && !result.items.length">
-                <td colspan="6" class="text-body-secondary">
+                <td colspan="7" class="text-body-secondary">
                   {{ canManage ? t('classes.empty') : t('classes.myEmpty') }}
                 </td>
               </tr>
@@ -147,6 +182,9 @@ const staffNames = (item: ClassSummary) =>
                   >
                 </td>
                 <td class="small">{{ item.subject.name }} · {{ item.grade.name }}</td>
+                <td class="small text-nowrap">
+                  {{ formatSchoolYear(item.schoolYearStart) || t('classes.noSchoolYear') }}
+                </td>
                 <td class="small text-nowrap">{{ dates(item) }}</td>
                 <td class="small">{{ staffNames(item) || '—' }}</td>
                 <td>

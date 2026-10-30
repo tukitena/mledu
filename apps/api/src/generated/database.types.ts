@@ -43,6 +43,7 @@ export type Database = {
           p_grade_id: string
           p_name: string
           p_note?: string
+          p_school_year_start?: number
           p_start_date: string
           p_subject_id: string
         }
@@ -118,7 +119,13 @@ export type Database = {
         Returns: Json
       }
       list_classes: {
-        Args: { p_deleted?: boolean; p_limit?: number; p_offset?: number; p_search?: string }
+        Args: {
+          p_deleted?: boolean
+          p_limit?: number
+          p_offset?: number
+          p_school_year?: string
+          p_search?: string
+        }
         Returns: Json
       }
       list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
@@ -237,19 +244,34 @@ export type Database = {
         }
         Returns: Json
       }
-      update_class: {
-        Args: {
-          p_end_date: string
-          p_expected_version: number
-          p_grade_id: string
-          p_id: string
-          p_name: string
-          p_note: string
-          p_start_date: string
-          p_subject_id: string
-        }
-        Returns: Json
-      }
+      update_class:
+        | {
+            Args: {
+              p_end_date: string
+              p_expected_version: number
+              p_grade_id: string
+              p_id: string
+              p_name: string
+              p_note: string
+              p_start_date: string
+              p_subject_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_end_date: string
+              p_expected_version: number
+              p_grade_id: string
+              p_id: string
+              p_name: string
+              p_note: string
+              p_school_year_start: number
+              p_start_date: string
+              p_subject_id: string
+            }
+            Returns: Json
+          }
       update_class_assignment: {
         Args: {
           p_end_date: string

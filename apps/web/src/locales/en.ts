@@ -389,6 +389,12 @@ export const en: typeof vi = {
     mySubtitle: 'Classes where your teacher or assistant assignment is in effect.',
     create: 'Create class',
     editTitle: 'Edit {name}',
+    filterSchoolYear: 'Filter by school year',
+    allSchoolYears: 'All school years',
+    noSchoolYear: 'No school year',
+    schoolYearHint:
+      'Enter the starting year (e.g. 2026 for 2026–2027), or leave blank for no school year. Class dates are independent.',
+    invalidSchoolYear: 'The starting year must be an integer from 1000 to 9998.',
     searchPlaceholder: 'Search by class name',
     choose: 'Choose…',
     columns: {
@@ -402,6 +408,7 @@ export const en: typeof vi = {
       name: 'Class name',
       subject: 'Subject',
       grade: 'Grade',
+      schoolYear: 'School year',
       startDate: 'Opening date',
       endDate: 'End date',
       note: 'Note',

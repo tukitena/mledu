@@ -7,7 +7,7 @@ import { describeError, type DescribedError } from '../../app/errors'
 import { apiRequest, workspace } from '../../app/session'
 import ErrorAlert from '../../components/ErrorAlert.vue'
 import FloatingAlert from '../../components/FloatingAlert.vue'
-import { formatIsoDate } from '../../lib/format'
+import { formatIsoDate, formatSchoolYear } from '../../lib/format'
 import AssignmentsPanel from './AssignmentsPanel.vue'
 import ClassFormDialog from './ClassFormDialog.vue'
 import EnrollmentsPanel from './EnrollmentsPanel.vue'
@@ -125,6 +125,10 @@ const date = (value: string) => formatIsoDate(value, locale.value)
               <span v-if="klass.grade.archived" class="badge text-bg-light border ms-1">{{
                 t('catalogs.archivedBadge')
               }}</span>
+            </dd>
+            <dt class="col-sm-3">{{ t('classes.fields.schoolYear') }}</dt>
+            <dd class="col-sm-9" data-testid="class-school-year">
+              {{ formatSchoolYear(klass.schoolYearStart) || t('classes.noSchoolYear') }}
             </dd>
             <dt class="col-sm-3">{{ t('classes.fields.note') }}</dt>
             <dd class="col-sm-9 text-preline mb-0">{{ klass.note || '—' }}</dd>

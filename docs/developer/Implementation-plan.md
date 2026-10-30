@@ -258,8 +258,13 @@ Chưa thử hosted/staging, CI GitHub chưa chạy. Kiểm tra phân công của
 **Phạm vi:** STU-01–04, CLASS-01–04, CAT-01; nền trạng thái/lịch sử cho CLASS-05, SCHED-03/05. Tệp theo các module `catalogs/`, `students/`, `classes/` và migration tương ứng.
 
 - [x] Tạo danh mục môn/khối/địa điểm/phòng; chuẩn hóa và kiểm tra duy nhất kể cả bản lưu trữ. Phòng chỉ có tên và địa điểm theo nghiệp vụ.
+
+  Mô hình danh mục hiện tại dùng chung `app.catalog_entries` cho `subject`/`grade`; `classes.subject_id` và `classes.grade_id` cùng tham chiếu bảng này. ERD đã được đồng bộ phần danh mục/lớp ngày 30/10/2026; xem [ghi nhận schema và đánh đổi](decisions/catalog-entries-schema.md). Đây là cập nhật tài liệu, không thêm bằng chứng nghiệm thu hoặc CI.
+
 - [x] Tạo hồ sơ học sinh, nhiều số liên hệ, chuẩn hóa tên/SĐT và chống trùng đồng thời theo STU-04; mã học sinh giữ ổn định qua xuất/nhập và khôi phục.
 - [x] Tạo lớp, phân công theo thời hạn và hồ sơ học sinh–lớp chứa nhiều lần tham gia. Kiểm tra không chồng khoảng, khóa ngày đã lưu và cắt khoảng bằng sự kiện.
+
+  Bổ sung CLASS-03 được duyệt ngày 30/10/2026: năm học chuẩn tùy chọn (`school_year_start` hoặc NULL), không ràng buộc ngày lớp; hiển thị/tạo/sửa và lọc Tất cả/Không thuộc năm học/một năm. Chi tiết triển khai và bằng chứng riêng trong [năm học của lớp](decisions/class-school-year.md); không thay các gate CI/hosted còn mở.
 - [x] Thực hiện chuyển lớp trong một RPC, phân biệt học lại trong hồ sơ cũ với xóa rồi thêm hồ sơ mới. Chuẩn bị hợp đồng vòng đời lớp để lịch/phí đăng ký xử lý nguyên khối ở GĐ 4/6/9.
 - [x] Bổ sung quyền sửa học sinh cho User theo quyết định 28/10/2026 tại STU-04/STU-03: giáo viên/trợ giảng đang được phân công sửa hồ sơ tổng dùng chung, ghi chú và ghi ngày nghỉ lần đầu của lần tham gia đúng lớp; ngày vào/ngày nghỉ đã lưu vẫn khóa như Admin/Receptionist. Tách quyền sửa khỏi tạo/thêm/xóa/hủy/khôi phục/chuyển lớp/học lại trong UI/API/RPC; không nới helper quản trị chung. Đã triển khai và kiểm chứng local ngày 29/10/2026; xem [biên bản bổ sung quyền sửa](decisions/student-edit-permissions.md). Excel vẫn thuộc GĐ8.
 - [x] Bổ sung nghiệm thu local quyền sửa: cả hai vai trò lớp; học sinh nhiều lớp nhưng chỉ sửa lần tham gia đúng lớp; hồ sơ chung phản ánh mọi lớp; ngoài phạm vi/lưu trữ/thu hồi phân công/token cũ bị chặn; kiểm tra khóa ngày, chống trùng, version đồng thời và lỗi audit rollback. Giữ kiểm thử từ chối thêm/xóa/khôi phục/chuyển lớp cho User. Bằng chứng mới: 417 pgTAP, 49 integration, 7 concurrency và 36 E2E desktop/mobile đạt; CI/hosted chưa kiểm chứng.

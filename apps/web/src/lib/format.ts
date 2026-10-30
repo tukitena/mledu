@@ -11,3 +11,8 @@ export function formatIsoDate(value: string | null | undefined, locale: string):
     timeZone: 'UTC',
   }).format(new Date(`${value}T00:00:00Z`))
 }
+
+/** The school year is a label, independent of operational class dates. */
+export function formatSchoolYear(start: number | null): string {
+  return start === null ? '' : `${start}–${start + 1}`
+}

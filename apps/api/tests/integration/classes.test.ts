@@ -17,7 +17,7 @@ const day = (offset: number) => {
   return now.toISOString().slice(0, 10)
 }
 
-async function createClass(name: string, start = -10, end = 90) {
+async function createClass(name: string, start = -10, end = 90, schoolYearStart?: number | null) {
   const response = await api('/v1/classes', {
     token: receptionist,
     method: 'POST',
@@ -28,6 +28,7 @@ async function createClass(name: string, start = -10, end = 90) {
       startDate: day(start),
       endDate: day(end),
       note: null,
+      ...(schoolYearStart === undefined ? {} : { schoolYearStart }),
     },
   })
   expect(response.status).toBe(201)
@@ -46,6 +47,94 @@ beforeAll(async () => {
 })
 
 describe('classes and assignments', () => {
+  it('creates, filters, changes and clears optional school years over HTTP', async () => {
+    const prefix = `Năm học API ${Date.now()}`
+    const first = await createClass(`${prefix} A`, -10, 90, 2026)
+    const second = await createClass(`${prefix} B`, -10, 90, 2026)
+    const independent = await createClass(`${prefix} C`)
+    expect(first.schoolYearStart).toBe(2026)
+    expect(independent.schoolYearStart).toBeNull()
+    const list = async (schoolYear: string, page = 1) =>
+      ClassPage.parse(
+        await json(
+          await api(
+            `/v1/classes?search=${encodeURIComponent(prefix)}&schoolYear=${schoolYear}&pageSize=1&page=${page}`,
+            { token: receptionist },
+          ),
+        ),
+      )
+    const filtered = await list('2026')
+    expect(filtered.total).toBe(2)
+    expect(filtered.items).toHaveLength(1)
+    const next = await list('2026', 2)
+    expect(new Set([filtered.items[0]!.id, next.items[0]!.id])).toEqual(
+      new Set([first.id, second.id]),
+    )
+    expect((await list('none')).items.map((item) => item.id)).toEqual([independent.id])
+    expect((await list('all')).total).toBe(3)
+    expect((await list('none')).schoolYears).toContain(2026)
+    for (const value of ['9999', '02026', '2026-2027', 'null']) {
+      const response = await api(`/v1/classes?schoolYear=${value}`, { token: receptionist })
+      expect(response.status).toBe(400)
+      expect(await errorCode(response)).toBe('validation_failed')
+    }
+    const fields = {
+      name: first.name,
+      subjectId: SUBJECT,
+      gradeId: GRADE,
+      startDate: first.startDate,
+      endDate: first.endDate,
+      note: null,
+    }
+    const update = (body: object) =>
+      api(`/v1/classes/${first.id}`, {
+        token: receptionist,
+        method: 'PUT',
+        body: { ...fields, ...body },
+      })
+    const changed = await update({ expectedVersion: 1, schoolYearStart: 2027 })
+    expect(changed.status).toBe(200)
+    expect(ClassSummary.parse(await json(changed)).schoolYearStart).toBe(2027)
+    const stale = await update({ expectedVersion: 1, schoolYearStart: null })
+    expect(stale.status).toBe(409)
+    expect(await errorCode(stale)).toBe('version_conflict')
+    const legacy = await update({ expectedVersion: 2, note: 'Older client' })
+    expect(legacy.status).toBe(200)
+    expect(ClassSummary.parse(await json(legacy)).schoolYearStart).toBe(2027)
+    const cleared = await update({ expectedVersion: 3, schoolYearStart: null })
+    expect(cleared.status).toBe(200)
+    expect(ClassSummary.parse(await json(cleared)).schoolYearStart).toBeNull()
+  })
+
+  it('scopes year options and results to the current teacher assignment', async () => {
+    const teacher = await createReadyAccount(admin, 'year-scope')
+    const mine = await createClass(`Năm học có quyền ${Date.now()}`, -10, 90, 2031)
+    await createClass(`Năm học không có quyền ${Date.now()}`, -10, 90, 2032)
+    const created = await assign(mine.id, teacher.id, 'teacher', -1, 30)
+    const assignment = Assignment.parse(await json(created))
+    const read = async () =>
+      ClassPage.parse(
+        await json(
+          await api('/v1/classes?schoolYear=2031', {
+            token: teacher.session.accessToken,
+          }),
+        ),
+      )
+    expect((await read()).schoolYears).toEqual([2031])
+    expect((await read()).items.map((item) => item.id)).toEqual([mine.id])
+    expect(
+      (
+        await api(`/v1/assignments/${assignment.id}/end`, {
+          token: receptionist,
+          method: 'POST',
+          body: { reason: 'Kết thúc quyền đọc', expectedVersion: assignment.rowVersion },
+        })
+      ).status,
+    ).toBe(200)
+    expect((await read()).schoolYears).toEqual([])
+    expect((await read()).total).toBe(0)
+  })
+
   it('a teacher sees the class only while the assignment is in effect', async () => {
     const teacher = await createReadyAccount(admin, 'teacher')
     const klass = await createClass(`Lớp quyền ${Date.now()}`)

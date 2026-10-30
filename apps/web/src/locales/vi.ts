@@ -392,6 +392,12 @@ export const vi = {
     mySubtitle: 'Các lớp bạn đang có phân công giáo viên hoặc trợ giảng còn hiệu lực.',
     create: 'Tạo lớp',
     editTitle: 'Sửa lớp {name}',
+    filterSchoolYear: 'Lọc theo năm học',
+    allSchoolYears: 'Tất cả năm học',
+    noSchoolYear: 'Không thuộc năm học',
+    schoolYearHint:
+      'Nhập năm bắt đầu (ví dụ 2026 cho 2026–2027); để trống nếu không thuộc năm học. Không giới hạn ngày lớp.',
+    invalidSchoolYear: 'Năm bắt đầu phải là số nguyên từ 1000 đến 9998.',
     searchPlaceholder: 'Tìm theo tên lớp',
     choose: 'Chọn…',
     columns: {
@@ -405,6 +411,7 @@ export const vi = {
       name: 'Tên lớp',
       subject: 'Môn',
       grade: 'Khối',
+      schoolYear: 'Năm học',
       startDate: 'Ngày mở',
       endDate: 'Ngày kết thúc',
       note: 'Ghi chú',

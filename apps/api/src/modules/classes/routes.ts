@@ -29,6 +29,9 @@ const classArgs = (body: ClassFields) => ({
   p_name: body.name,
   p_subject_id: body.subjectId,
   p_grade_id: body.gradeId,
+  ...(body.schoolYearStart === undefined
+    ? {}
+    : { p_school_year_start: nullable(body.schoolYearStart) }),
   p_start_date: body.startDate,
   p_end_date: body.endDate,
   p_note: nullable(body.note),
@@ -40,12 +43,17 @@ export const classRoutes = new Hono<AppEnv>()
   .get('/', async (c) => {
     const query = parseQuery(c, ListClassesQuery)
     const page = rpcResult(
-      z.object({ total: z.number(), items: z.array(z.unknown()) }),
+      z.object({
+        total: z.number(),
+        items: z.array(z.unknown()),
+        schoolYears: z.array(z.number()),
+      }),
       await c.get('db').rpc('list_classes', {
         p_search: nullable(query.search || null),
         p_deleted: query.deleted,
         p_limit: query.pageSize,
         p_offset: (query.page - 1) * query.pageSize,
+        p_school_year: query.schoolYear,
       }),
     )
     return c.json(expectShape(ClassPage, { ...page, page: query.page, pageSize: query.pageSize }))
