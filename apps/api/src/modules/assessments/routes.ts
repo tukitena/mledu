@@ -1,10 +1,10 @@
 import {
-  ChangeTestConfigRequest,
   ClassTest,
-  ClassTestDetail,
   ClassTestList,
   CreateTestRequest,
   CreateTestTemplateRequest,
+  PublishTestResultsRequest,
+  PublishTestResultsResponse,
   SaveTestResultsRequest,
   SetShowComponentsRequest,
   TestResults,
@@ -114,14 +114,18 @@ export const testTemplateRoutes = new Hono<AppEnv>()
 export const classTestRoutes = new Hono<AppEnv>()
   .use(requireSession())
 
-  .get('/:classId/tests', async (c) =>
-    c.json(
+  .get('/:classId/tests', async (c) => {
+    const { includeArchived } = parseQuery(c, ListCatalogQuery)
+    return c.json(
       rpcResult(
         ClassTestList,
-        await c.get('db').rpc('list_class_tests', { p_class_id: uuidParam(c, 'classId') }),
+        await c.get('db').rpc('list_class_tests', {
+          p_class_id: uuidParam(c, 'classId'),
+          p_include_archived: includeArchived,
+        }),
       ),
-    ),
-  )
+    )
+  })
 
   // Templates that may be copied into a test of this class (not archived).
   .get('/:classId/test-templates', async (c) =>
@@ -155,9 +159,7 @@ export const testRoutes = new Hono<AppEnv>()
   .use(requireSession())
 
   .get('/:id', async (c) =>
-    c.json(
-      rpcResult(ClassTestDetail, await c.get('db').rpc('get_test', { p_id: uuidParam(c, 'id') })),
-    ),
+    c.json(rpcResult(ClassTest, await c.get('db').rpc('get_test', { p_id: uuidParam(c, 'id') }))),
   )
 
   .put('/:id', async (c) => {
@@ -176,21 +178,6 @@ export const testRoutes = new Hono<AppEnv>()
     )
   })
 
-  .put('/:id/config', async (c) => {
-    const body = await parseJson(c, ChangeTestConfigRequest)
-    return c.json(
-      rpcResult(
-        ClassTest,
-        await c.get('db').rpc('change_test_config', {
-          p_id: uuidParam(c, 'id'),
-          p_config: body.config,
-          p_source_template_version_id: nullable(body.sourceTemplateVersionId),
-          p_expected_version: body.expectedVersion,
-        }),
-      ),
-    )
-  })
-
   .put('/:id/show-components', async (c) => {
     const body = await parseJson(c, SetShowComponentsRequest)
     return c.json(
@@ -200,6 +187,34 @@ export const testRoutes = new Hono<AppEnv>()
           p_id: uuidParam(c, 'id'),
           p_show: body.showComponents,
           p_expected_version: body.expectedVersion,
+        }),
+      ),
+    )
+  })
+
+  // TEST-06: unpublishes the test's scores and comments in the same transaction.
+  .post('/:id/archive', async (c) => {
+    const body = await parseJson(c, ArchiveRequest)
+    return c.json(
+      rpcResult(
+        ClassTest,
+        await c.get('db').rpc('archive_test', {
+          p_id: uuidParam(c, 'id'),
+          p_reason: body.reason,
+          p_expected_version: body.expectedVersion,
+        }),
+      ),
+    )
+  })
+
+  .post('/:id/restore', async (c) => {
+    const { expectedVersion } = await parseJson(c, VersionedRequest)
+    return c.json(
+      rpcResult(
+        ClassTest,
+        await c.get('db').rpc('restore_test', {
+          p_id: uuidParam(c, 'id'),
+          p_expected_version: expectedVersion,
         }),
       ),
     )
@@ -225,6 +240,21 @@ export const testRoutes = new Hono<AppEnv>()
           p_test_id: uuidParam(c, 'id'),
           p_config_id: body.configId,
           p_items: body.items,
+        }),
+      ),
+    )
+  })
+
+  // ACAD-01: one student or the whole class; Admin or a current teacher only.
+  .post('/:id/results/publication', async (c) => {
+    const body = await parseJson(c, PublishTestResultsRequest)
+    return c.json(
+      rpcResult(
+        PublishTestResultsResponse,
+        await c.get('db').rpc('publish_test_results', {
+          p_test_id: uuidParam(c, 'id'),
+          p_student_id: nullable(body.studentId),
+          p_publish: body.publish,
         }),
       ),
     )

@@ -622,10 +622,10 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 - **Quy tắc nghiệp vụ:**
   - Bài kiểm tra thuộc một lớp; thông tin bài dùng chung cho các kết quả học sinh của bài đó.
   - Nhập và kiểm tra kết quả theo cấu hình của bài, không dùng cấu hình của bài khác.
-  - Chọn template là tùy chọn, không phải điều kiện để tạo bài. Cấu hình riêng hoặc sửa bản sao từ template không tạo/sửa template trong thư viện. Thay đổi cấu hình sau khi có kết quả tuân theo TEST-03; sửa template không tự thay đổi bài cũ.
+  - Chọn template là tùy chọn, không phải điều kiện để tạo bài. Cấu hình riêng hoặc sửa bản sao từ template không tạo/sửa template trong thư viện. Cấu hình được chốt khi tạo bài và không đổi được sau đó (TEST-03); sửa template không tự thay đổi bài cũ.
   - Tạo/sửa thông tin bài thành công được ghi audit theo AUD-01.
 - **Tiêu chí nghiệm thu:** Tạo được bài với mô tả để trống khi các thông tin bắt buộc hợp lệ; thiếu tên, ngày kiểm tra, loại đánh giá hoặc cấu hình bắt buộc thì từ chối tạo và chỉ rõ thông tin thiếu. Hỗ trợ số/phân số/chữ và IELTS, tạo không dùng template hoặc chỉnh bản sao từ template; nhập kết quả theo đúng cấu hình đã lưu của bài.
-- **Quyền sửa thông tin:** Cho phép sửa tên, ngày kiểm tra và mô tả khi đã có kết quả công bố; không làm thay đổi trạng thái công bố hoặc kết quả. Thay đổi cấu hình đánh giá vẫn theo TEST-03.
+- **Quyền sửa thông tin:** Cho phép sửa tên, ngày kiểm tra và mô tả khi đã có kết quả công bố; không làm thay đổi trạng thái công bố hoặc kết quả. Cấu hình đánh giá không sửa được (TEST-03).
 - **Khóa/mốc:** Mỗi học sinh có tối đa một kết quả và một nhận xét cho một bài, không phụ thuộc hồ sơ/lần tham gia. Nhập cho học sinh có ngày bài giao với ít nhất một khoảng tham gia trong lớp, kể cả lịch sử; không lấy danh sách Đang học hiện tại để thay điều kiện theo ngày.
 - **Ngày bài:** Nằm trong thời gian lớp đã có hiệu lực tại ngày bài; được sửa tên/ngày/mô tả khi đã công bố nhưng không cho chuyển ngày ra ngoài hợp khoảng tham gia của bất kỳ học sinh đang có kết quả/nhận xét. Chặn cả thay đổi và chỉ rõ học sinh bị ảnh hưởng, không tự xóa hoặc hủy công bố.
 - **Tên:** Cho trùng tên bài/đợt trong cùng lớp, luôn dùng định danh và ngày để phân biệt; không dùng tên làm khóa Excel. Học sinh Vắng cũng có kết quả theo cùng khóa học sinh/bài.
@@ -672,12 +672,12 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   - Lưu được Vắng như trạng thái riêng; không thay thành điểm 0 hoặc mức Chưa đạt.
   - Công bố được Vắng, kể cả bài có điểm thành phần nhưng học sinh không có điểm các phần; phụ huynh thấy đúng thông báo khi công bố và không thấy kết quả này sau khi hủy công bố.
   - Excel hỗ trợ đúng loại kết quả và Vắng; dữ liệu không hợp lệ chặn toàn bộ lần đồng bộ.
-- **Đã làm rõ:** Excel dùng mẫu của từng chức năng theo XLS-06; thay thang hoặc điểm tối đa/tổng số câu phải hủy công bố, nhập lại điểm, công bố lại theo TEST-03; Vắng giữ nguyên. Các quy tắc cộng phần của thang số/phân số không áp dụng thay công thức IELTS.
+- **Đã làm rõ:** Excel dùng mẫu của từng chức năng theo XLS-06; thang, điểm tối đa/tổng số câu cố định theo cấu hình lúc tạo bài (TEST-03). Các quy tắc cộng phần của thang số/phân số không áp dụng thay công thức IELTS.
 
 **IELTS — mở rộng được người dùng chốt ngày 28/10/2026:**
 
 - **Kỹ năng:** Bài IELTS chọn một hoặc nhiều kỹ năng Listening (L), Reading (R), Writing (W), Speaking (S), không bắt buộc đủ bốn. Kỹ năng không được chọn là Không áp dụng, không phải thiếu điểm hoặc Vắng. Không tạo bài IELTS rỗng.
-- **Chế độ nhập:** Cấu hình riêng từng kỹ năng là nhập band trực tiếp hoặc nhập chi tiết; chế độ đó thống nhất cho mọi học sinh trong bài, không chọn khác nhau theo học sinh. Được lưu dữ liệu chưa đầy đủ nhưng không tự điền 0 hoặc tự chuyển chế độ để hoàn tất. Chuyển chế độ sau khi có kết quả theo TEST-03.
+- **Chế độ nhập:** Cấu hình riêng từng kỹ năng là nhập band trực tiếp hoặc nhập chi tiết; chế độ đó thống nhất cho mọi học sinh trong bài, không chọn khác nhau theo học sinh. Được lưu dữ liệu chưa đầy đủ nhưng không tự điền 0 hoặc tự chuyển chế độ để hoàn tất. Chế độ cố định từ lúc tạo bài (TEST-03).
 - **L/R:** Chế độ chi tiết lưu số câu đúng và band do người dùng nhập; cấu hình số câu tối đa nguyên dương theo bài. Số câu đúng là số nguyên từ 0 đến tối đa. Hệ thống không quy đổi số câu đúng sang band, không suy ngược số câu từ band. Chế độ trực tiếp chỉ cần band, không bắt nhập số câu đúng.
 - **Writing:** Chế độ chi tiết có Task 1 và Task 2, mỗi Task gồm bốn tiêu chí trọng số bằng nhau: Task Achievement (Task 1) / Task Response (Task 2), Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy. Mỗi Task cần đủ bốn tiêu chí để có điểm; Writing cần đủ hai Task. Chế độ trực tiếp chỉ nhập band Writing, không bắt có điểm Task/tiêu chí.
 - **Công thức Writing:** `Task1 = roundBand((TA + CC1 + LR1 + GRA1) / 4)`; `Task2 = roundBand((TR + CC2 + LR2 + GRA2) / 4)`; `Writing = roundBand((Task1 + 2 × Task2) / 3)`. Làm tròn từng Task trước khi tính trọng số, đúng thứ tự người dùng yêu cầu; không thay ngầm bằng cách chỉ làm tròn ở bước cuối.
@@ -686,7 +686,7 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 - **Overall:** Chỉ tính khi bài có đủ L/R/W/S và học sinh có band hợp lệ của cả bốn: `Overall = roundBand((L + R + W + S) / 4)`. Nếu bài chỉ chọn một đến ba kỹ năng thì không có Overall và không tự lấy trung bình các kỹ năng đó làm Overall. Nếu bài chọn đủ bốn nhưng thiếu band thì Overall để trống; không quy thiếu thành 0. Overall do backend tính, không nhập/ghi đè.
 - **Hoàn tất/công bố:** Kết quả không Vắng hoàn tất khi tất cả kỹ năng được chọn đủ dữ liệu theo chế độ; L/R chi tiết cần cả số câu đúng và band, W/S chi tiết cần đủ tiêu chí. Bài chỉ có một đến ba kỹ năng vẫn được công bố khi đủ dữ liệu đã chọn, dù không có Overall. Bài chọn đủ bốn nhưng thiếu kỹ năng không được công bố. Vắng cả bài vẫn là kết quả hợp lệ theo quy tắc chung. Công bố theo học sinh/bài, không tạo công bố độc lập từng kỹ năng/Task/tiêu chí.
 - **Hiển thị:** Khi đã công bố, phụ huynh thấy band từng kỹ năng đã chọn và Overall nếu có. Số câu đúng L/R, điểm Task và tiêu chí W/S là chi tiết chịu tùy chọn hiện/ẩn toàn bài theo TEST-04; ẩn chi tiết phải loại chúng khỏi phản hồi API. Chưa công bố thì ẩn toàn bộ kết quả; không ảnh hưởng trạng thái nhận xét.
-- **Lịch sử/Excel:** Lưu điểm đầu vào, cấu hình và phiên bản công thức với kết quả; backend tính lại, không tin band tự tính/Overall do client hoặc Excel gửi. L/R vẫn dùng band do người dùng nhập. Đổi tập kỹ năng, chế độ, số câu tối đa hoặc cấu hình chấm theo TEST-03; không tính lại bài cũ chỉ vì sửa template/công thức mặc định.
+- **Lịch sử/Excel:** Lưu điểm đầu vào, cấu hình và phiên bản công thức với kết quả; backend tính lại, không tin band tự tính/Overall do client hoặc Excel gửi. L/R vẫn dùng band do người dùng nhập. Tập kỹ năng, chế độ, số câu tối đa và cấu hình chấm cố định từ lúc tạo bài (TEST-03); không tính lại bài cũ chỉ vì sửa template/công thức mặc định.
 - **Nghiệm thu:** Bài chỉ L/R công bố được khi đủ dữ liệu và không có Overall; bài đủ bốn thiếu S không công bố. `6,125 → 6,0`, `6,25 → 6,5`, `6,75 → 7,0`. Task 1 có `6; 6; 6; 6,5` cho 6,0; Task 2 có `6; 6; 6,5; 6,5` cho 6,5; Writing là 6,5 theo thứ tự làm tròn đã chốt. L/R nhập 30 câu đúng và band 6,5 phải giữ đúng band 6,5, không tự quy đổi. Thiếu tiêu chí khác 0; chế độ chi tiết không được ghi đè điểm tự tính; UI/API/Excel cho cùng kết quả.
 
 #### TEST-02. Thư viện template bài kiểm tra dùng chung
@@ -696,36 +696,23 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
 - **Phạm vi:** Một thư viện chung toàn trung tâm, dùng cho nhiều lớp; không có quyền theo cơ sở. Template chứa tên/mô tả và cấu hình đánh giá số/phân số/chữ/IELTS, chế độ nhập, các phần/kỹ năng/tiêu chí và tùy chọn hiện chi tiết phù hợp loại bài. Không chứa ngày kiểm tra thực tế, danh sách học sinh, kết quả, nhận xét hoặc trạng thái công bố; không phải ngân hàng câu hỏi/đáp án hoặc mẫu đề thi.
 - **Dùng mẫu:** Người có quyền có thể tạo bài từ đầu hoặc chọn template rồi chỉnh riêng. Mỗi bài lưu bản sao cấu hình đầy đủ, định danh/phiên bản nguồn nếu có; template chỉ là nguồn tham khảo, không liên kết cập nhật tự động. Tên/ngày thực tế của bài do người tạo nhập theo TEST-05.
 - **Thang chữ:** Chọn template có bộ mức chữ hoặc cấu hình riêng bộ mức của bài; không có bước chọn mẫu thang chữ độc lập. Bộ mặc định Chưa đạt, Đạt, Tốt, Xuất sắc được cung cấp trong template chữ. Mỗi bộ có 1–20 mức, tên 1–100 ký tự và duy nhất theo chuẩn hóa tên; cho thêm/xóa/đổi tên/sắp xếp trong cấu hình được phép, không lưu bộ rỗng.
-- **Phiên bản:** Sửa template tạo phiên bản mới, không đổi bất kỳ bài đã sao chép, kể cả chưa có kết quả; xóa mềm ngừng lựa chọn cho bài mới nhưng giữ lịch sử và bản sao trong bài cũ. Muốn áp dụng lại template cho một bài phải chủ động chọn lại; khi đã có kết quả áp dụng TEST-03.
+- **Phiên bản:** Sửa template tạo phiên bản mới, không đổi bất kỳ bài đã sao chép, kể cả chưa có kết quả; xóa mềm ngừng lựa chọn cho bài mới nhưng giữ lịch sử và bản sao trong bài cũ. Không chọn lại/áp dụng lại template cho bài đã tạo (TEST-03).
 - **Nguyên khối:** Quản lý template kiểm tra quyền hiện hành, phiên bản và audit trong một transaction. Lỗi audit không tạo phiên bản hoặc thay mẫu; không xóa vĩnh viễn cấu hình/lịch sử.
-- **Nghiệm thu:** Chỉ Admin quản lý qua UI/API; giáo viên/trợ giảng sửa cấu hình riêng của bài mà template không đổi; cùng template dùng được ở hai lớp. Sửa/xóa template không đổi bài cũ hoặc kết quả đã công bố. Bài chọn template trước/sau lần sửa giữ được hai cấu hình khác nhau; Excel luôn đối chiếu cấu hình của bài.
+- **Nghiệm thu:** Chỉ Admin quản lý qua UI/API; giáo viên/trợ giảng chỉnh cấu hình riêng của bài khi tạo bài mà template không đổi; cùng template dùng được ở hai lớp. Sửa/xóa template không đổi bài cũ hoặc kết quả đã công bố. Bài chọn template trước/sau lần sửa giữ được hai cấu hình khác nhau; Excel luôn đối chiếu cấu hình của bài.
 
-#### TEST-03. Đổi cấu hình đánh giá hoặc chọn lại template khi bài đã có kết quả
+#### TEST-03. Cấu hình đánh giá cố định sau khi tạo bài
 
-- **Mục đích:** Cho phép thay đổi cách đánh giá của bài kiểm tra đã có kết quả, với yêu cầu hủy công bố và nhập lại toàn bộ kết quả.
-- **Người thực hiện:** Admin hoặc giáo viên/trợ giảng có phân công đang hiệu lực trong lớp, theo quyền cấu hình và chỉnh sửa học vụ. Trợ giảng không được hủy công bố; phải chờ Admin hoặc giáo viên thực hiện nếu bài đang có điểm công bố.
-- **Điều kiện trước:** Điểm của tất cả học sinh trong bài kiểm tra đã được chủ động hủy công bố hoặc chưa từng công bố; không còn điểm đang công bố trong bài.
-- **Luồng chính:**
-  1. Nếu bài còn điểm đang công bố, Admin hoặc giáo viên chủ động hủy công bố điểm cho toàn bộ phạm vi cần thiết.
-  2. Người có quyền đổi cấu hình đánh giá hoặc chủ động chọn lại template cho bài (kể cả template chữ/IELTS).
-  3. Hệ thống áp dụng thang mới; các kết quả cũ không được tiếp tục sử dụng như kết quả hợp lệ của thang mới.
-  4. Người có quyền nhập lại toàn bộ kết quả theo thang mới.
-  5. Admin hoặc giáo viên kiểm tra và chủ động công bố lại khi phù hợp.
+> **Cập nhật 31/10/2026 (theo yêu cầu trực tiếp của người dùng):** Bỏ hẳn luồng đổi cấu hình đánh giá/chọn lại template cho bài kiểm tra đã tạo, cùng quy trình hủy công bố, nhập lại điểm và giữ phiên bản cấu hình cũ trước đây của mục này. Mã TEST-03 được giữ để không đổi bộ mã yêu cầu ổn định.
+
+- **Mục đích:** Kết quả của mỗi bài luôn được nhập, tính và hiển thị theo đúng một cấu hình đánh giá.
 - **Quy tắc nghiệp vụ:**
-  - Không tự quy đổi kết quả cũ sang thang mới, kể cả đổi giữa số và phân số hoặc chọn mẫu chữ có một số mức giống mẫu cũ.
-  - Nhập lại toàn bộ kết quả có điểm; giữ nguyên trạng thái Vắng vì trạng thái này không phụ thuộc thang điểm, không yêu cầu nhập lại Vắng.
-  - Thao tác đổi thang/chọn lại mẫu không tự công bố kết quả.
-  - Không tự sửa hoặc hủy công bố nhận xét gắn bài kiểm tra, vì nhận xét có trạng thái công bố độc lập; thao tác riêng đối với nhận xét vẫn tuân theo ACAD-01.
-  - Sửa template chung không ảnh hưởng bài cũ theo TEST-02; chỉ khi chủ động áp dụng cấu hình khác/chọn lại template cho bài mới áp dụng quy trình này. Đổi tập kỹ năng, chế độ nhập hoặc số câu tối đa L/R của bài IELTS cũng là đổi cấu hình; không tự bảo lưu điểm cũ thành điểm hiện hành của cấu hình mới. Công thức IELTS tại TEST-01 là cố định, không phải trường tùy chỉnh của template/bài; phiên bản công thức chỉ để bảo toàn lịch sử. Muốn thay công thức phải có quyết định cập nhật đặc tả riêng, không cấp quyền tự đổi công thức cho người cấu hình bài.
-  - Thay đổi thành công được audit với chi tiết trước/sau; lỗi ghi audit hủy toàn bộ thay đổi.
-- **Xử lý lỗi:** Chặn đổi thang/chọn lại mẫu nếu còn bất kỳ điểm đang công bố trong bài hoặc người thực hiện không có quyền; không tự hủy công bố để tiếp tục.
-- **Tiêu chí nghiệm thu:**
-  - Cho đổi thang/chọn lại mẫu sau khi bài không còn điểm đang công bố.
-  - Điểm cũ không tự trở thành kết quả theo thang mới; phải nhập lại toàn bộ điểm. Các học sinh Vắng vẫn giữ trạng thái Vắng.
-  - Đổi cấu hình không tự công bố dữ liệu hoặc thay đổi trạng thái công bố nhận xét.
-- **Thay đổi cấu hình:** Đổi điểm tối đa, tổng số câu hoặc cấu trúc điểm thành phần cũng áp dụng cùng quy trình: chủ động hủy công bố, nhập lại toàn bộ điểm, chủ động công bố lại; Vắng giữ nguyên.
-- **Đã chốt:** Đổi chế độ tổng trực tiếp/theo phần cùng quy trình hủy công bố, nhập lại điểm, công bố lại; Vắng giữ nguyên. Điểm/cấu hình cũ được giữ thành phiên bản nghiệp vụ không thời hạn, độc lập với audit 60 ngày; không tự dùng phiên bản cũ làm kết quả hiện hành.
-- **Nghiệm thu bổ sung:** Sau đổi không dùng điểm cũ tính tổng hoặc hiển thị phụ huynh; audit vẫn có dữ liệu trước thay đổi trong thời hạn lưu.
+  - Cấu hình đánh giá (loại đánh giá, chế độ nhập, điểm tối đa, tổng số câu, bộ mức chữ, các phần, tập kỹ năng/chế độ/số câu tối đa L/R của IELTS) và nguồn template được chốt khi tạo bài theo TEST-05; không sửa và không chọn lại template sau đó, kể cả khi bài chưa có kết quả.
+  - Muốn dùng cấu hình khác thì tạo bài mới; bài cũ không dùng nữa được xóa theo TEST-06. Hệ thống không tự chuyển kết quả hoặc nhận xét sang bài khác.
+  - Sửa tên, ngày, mô tả (TEST-05) và bật/tắt hiện chi tiết (TEST-04) không phải đổi cấu hình, vẫn được phép theo quyền tương ứng.
+  - Sửa template chung không ảnh hưởng bài đã tạo theo TEST-02.
+  - Công thức IELTS tại TEST-01 là cố định, không phải trường tùy chỉnh của template/bài; phiên bản công thức chỉ để bảo toàn lịch sử. Muốn thay công thức phải có quyết định cập nhật đặc tả riêng.
+- **Xử lý lỗi:** Không có thao tác hay endpoint đổi cấu hình bài; cơ sở dữ liệu từ chối thêm cấu hình thứ hai cho một bài.
+- **Tiêu chí nghiệm thu:** UI/API không cho đổi cấu hình hoặc chọn lại template của bài đã tạo; sửa thông tin hoặc hiện/ẩn chi tiết không đổi cấu hình; kết quả luôn theo cấu hình lúc tạo bài.
 
 #### TEST-04. Điểm thành phần cho thang số và phân số
 
@@ -779,8 +766,8 @@ Mỗi chức năng được nhận diện bằng mã ổn định; nội dung g�
   - Đổi được tùy chọn khi bài đã có điểm công bố mà không cần hủy công bố; kết quả và trạng thái công bố giữ nguyên.
   - Tùy chọn hiện không làm lộ điểm thành phần của học sinh chưa công bố điểm tổng.
   - Khi tùy chọn ẩn hoặc điểm tổng chưa công bố, API tra cứu phụ huynh không trả chi tiết điểm thành phần; thay đổi thành công được ghi audit.
-- **Thay đổi cấu trúc:** Đổi cấu trúc phần/điểm tối đa/tổng số câu phải hủy công bố, nhập lại, công bố lại theo TEST-03.
-- **Đã chốt:** Chuyển chế độ trực tiếp/theo phần sau khi có kết quả áp dụng TEST-03; điểm/cấu hình cũ giữ trong lịch sử phiên bản độc lập audit, Vắng giữ nguyên.
+- **Cấu trúc cố định:** Cấu trúc phần/điểm tối đa/tổng số câu cố định từ lúc tạo bài (TEST-03).
+- **Đã chốt:** Chế độ trực tiếp/theo phần cố định từ lúc tạo bài (TEST-03).
 - **Giới hạn cấu hình:** Từ 1 đến 50 phần nếu chọn theo phần, mỗi tên tối đa 200 ký tự, duy nhất trong bài; điểm tối đa mỗi phần là số dương tối đa hai số lẻ, tổng số câu phần là số nguyên dương. Tổng tối đa bài phải đúng tổng tối đa các phần, không lưu cấu hình mâu thuẫn.
 - **Đổi hiện/ẩn:** Chỉ Admin hoặc giáo viên có phân công hiệu lực được đổi tùy chọn hiện/ẩn thành phần khi đã có điểm công bố; trợ giảng chỉ nhập/sửa điểm chưa công bố, không đổi tùy chọn này. Thay tùy chọn không sửa điểm hoặc trạng thái công bố.
 

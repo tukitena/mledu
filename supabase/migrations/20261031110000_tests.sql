@@ -4,12 +4,12 @@
 -- A test belongs to one class. Its grading configuration is an immutable,
 -- relational snapshot (test_config_versions + letter levels / components /
 -- IELTS skills), created from scratch or copied from one exact template
--- version and then adjusted. Editing a template never changes a test, and
--- editing a test's configuration never writes to the template library.
+-- version and then adjusted. The configuration is fixed when the test is
+-- created: it is never changed afterwards (one snapshot per test). Editing a
+-- template never changes a test, and a test never writes to the template library.
 --
--- Not in this feature: results (TEST-01/04), publication (ACAD-01), the
--- re-entry rules of TEST-03 once results exist, and archive/restore of a test
--- (TEST-06). The deleted_* columns exist so that feature adds no table change.
+-- Not in this feature: results (TEST-01/04), publication (ACAD-01) and
+-- archive/restore of a test (TEST-06). The deleted_* columns exist so that feature adds no table change.
 -- Design: docs/developer/assessment-schema.md.
 
 -------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ create table app.tests (
   description text,
   current_config_id uuid not null,
   -- One display option for the whole test (TEST-04), kept outside the immutable
-  -- configuration: it can change without re-entering results.
+  -- configuration: it can change on its own, without touching results.
   show_components boolean not null default false,
   row_version bigint not null default 1,
   created_at timestamptz not null default now(),
@@ -75,7 +75,8 @@ create table app.test_config_versions (
   created_by uuid not null references app.account_profiles (id),
   constraint test_config_versions_revision_key unique (test_id, revision),
   constraint test_config_versions_test_id_id_key unique (test_id, id),
-  constraint test_config_versions_revision_check check (revision >= 1),
+  -- One snapshot per test: the configuration cannot be changed after creation.
+  constraint test_config_versions_revision_check check (revision = 1),
   constraint test_config_versions_shape_check check (
     (scale_kind = 'numeric' and input_mode in ('direct', 'components')
        and max_score > 0 and scale(max_score) <= 2
@@ -93,7 +94,7 @@ create index test_config_versions_source_idx
   on app.test_config_versions (source_template_version_id);
 
 comment on table app.test_config_versions is
-  'Immutable grading snapshot of a test (TEST-01/02/04). A new configuration adds a revision.';
+  'Immutable grading snapshot of a test (TEST-01/02/04), fixed when the test is created.';
 
 -- The test and its first snapshot are created in one transaction.
 alter table app.tests
@@ -383,7 +384,6 @@ as $$
     'description', p_test.description,
     'show_components', p_test.show_components,
     'current_config_id', p_test.current_config_id,
-    'config_revision', c.revision,
     'config', app_private.test_config_json(c.id, p_test.show_components),
     'source_template_version_id', c.source_template_version_id,
     'deleted_at', p_test.deleted_at,
@@ -426,7 +426,6 @@ as $$
     'description', p_test.description,
     'showComponents', p_test.show_components,
     'configId', c.id,
-    'configRevision', c.revision,
     'config', app_private.test_config_json(c.id, p_test.show_components),
     'source', app_private.test_source_dto(c.source_template_version_id),
     'deleted', p_test.deleted_at is not null,
@@ -601,7 +600,7 @@ begin
 end
 $$;
 
--- One test with every configuration revision (history is kept without limit).
+-- One test.
 create function api.get_test(p_id uuid)
 returns jsonb
 language plpgsql
@@ -617,19 +616,7 @@ begin
     perform app_private.raise_api_error(404, 'not_found');
   end if;
   perform app_private.require_test_reader(v_test.class_id);
-  return app_private.test_dto(v_test) || jsonb_build_object(
-    'configVersions', (
-      select jsonb_agg(jsonb_build_object(
-               'id', c.id,
-               'revision', c.revision,
-               'scaleKind', c.scale_kind,
-               'source', app_private.test_source_dto(c.source_template_version_id),
-               'createdAt', c.created_at,
-               'createdByName', a.full_name)
-             order by c.revision desc)
-        from app.test_config_versions c
-        join app.account_profiles a on a.id = c.created_by
-       where c.test_id = v_test.id));
+  return app_private.test_dto(v_test);
 end
 $$;
 
@@ -764,86 +751,6 @@ begin
 end
 $$;
 
--- New configuration for a test (adjusting it, or picking a template again):
--- adds an immutable snapshot and moves the pointer; earlier snapshots stay.
--- p_source_template_version_id equal to the current snapshot's source keeps
--- that provenance without checking the template again; another value is a new
--- choice and is checked like on creation. The display option does not change
--- implicitly: a different value needs the display right (Admin or teacher).
--- Results do not exist yet; the TEST-03 publication lock and re-entry are
--- added to this command together with them.
-create function api.change_test_config(
-  p_id uuid,
-  p_config jsonb,
-  p_source_template_version_id uuid,
-  p_expected_version bigint
-)
-returns jsonb
-language plpgsql
-volatile
-security definer
-set search_path = ''
-as $$
-declare
-  v_class_id uuid := (select t.class_id from app.tests t where t.id = p_id);
-  v_actor app.account_profiles;
-  v_config jsonb;
-  v_show boolean;
-  v_before app.tests;
-  v_current app.test_config_versions;
-  v_same_config boolean;
-  v_config_id uuid := gen_random_uuid();
-  v_after app.tests;
-begin
-  if v_class_id is null then
-    perform app_private.raise_api_error(404, 'not_found');
-  end if;
-  v_actor := app_private.require_test_editor(v_class_id);
-  v_config := app_private.test_template_config(p_config);
-  v_show := app_private.config_has_details(v_config)
-    and coalesce((v_config ->> 'showComponents')::boolean, false);
-  v_before := app_private.lock_test(p_id, p_expected_version);
-  select * into v_current from app.test_config_versions c where c.id = v_before.current_config_id;
-
-  v_same_config := v_current.source_template_version_id is not distinct from p_source_template_version_id
-    and app_private.test_config_json(v_current.id, false) = app_private.test_template_config(
-          case when v_config ? 'showComponents'
-            then jsonb_set(v_config, '{showComponents}', 'false') else v_config end);
-  if v_same_config and v_show = v_before.show_components then
-    return app_private.test_dto(v_before);
-  end if;
-  if v_show <> v_before.show_components then
-    perform app_private.require_test_editor(v_class_id, p_display => true);
-  end if;
-  if p_source_template_version_id is not null
-    and p_source_template_version_id is distinct from v_current.source_template_version_id
-  then
-    perform app_private.lock_template_source(p_source_template_version_id);
-  end if;
-
-  if not v_same_config then
-    perform app_private.insert_test_config(v_config_id, v_before.id, v_current.revision + 1,
-      v_config, p_source_template_version_id, v_actor.id);
-  end if;
-
-  update app.tests t
-     set current_config_id = case when v_same_config then t.current_config_id else v_config_id end,
-         show_components = v_show,
-         row_version = t.row_version + 1,
-         updated_at = now()
-   where t.id = v_before.id
-  returning * into v_after;
-
-  perform app_private.record_change('test', v_after.id, v_after.row_version,
-    app_private.test_snapshot(v_before), app_private.test_snapshot(v_after), v_actor.id,
-    case when v_same_config then 'test.set_show_components' else 'test.change_config' end,
-    jsonb_strip_nulls(jsonb_build_object('class_id', v_class_id, 'test_id', v_after.id,
-      'test_config_id', v_after.current_config_id,
-      'test_template_version_id', p_source_template_version_id)));
-  return app_private.test_dto(v_after);
-end
-$$;
-
 -- TEST-04 display option of the whole test: Admin or teacher only; changes no
 -- configuration, result or publication.
 create function api.set_test_show_components(p_id uuid, p_show boolean, p_expected_version bigint)
@@ -894,7 +801,6 @@ revoke all on function
   api.list_test_template_choices(uuid),
   api.create_test(uuid, text, date, text, jsonb, uuid),
   api.update_test(uuid, text, date, text, bigint),
-  api.change_test_config(uuid, jsonb, uuid, bigint),
   api.set_test_show_components(uuid, boolean, bigint)
   from public, anon;
 grant execute on function
@@ -903,6 +809,5 @@ grant execute on function
   api.list_test_template_choices(uuid),
   api.create_test(uuid, text, date, text, jsonb, uuid),
   api.update_test(uuid, text, date, text, bigint),
-  api.change_test_config(uuid, jsonb, uuid, bigint),
   api.set_test_show_components(uuid, boolean, bigint)
   to authenticated;

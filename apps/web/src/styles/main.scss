@@ -1452,4 +1452,21 @@ body {
   .result-select {
     min-width: 8rem;
   }
+
+  // IELTS: one cell per skill; criteria inputs fit a band ("6,5").
+  .band-input {
+    width: 3.5rem;
+    padding-inline: 0.375rem;
+    text-align: center;
+  }
+
+  .ielts-task {
+    width: 1.25rem;
+  }
+
+  // Comments (COMMENT-01): the text column takes the remaining width.
+  .comment-cell {
+    min-width: 16rem;
+    width: 100%;
+  }
 }

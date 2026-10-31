@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  ClassTest,
-  ClassTestDetail,
-  ClassTestList,
-  hasDetails,
-  type TestSource,
-} from '@mledu/contracts/assessments'
+import { ClassTest, ClassTestList, hasDetails, type TestSource } from '@mledu/contracts/assessments'
 import type { ClassDetail } from '@mledu/contracts/classes'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -15,9 +9,10 @@ import ErrorAlert from '../../components/ErrorAlert.vue'
 import FloatingAlert from '../../components/FloatingAlert.vue'
 import ModalDialog from '../../components/ModalDialog.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
-import { formatInstant, formatIsoDate } from '../../lib/format'
+import { formatIsoDate } from '../../lib/format'
 import TestFormDialog from './TestFormDialog.vue'
 import TestResultsDialog from './TestResultsDialog.vue'
+import CommentsDialog from '../comments/CommentsDialog.vue'
 import { configSummary } from './labels'
 
 // Tests of a class (TEST-05), as the class page's "Tests" tab. Table + row menu
@@ -30,25 +25,31 @@ const list = ref<ClassTestList | null>(null)
 const loading = ref(false)
 const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
-const editing = ref<{ mode: 'create' | 'info' | 'config'; test: ClassTest | null } | null>(null)
-const history = ref<{ test: ClassTest; detail: ClassTestDetail | null } | null>(null)
+const editing = ref<{ mode: 'create' | 'info'; test: ClassTest | null } | null>(null)
 const results = ref<ClassTest | null>(null)
+const showArchived = ref(false)
+const archiving = ref<ClassTest | null>(null)
+const restoring = ref<ClassTest | null>(null)
+const reason = ref('')
+const actionError = ref<DescribedError | null>(null)
+const comments = ref<ClassTest | null>(null)
 const busy = ref(false)
 
 async function load() {
   loading.value = true
   error.value = null
   try {
-    list.value = await apiRequest(`/v1/classes/${props.klass.id}/tests`, {
-      schema: ClassTestList,
-    })
+    list.value = await apiRequest(
+      `/v1/classes/${props.klass.id}/tests?includeArchived=${showArchived.value}`,
+      { schema: ClassTestList },
+    )
   } catch (cause) {
     error.value = describeError(cause)
   } finally {
     loading.value = false
   }
 }
-watch(() => props.klass.id, load, { immediate: true })
+watch([() => props.klass.id, showArchived], load, { immediate: true })
 
 const summary = (test: ClassTest) => configSummary(test.config, t, locale.value)
 const sourceLabel = (source: TestSource | null) =>
@@ -57,22 +58,29 @@ const sourceLabel = (source: TestSource | null) =>
     : t('tests.ownConfig')
 
 function actionsFor(test: ClassTest): RowAction[] {
+  if (test.deleted)
+    return [
+      { key: 'results', label: t('tests.actions.viewResults') },
+      ...(list.value?.canArchive ? [{ key: 'restore', label: t('tests.actions.restore') }] : []),
+    ]
   const items: RowAction[] = [
     {
       key: 'results',
       label: t(list.value?.canEdit ? 'tests.actions.enterResults' : 'tests.actions.viewResults'),
     },
+    {
+      key: 'comments',
+      label: t(list.value?.canEdit ? 'tests.actions.enterComments' : 'tests.actions.viewComments'),
+    },
   ]
-  if (list.value?.canEdit) {
-    items.push({ key: 'info', label: t('tests.actions.info') })
-    items.push({ key: 'config', label: t('tests.actions.config') })
-  }
+  if (list.value?.canEdit) items.push({ key: 'info', label: t('tests.actions.info') })
   if (list.value?.canChangeDisplay && hasDetails(test.config))
     items.push({
       key: 'display',
       label: t(test.showComponents ? 'tests.actions.hideDetails' : 'tests.actions.showDetails'),
     })
-  items.push({ key: 'history', label: t('tests.actions.history') })
+  if (list.value?.canArchive)
+    items.push({ key: 'archive', label: t('tests.actions.archive'), danger: true })
   return items
 }
 
@@ -80,17 +88,17 @@ async function onAction(test: ClassTest, key: string) {
   notice.value = null
   error.value = null
   if (key === 'results') results.value = test
-  if (key === 'info' || key === 'config') editing.value = { mode: key, test }
+  if (key === 'comments') comments.value = test
+  if (key === 'info') editing.value = { mode: key, test }
   if (key === 'display') await toggleDisplay(test)
-  if (key === 'history') {
-    history.value = { test, detail: null }
-    try {
-      const detail = await apiRequest(`/v1/tests/${test.id}`, { schema: ClassTestDetail })
-      if (history.value?.test.id === test.id) history.value.detail = detail
-    } catch (cause) {
-      history.value = null
-      error.value = describeError(cause)
-    }
+  if (key === 'archive') {
+    reason.value = ''
+    actionError.value = null
+    archiving.value = test
+  }
+  if (key === 'restore') {
+    actionError.value = null
+    restoring.value = test
   }
 }
 
@@ -113,21 +121,53 @@ async function toggleDisplay(test: ClassTest) {
   }
 }
 
+async function archiveOrRestore(test: ClassTest, archive: boolean) {
+  busy.value = true
+  actionError.value = null
+  try {
+    const saved = await apiRequest(`/v1/tests/${test.id}/${archive ? 'archive' : 'restore'}`, {
+      method: 'POST',
+      schema: ClassTest,
+      body: archive
+        ? { reason: reason.value, expectedVersion: test.rowVersion }
+        : { expectedVersion: test.rowVersion },
+    })
+    archiving.value = null
+    restoring.value = null
+    notice.value = t(archive ? 'tests.archived' : 'tests.restored', { name: saved.name })
+    await load()
+  } catch (cause) {
+    actionError.value = describeError(cause)
+  } finally {
+    busy.value = false
+  }
+}
+
 async function onSaved(saved: ClassTest) {
   const mode = editing.value?.mode
   editing.value = null
-  notice.value = t(
-    mode === 'create' ? 'tests.created' : mode === 'config' ? 'tests.configSaved' : 'tests.saved',
-    { name: saved.name, revision: saved.configRevision },
-  )
+  notice.value = t(mode === 'create' ? 'tests.created' : 'tests.saved', { name: saved.name })
   await load()
 }
 </script>
 
 <template>
   <div class="tests-panel">
-    <div v-if="list?.canEdit" class="table-controls d-flex justify-content-end">
+    <div class="table-controls d-flex align-items-center justify-content-between gap-2">
+      <div class="form-check form-switch mb-0">
+        <input
+          id="tests-show-archived"
+          v-model="showArchived"
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+        />
+        <label class="form-check-label small" for="tests-show-archived">
+          {{ t('tests.showArchived') }}
+        </label>
+      </div>
       <button
+        v-if="list?.canEdit"
         type="button"
         class="btn btn-primary btn-sm"
         data-testid="test-create"
@@ -172,6 +212,9 @@ async function onSaved(saved: ClassTest) {
           <tr v-for="test in list?.items ?? []" :key="test.id" :data-name="test.name">
             <td>
               <div class="fw-medium text-break">{{ test.name }}</div>
+              <span v-if="test.deleted" class="badge bg-secondary" data-testid="test-archived">
+                {{ t('catalogs.archivedBadge') }}
+              </span>
               <small v-if="test.description" class="text-body-secondary d-block text-break">
                 {{ test.description }}
               </small>
@@ -197,12 +240,23 @@ async function onSaved(saved: ClassTest) {
               <span class="text-break" data-testid="test-source">{{
                 sourceLabel(test.source)
               }}</span>
-              <span class="d-block text-body-secondary">
-                {{ t('tests.configRevision', { n: test.configRevision }) }}
-              </span>
             </td>
             <td class="small text-nowrap" data-testid="test-result-count">
               {{ t('tests.resultCount', { n: test.resultCount }) }}
+              <span
+                v-if="test.publishedCount"
+                class="d-block text-primary"
+                data-testid="test-published-count"
+              >
+                {{ t('tests.publishedCount', { n: test.publishedCount }) }}
+              </span>
+              <span
+                v-if="test.commentCount"
+                class="d-block text-body-secondary"
+                data-testid="test-comment-count"
+              >
+                {{ t('comments.commentCount', { n: test.commentCount }) }}
+              </span>
             </td>
             <td class="text-end">
               <RowActionMenu
@@ -225,58 +279,76 @@ async function onSaved(saved: ClassTest) {
       :klass="klass"
       :mode="editing.mode"
       :test="editing.test"
-      :can-change-display="list?.canChangeDisplay ?? false"
       @close="editing = null"
       @saved="onSaved"
     />
 
     <TestResultsDialog v-if="results" :test="results" @close="results = null" @saved="load" />
+    <CommentsDialog
+      v-if="comments"
+      kind="test"
+      :target-id="comments.id"
+      :name="comments.name"
+      @close="comments = null"
+      @saved="load"
+    />
 
     <ModalDialog
-      v-if="history"
-      wide
-      :title="t('tests.historyTitle', { name: history.test.name })"
-      @close="history = null"
+      v-if="archiving"
+      :title="t('tests.archiveTitle', { name: archiving.name })"
+      @close="archiving = null"
     >
-      <p class="small text-body-secondary">{{ t('tests.historyHint') }}</p>
-      <p v-if="!history.detail" class="text-body-secondary">{{ t('common.loading') }}</p>
-      <div v-else class="table-responsive">
-        <table class="table align-middle mb-0" data-testid="test-history">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('testTemplates.version') }}</th>
-              <th scope="col">{{ t('testTemplates.scaleKind') }}</th>
-              <th scope="col">{{ t('tests.source') }}</th>
-              <th scope="col">{{ t('testTemplates.savedBy') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="version in history.detail.configVersions" :key="version.id">
-              <td class="text-nowrap">
-                {{ t('tests.configRevision', { n: version.revision }) }}
-                <span v-if="version.id === history.detail.configId" class="badge bg-primary ms-1">
-                  {{ t('testTemplates.current') }}
-                </span>
-              </td>
-              <td>
-                <span class="badge bg-light text-dark border">
-                  {{ t(`testTemplates.scale.${version.scaleKind}`) }}
-                </span>
-              </td>
-              <td class="small text-break">{{ sourceLabel(version.source) }}</td>
-              <td class="small">
-                {{ version.createdByName }}
-                <span class="d-block text-body-secondary">{{
-                  formatInstant(version.createdAt)
-                }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ErrorAlert :error="actionError" />
+      <p data-testid="test-archive-impact">
+        {{
+          t('tests.archiveHint', {
+            results: archiving.resultCount,
+            published: archiving.publishedCount,
+            comments: archiving.commentCount,
+            publishedComments: archiving.publishedCommentCount,
+          })
+        }}
+      </p>
+      <label class="form-label" for="test-archive-reason">{{ t('accounts.reason') }}</label>
+      <textarea
+        id="test-archive-reason"
+        v-model="reason"
+        class="form-control"
+        rows="3"
+        maxlength="1000"
+        data-testid="test-archive-reason"
+      ></textarea>
       <template #footer>
-        <button type="button" class="btn btn-outline-secondary" @click="history = null">
-          {{ t('common.close') }}
+        <button type="button" class="btn btn-outline-secondary" @click="archiving = null">
+          {{ t('common.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          :disabled="busy || !reason.trim()"
+          data-testid="test-confirm-archive"
+          @click="archiveOrRestore(archiving, true)"
+        >
+          {{ t('tests.actions.archive') }}
+        </button>
+      </template>
+    </ModalDialog>
+
+    <ModalDialog v-if="restoring" :title="t('tests.actions.restore')" @close="restoring = null">
+      <ErrorAlert :error="actionError" />
+      <p class="mb-0">{{ t('tests.restoreHint', { name: restoring.name }) }}</p>
+      <template #footer>
+        <button type="button" class="btn btn-outline-secondary" @click="restoring = null">
+          {{ t('common.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          :disabled="busy"
+          data-testid="test-confirm-restore"
+          @click="archiveOrRestore(restoring, false)"
+        >
+          {{ t('common.confirm') }}
         </button>
       </template>
     </ModalDialog>

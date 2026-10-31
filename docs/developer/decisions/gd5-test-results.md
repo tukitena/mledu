@@ -1,8 +1,9 @@
-# GĐ5 — Feature 3: kết quả bài kiểm tra theo học sinh (TEST-01/04/05, TEST-03)
+# GĐ5 — Feature 3: kết quả bài kiểm tra theo học sinh (TEST-01/04/05)
+
+> **Cập nhật 31/10/2026:** luồng đổi cấu hình/chọn lại template của bài đã bị bỏ hẳn; cấu hình chốt khi tạo bài. Xem [quyết định bỏ đổi cấu hình bài](gd5-remove-test-config-change.md).
 
 Ngày triển khai/kiểm chứng local: **31/10/2026**. Phạm vi: nhập kết quả **số, phân số, chữ** (trực tiếp hoặc
-theo phần) và **Vắng** cho học sinh của bài (TEST-01/04/05); quy trình **TEST-03** khi đổi cấu hình bài đã có
-kết quả; quy tắc ngày bài theo học sinh đã có kết quả (TEST-05). Tiếp nối [bài kiểm tra/snapshot](gd5-tests.md).
+theo phần) và **Vắng** cho học sinh của bài (TEST-01/04/05); quy tắc ngày bài theo học sinh đã có kết quả (TEST-05). Tiếp nối [bài kiểm tra/snapshot](gd5-tests.md).
 **Chưa triển khai:** kết quả IELTS, lệnh công bố/hủy công bố (ACAD-01), trang phụ huynh, nhận xét, Excel,
 xóa/khôi phục bài (TEST-06). Không đổi đặc tả.
 
@@ -18,15 +19,12 @@ xóa/khôi phục bài (TEST-06). Không đổi đặc tả.
   Không ghi đè tổng khi theo phần: DB cộng chính xác (1,25 + 2,10 = 3,35), phân số giữ mẫu số toàn bài (20/90).
   `complete` là giá trị suy ra (Vắng, hoặc đủ mọi phần).
 - **Lưu:** `api.save_test_results(test, configId, items)` nhận các dòng đã đổi, mỗi dòng `expectedVersion`
-  (`null` = chưa có kết quả đang dùng); `configId` khác snapshot hiện hành → `version_conflict`. Khóa: tài
+  (`null` = chưa có kết quả đang dùng); `configId` khác snapshot của bài → `version_conflict`. Khóa: tài
   khoản → lớp (`FOR SHARE`) → phân công → bài (`FOR SHARE`) → kết quả (`FOR UPDATE`, theo thứ tự học sinh).
   Mỗi kết quả đổi ghi một phiên bản `test_result`; cả lần lưu ghi **một audit** `test_result.save` với
   trước/sau. Nội dung không đổi không ghi gì. `entry: null` xóa kết quả (giữ dòng, nhập lại dùng cùng ID).
 - **Khóa công bố:** cột `published_*` có sẵn; kết quả đang công bố không sửa/xóa được (`result_published`).
   Chưa có lệnh công bố nên hiện chỉ kiểm chứng bằng pgTAP đặt cột trực tiếp.
-- **TEST-03:** `change_test_config` (khi cấu hình thật sự đổi) bị chặn nếu còn kết quả công bố; ghi phiên bản
-  từng kết quả trước khi xóa giá trị/dòng phần hiện hành, chuyển kết quả sang snapshot mới; điểm thành "đã
-  xóa" để nhập lại, **Vắng giữ nguyên**; audit `test.change_config` chứa kết quả trước/sau. Không tự công bố.
 - **Ngày bài:** `update_test` từ chối ngày mới nằm ngoài mọi lần tham gia của học sinh đang có kết quả
   (`test_date_excludes_results`, `details` = tên học sinh), không tự xóa/hủy công bố. Phần nhận xét sẽ bổ sung
   cùng feature nhận xét.
@@ -37,7 +35,7 @@ xóa/khôi phục bài (TEST-06). Không đổi đặc tả.
 - **UI:** menu hàng bài có **Nhập kết quả**/**Xem kết quả** mở dialog rộng (cùng mẫu dialog điểm danh): cột Vắng,
   ô từng phần hoặc ô kết quả/danh sách mức, tổng tạm tính ở client chỉ để xem, trạng thái Chưa nhập / Chưa hoàn
   tất / Hoàn tất / Vắng / Chưa lưu / Đã công bố. Giá trị sai được đánh dấu và không gửi. Bảng bài có cột số kết
-  quả; dialog đổi cấu hình cảnh báo khi bài đã có kết quả. IELTS hiện thông báo "sẽ có ở bước sau".
+  quả. IELTS hiện thông báo "sẽ có ở bước sau".
 
 ## Quyết định kỹ thuật
 
@@ -52,7 +50,7 @@ xóa/khôi phục bài (TEST-06). Không đổi đặc tả.
 | Lệnh | Kết quả đã chạy |
 | --- | --- |
 | `npm run test:db` | 752/752 pgTAP (mới: `test_results.test.sql` 70; `tests.test.sql` cập nhật `resultCount`) |
-| `npm run test:db:concurrency` | 15/15 (mới: lưu điểm chờ lệnh đổi cấu hình rồi bị từ chối, không tạo kết quả) |
+| `npm run test:db:concurrency` | 15/15 |
 | `npm run test:integration` | 65/65 (mới: `test-results.test.ts` 3) |
 | `npm run test:unit` | contracts 29 (mới 2), API 17, web 8 |
 | `npm run lint`, `npm run format:check`, `npm run typecheck` | Đạt |

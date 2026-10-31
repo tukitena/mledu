@@ -17,11 +17,19 @@ export type Database = {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
       }
+      archive_comment_batch: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
       archive_room: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
       }
       archive_site: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
+      archive_test: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
       }
@@ -32,15 +40,6 @@ export type Database = {
       auth_command_status: { Args: { p_command_id: string }; Returns: string }
       cancel_participation: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
-        Returns: Json
-      }
-      change_test_config: {
-        Args: {
-          p_config: Json
-          p_expected_version: number
-          p_id: string
-          p_source_template_version_id: string
-        }
         Returns: Json
       }
       class_lifecycle_impact: { Args: { p_id: string }; Returns: Json }
@@ -73,6 +72,7 @@ export type Database = {
         }
         Returns: Json
       }
+      create_comment_batch: { Args: { p_class_id: string; p_name: string }; Returns: Json }
       create_room: { Args: { p_name: string; p_site_id: string }; Returns: Json }
       create_site: { Args: { p_address: string; p_name: string }; Returns: Json }
       create_student: {
@@ -129,6 +129,7 @@ export type Database = {
       get_attendance: { Args: { p_session_id: string }; Returns: Json }
       get_class: { Args: { p_id: string }; Returns: Json }
       get_class_schedule: { Args: { p_class_id: string }; Returns: Json }
+      get_comments: { Args: { p_id: string; p_kind: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       get_student: { Args: { p_id: string }; Returns: Json }
       get_test: { Args: { p_id: string }; Returns: Json }
@@ -148,7 +149,10 @@ export type Database = {
         Args: { p_class_id: string; p_include_deleted?: boolean }
         Returns: Json
       }
-      list_class_tests: { Args: { p_class_id: string }; Returns: Json }
+      list_class_tests: {
+        Args: { p_class_id: string; p_include_archived?: boolean }
+        Returns: Json
+      }
       list_classes: {
         Args: {
           p_deleted?: boolean
@@ -161,6 +165,10 @@ export type Database = {
           p_status?: string
           p_subject_id?: string
         }
+        Returns: Json
+      }
+      list_comment_batches: {
+        Args: { p_class_id: string; p_include_archived: boolean }
         Returns: Json
       }
       list_rooms: { Args: { p_include_archived?: boolean; p_site_id?: string }; Returns: Json }
@@ -208,6 +216,14 @@ export type Database = {
         Returns: string
       }
       preview_schedule_change: { Args: { p_change: Json; p_class_id: string }; Returns: Json }
+      publish_comments: {
+        Args: { p_id: string; p_kind: string; p_publish: boolean; p_student_id: string }
+        Returns: Json
+      }
+      publish_test_results: {
+        Args: { p_publish: boolean; p_student_id: string; p_test_id: string }
+        Returns: Json
+      }
       rename_catalog_entry: {
         Args: { p_expected_version: number; p_id: string; p_name: string }
         Returns: Json
@@ -217,6 +233,7 @@ export type Database = {
       restore_account: { Args: { p_account_id: string; p_expected_version: number }; Returns: Json }
       restore_catalog_entry: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_class: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
+      restore_comment_batch: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_room: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_site: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_student: {
@@ -233,11 +250,13 @@ export type Database = {
         }
         Returns: Json
       }
+      restore_test: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       restore_test_template: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       save_attendance: {
         Args: { p_fingerprint: string; p_session_id: string; p_students: Json }
         Returns: Json
       }
+      save_comments: { Args: { p_id: string; p_items: Json; p_kind: string }; Returns: Json }
       save_test_results: {
         Args: { p_config_id: string; p_items: Json; p_test_id: string }
         Returns: Json
@@ -328,6 +347,10 @@ export type Database = {
           p_start_date: string
           p_subject_note: string
         }
+        Returns: Json
+      }
+      update_comment_batch: {
+        Args: { p_expected_version: number; p_id: string; p_name: string }
         Returns: Json
       }
       update_my_profile: {

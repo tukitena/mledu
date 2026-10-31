@@ -1,6 +1,5 @@
--- Results of a test per student (TEST-01/04/05) and the TEST-03 re-entry rule:
--- roster by participation on the test day, typed values on the current
--- snapshot, computed totals, Absent, the publication lock, history and audit.
+-- Results of a test per student (TEST-01/04/05): roster by participation on
+-- the test day, typed values on the test's snapshot, computed totals, Absent, the publication lock, history and audit.
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
@@ -116,8 +115,8 @@ select is((api.get_test_results(pg_temp.id('parts')) ->> 'canEdit')::boolean, tr
 -- Components: partial total, missing is not 0, exact sums (TEST-04).
 -------------------------------------------------------------------------------
 select pg_temp.save('parts', 'on', null, '{"absent":false,"components":{"c1":1.25}}');
-select is(pg_temp.result('parts', 'on') - 'id' - 'updatedAt',
-  '{"absent":false,"score":1.25,"correctAnswers":null,"level":null,"components":{"c1":1.25},
+select is(pg_temp.result('parts', 'on') - 'id' - 'updatedAt' - 'publishedAt' - 'publishedByName',
+  '{"absent":false,"score":1.25,"correctAnswers":null,"level":null,"components":{"c1":1.25},"ielts":null,"overallBand":null,
     "complete":false,"published":false,"rowVersion":1,"updatedByName":"Quản trị Thử nghiệm"}'::jsonb,
   'one component keeps a partial total and the result is incomplete');
 select pg_temp.save('parts', 'on', 1, '{"absent":false,"components":{"c1":1.25,"c2":2.10}}');
@@ -191,15 +190,16 @@ select pg_temp.save('letter', 'on', null, '{"absent":false,"level":"l2"}');
 select is(pg_temp.result('letter', 'on') ->> 'level', 'l2', 'a level of the test is stored');
 select throws_ok($$select pg_temp.save('letter', 'absent', null, '{"absent":false,"level":"l9"}')$$,
   'PT400', 'validation_failed', 'a level outside the test is refused');
-select throws_ok($$select pg_temp.save('ielts', 'on', null, '{"absent":true}')$$,
-  'PT409', 'invalid_state', 'IELTS results are not entered by this feature');
+select lives_ok($$select pg_temp.save('ielts', 'on', null, '{"absent":true}')$$,
+  'IELTS results use the same command (details in ielts_results.test.sql)');
 
 -------------------------------------------------------------------------------
 -- Absent and clearing.
 -------------------------------------------------------------------------------
 select pg_temp.save('parts', 'absent', null, '{"absent":true}');
-select is(pg_temp.result('parts', 'absent') - 'id' - 'updatedAt' - 'updatedByName',
-  '{"absent":true,"score":null,"correctAnswers":null,"level":null,"components":{},
+select is(pg_temp.result('parts', 'absent') - 'id' - 'updatedAt' - 'updatedByName' - 'publishedAt'
+            - 'publishedByName',
+  '{"absent":true,"score":null,"correctAnswers":null,"level":null,"components":{},"ielts":null,"overallBand":null,
     "complete":true,"published":false,"rowVersion":1}'::jsonb,
   'Absent is its own complete state, not a 0 and without components');
 select throws_ok($$select pg_temp.save('parts', 'absent', 1, '{"absent":true,"components":{"c1":0}}')$$,
@@ -241,7 +241,7 @@ select lives_ok($$select pg_temp.save('letter', 'absent', null, '{"absent":true}
   'a teacher enters results in their class');
 
 -------------------------------------------------------------------------------
--- Publication lock (ACAD-01) and TEST-03 re-entry.
+-- Publication lock (ACAD-01).
 -------------------------------------------------------------------------------
 select pg_temp.actor(1);
 update app.test_results set published_at = now(), published_by = '00000000-0000-4000-8000-000000000001'
@@ -250,33 +250,8 @@ select throws_ok($$select pg_temp.save('parts', 'on', 3, '{"absent":false,"compo
   'PT409', 'result_published', 'a published result cannot be changed');
 select throws_ok($$select pg_temp.save('parts', 'on', 3, null)$$,
   'PT409', 'result_published', 'a published result cannot be cleared');
-select throws_ok($$select api.change_test_config(pg_temp.id('parts'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null, row_version)
-    from app.tests where id = pg_temp.id('parts')$$,
-  'PT409', 'result_published', 'the configuration cannot change while a result is published');
 update app.test_results set published_at = null, published_by = null
  where test_id = pg_temp.id('parts') and student_id = pg_temp.id('on');
-
-select api.change_test_config(pg_temp.id('parts'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null, row_version)
-  from app.tests where id = pg_temp.id('parts');
-select is(pg_temp.result('parts', 'on'), 'null'::jsonb, 'a score must be entered again on the new configuration');
-select is(pg_temp.result('parts', 'absent') ->> 'absent', 'true', 'Absent is kept');
-select is((select count(*)::int from app.test_results
-            where test_id = pg_temp.id('parts') and config_id <> pg_temp.config('parts')), 0,
-  'every result follows the new configuration');
-select is((select count(*)::int from app.component_results x join app.test_results r on r.id = x.result_id
-            where r.test_id = pg_temp.id('parts')), 0, 'old component values leave the current tables');
-select is((select v.sanitized_snapshot -> 'components' from app.business_entity_versions v
-            join app.test_results r on r.id = v.entity_id
-            where v.entity_kind = 'test_result' and r.test_id = pg_temp.id('parts')
-              and r.student_id = pg_temp.id('on') and v.revision = 3),
-  '{"c1":0,"c2":4}'::jsonb, 'the old values stay in the result history');
-select is((select jsonb_array_length(before_after -> 'before' -> 'results') from app.audit_events
-            where action = 'test.change_config' and entity_refs ->> 'test_id' = pg_temp.id('parts')::text),
-  2, 'the audit keeps the results before the change');
-select lives_ok($$select pg_temp.save('parts', 'on', 4, '{"absent":false,"score":9}')$$,
-  'the score is entered again on the new configuration');
 
 -------------------------------------------------------------------------------
 -- Test date and participation (TEST-05).

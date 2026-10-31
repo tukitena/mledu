@@ -583,7 +583,7 @@ Khóa và tham chiếu:
 
 ### app.test_config_versions
 
-Snapshot cấu hình bất biến của bài; mỗi lần đổi cấu hình thêm `revision`. `source_template_version_id` chỉ là provenance (NULL khi cấu hình riêng). Trigger `reject_change` chặn `UPDATE`/`DELETE`/`TRUNCATE`.
+Snapshot cấu hình bất biến của bài, chốt khi tạo bài (TEST-03): mỗi bài đúng một snapshot (`CHECK revision = 1` + `UNIQUE (test_id, revision)`). `source_template_version_id` chỉ là provenance (NULL khi cấu hình riêng). Trigger `reject_change` chặn `UPDATE`/`DELETE`/`TRUNCATE`.
 
 | Cột | Kiểu | NULL | Mặc định |
 | --- | --- | --- | --- |

@@ -10,6 +10,11 @@ import { accountRoutes } from './modules/accounts/routes'
 import { classTestRoutes, testRoutes, testTemplateRoutes } from './modules/assessments/routes'
 import { authRoutes } from './modules/auth/routes'
 import { catalogRoutes, roomRoutes, siteRoutes } from './modules/catalogs/routes'
+import {
+  commentBatchClassRoutes,
+  commentBatchRoutes,
+  commentRoutes,
+} from './modules/comments/routes'
 import { assignmentRoutes, classRoutes } from './modules/classes/routes'
 import { healthRoutes } from './modules/health/routes'
 import { profileRoutes } from './modules/profile/routes'
@@ -82,6 +87,9 @@ export function createApp() {
   app.route(`/${API_VERSION}/test-templates`, testTemplateRoutes)
   app.route(`/${API_VERSION}/classes`, classTestRoutes)
   app.route(`/${API_VERSION}/tests`, testRoutes)
+  app.route(`/${API_VERSION}/classes`, commentBatchClassRoutes)
+  app.route(`/${API_VERSION}/comment-batches`, commentBatchRoutes)
+  app.route(`/${API_VERSION}/comments`, commentRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

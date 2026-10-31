@@ -1,9 +1,4 @@
-import {
-  ClassTest,
-  ClassTestDetail,
-  ClassTestList,
-  TestTemplate,
-} from '@mledu/contracts/assessments'
+import { ClassTest, ClassTestList, TestTemplate } from '@mledu/contracts/assessments'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { api, createReadyAccount, errorCode, json, signIn } from './support'
 
@@ -143,7 +138,6 @@ describe('tests of a class (TEST-05)', () => {
     expect(test).toMatchObject({
       description: null,
       showComponents: true,
-      configRevision: 1,
       source: { templateVersionId: template.currentVersionId, revision: 1 },
     })
     expect(test.config).toMatchObject({ maxScore: 10 })
@@ -156,7 +150,7 @@ describe('tests of a class (TEST-05)', () => {
       expectedVersion: template.rowVersion,
     })
     expect(edited.status).toBe(200)
-    const reread = ClassTestDetail.parse(
+    const reread = ClassTest.parse(
       await json(await api(`/v1/tests/${test.id}`, { token: teacher })),
     )
     expect(reread.config).toEqual(test.config)
@@ -186,25 +180,13 @@ describe('tests of a class (TEST-05)', () => {
     expect(list).toMatchObject({ canEdit: true, canChangeDisplay: false })
     expect(list.items.map((item) => item.id)).toEqual([test.id])
 
-    // Two simultaneous configuration changes: exactly one wins.
-    const change = (maxScore: number) =>
-      put(
-        `/v1/tests/${test.id}/config`,
-        {
-          config: { ...direct, maxScore },
-          sourceTemplateVersionId: null,
-          expectedVersion: afterHide.rowVersion,
-        },
-        assistant,
-      )
-    const results = await Promise.all([change(20), change(30)])
-    expect(results.map((r) => r.status).sort()).toEqual([200, 409])
-    const final = ClassTestDetail.parse(
-      await json(await api(`/v1/tests/${test.id}`, { token: teacher })),
+    // The configuration is fixed at creation: there is no command to change it.
+    const change = await put(
+      `/v1/tests/${test.id}/config`,
+      { config: direct, sourceTemplateVersionId: null, expectedVersion: afterHide.rowVersion },
+      assistant,
     )
-    expect(final.configRevision).toBe(2)
-    expect(final.configVersions.map((item) => item.revision)).toEqual([2, 1])
-    expect(final.source).toBeNull()
+    expect(change.status).toBe(404)
 
     // Information edits keep the configuration.
     const renamed = await put(
@@ -213,14 +195,13 @@ describe('tests of a class (TEST-05)', () => {
         name: 'Giữa kỳ I',
         testOn: day(-1),
         description: 'Ôn tập',
-        expectedVersion: final.rowVersion,
+        expectedVersion: afterHide.rowVersion,
       },
       teacher,
     )
     expect(renamed.status).toBe(200)
-    expect(ClassTest.parse(await json(renamed))).toMatchObject({
-      name: 'Giữa kỳ I',
-      configRevision: 2,
-    })
+    const afterRename = ClassTest.parse(await json(renamed))
+    expect(afterRename).toMatchObject({ name: 'Giữa kỳ I', configId: test.configId })
+    expect(afterRename.config).toEqual(afterHide.config)
   })
 })

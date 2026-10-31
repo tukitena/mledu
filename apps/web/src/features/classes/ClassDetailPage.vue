@@ -15,6 +15,7 @@ import ClassLifecycleActions from './ClassLifecycleActions.vue'
 import { periodBadge } from './labels'
 import SchedulePanel from '../scheduling/SchedulePanel.vue'
 import TestsPanel from '../assessments/TestsPanel.vue'
+import CommentBatchesPanel from '../comments/CommentBatchesPanel.vue'
 import StaffWarnings from '../scheduling/StaffWarnings.vue'
 import { ClassSchedule } from '@mledu/contracts/scheduling'
 
@@ -24,7 +25,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const TABS = ['staff', 'students', 'schedule', 'tests'] as const
+const TABS = ['staff', 'students', 'schedule', 'tests', 'comments'] as const
 type Tab = (typeof TABS)[number]
 
 const klass = ref<ClassDetail | null>(null)
@@ -38,7 +39,9 @@ const canManage = computed(() => workspace.value === 'admin' || workspace.value 
 const academic = computed(
   () => workspace.value === 'admin' || (workspace.value === 'user' && !!klass.value?.myRole),
 )
-const tabs = computed(() => TABS.filter((item) => item !== 'tests' || academic.value))
+const tabs = computed(() =>
+  TABS.filter((item) => (item !== 'tests' && item !== 'comments') || academic.value),
+)
 const tab = computed<Tab>({
   get: () => (tabs.value.find((item) => item === route.query.tab) as Tab | undefined) ?? 'staff',
   set: (value) => void router.replace({ query: { ...route.query, tab: value } }),
@@ -177,6 +180,7 @@ const date = (value: string) => formatIsoDate(value)
           />
           <SchedulePanel v-if="tab === 'schedule'" :key="klass.id" :klass="klass" />
           <TestsPanel v-if="tab === 'tests'" :key="klass.id" :klass="klass" />
+          <CommentBatchesPanel v-if="tab === 'comments'" :key="klass.id" :klass="klass" />
         </div>
       </div>
     </template>

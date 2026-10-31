@@ -138,8 +138,8 @@ test('an assistant whose assignment ends while waiting cannot create a test', as
   }
 })
 
-test('results saved while the configuration changes wait and are refused (TEST-03)', async () => {
-  const [setup, changing, saving] = await Promise.all([
+test('publishing waits for a test being archived and is refused (TEST-06, ACAD-01)', async () => {
+  const [setup, archiving, publishing] = await Promise.all([
     connect(ADMIN),
     connect(ADMIN),
     connect(ADMIN),
@@ -147,9 +147,7 @@ test('results saved while the configuration changes wait and are refused (TEST-0
   try {
     const classId = await createClass(setup)
     const student = (
-      await setup.query("select (api.create_student($1)->>'id') as id", [
-        `Đồng thời ${randomUUID()}`,
-      ])
+      await setup.query("select (api.create_student($1)->>'id') as id", [`Xóa bài ${randomUUID()}`])
     ).rows[0].id as string
     await setup.query('select api.enroll_student($1,$2,app_private.business_date(now())-3)', [
       classId,
@@ -157,37 +155,37 @@ test('results saved while the configuration changes wait and are refused (TEST-0
     ])
     const created = (
       await setup.query(
-        "select api.create_test($1,'Đổi cấu hình',app_private.business_date(now()),null,$2::jsonb,null) as data",
+        "select api.create_test($1,'Xóa khi công bố',app_private.business_date(now()),null,$2::jsonb,null) as data",
         [classId, DIRECT],
       )
     ).rows[0].data
-    await changing.query('begin')
-    await changing.query(
-      `select api.change_test_config($1,'{"scaleKind":"fraction","inputMode":"direct","totalQuestions":20}'::jsonb,null,$2)`,
-      [created.id, created.rowVersion],
-    )
-    const pid = await backendPid(saving)
+    await setup.query('select api.save_test_results($1,$2,$3::jsonb)', [
+      created.id,
+      created.configId,
+      JSON.stringify([{ studentId: student, expectedVersion: null, entry: { absent: true } }]),
+    ])
+    await archiving.query('begin')
+    await archiving.query("select api.archive_test($1,'Nhập nhầm',$2)", [
+      created.id,
+      created.rowVersion,
+    ])
+    const pid = await backendPid(publishing)
     const pending = settle(
-      saving.query('select api.save_test_results($1,$2,$3::jsonb)', [
-        created.id,
-        created.configId,
-        JSON.stringify([
-          { studentId: student, expectedVersion: null, entry: { absent: false, score: 7 } },
-        ]),
-      ]),
+      publishing.query('select api.publish_test_results($1,null,true)', [created.id]),
     )
     await waitUntilBlocked(setup, pid)
-    await changing.query('commit')
+    await archiving.query('commit')
     const result = await pending
     assert.equal(result.code, 'PT409')
-    assert.equal(result.message, 'version_conflict')
-    const count = (
-      await setup.query('select count(*)::int as n from app.test_results where test_id = $1', [
-        created.id,
-      ])
+    assert.equal(result.message, 'invalid_state')
+    const published = (
+      await setup.query(
+        'select count(*)::int as n from app.test_results where test_id = $1 and published_at is not null',
+        [created.id],
+      )
     ).rows[0].n
-    assert.equal(count, 0)
+    assert.equal(published, 0)
   } finally {
-    await Promise.all([setup.end(), changing.end(), saving.end()])
+    await Promise.all([setup.end(), archiving.end(), publishing.end()])
   }
 })

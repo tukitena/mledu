@@ -1,8 +1,7 @@
--- GĐ 5, third feature: results of a test per student (TEST-01/04/05) and the
--- re-entry rule of TEST-03 when a configuration changes after results exist.
+-- GĐ 5, third feature: results of a test per student (TEST-01/04/05).
 --
 -- One result per student and test, whatever the class record or participation
--- (TEST-05). A result is Absent or graded on the test's current snapshot:
+-- (TEST-05). A result is Absent or graded on the test's snapshot:
 -- numeric/fraction entered directly or by component, or one letter level.
 -- Totals of components are computed here, never sent by the client. Missing
 -- components stay missing (never 0) and leave the result incomplete (TEST-04).
@@ -19,8 +18,8 @@ create table app.test_results (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references app.students (id),
   test_id uuid not null references app.tests (id),
-  -- Snapshot the values were entered on; always the test's current one for a
-  -- result in use (checked by the commands that write results or snapshots).
+  -- Snapshot the values were entered on: always the test's one (checked by the
+  -- command that writes results).
   config_id uuid not null,
   result_kind text not null,
   -- Numeric: direct score, or total/partial total of components (computed).
@@ -36,8 +35,7 @@ create table app.test_results (
   created_by uuid not null references app.account_profiles (id),
   updated_at timestamptz not null default now(),
   updated_by uuid not null references app.account_profiles (id),
-  -- Cleared result (by the user, or because a new configuration needs the
-  -- score entered again, TEST-03). Entering it again reuses the same id.
+  -- Cleared result. Entering it again reuses the same id.
   deleted_at timestamptz,
   deleted_by uuid references app.account_profiles (id),
   constraint test_results_student_test_key unique (student_id, test_id),
@@ -243,7 +241,6 @@ as $$
     'description', p_test.description,
     'showComponents', p_test.show_components,
     'configId', c.id,
-    'configRevision', c.revision,
     'config', app_private.test_config_json(c.id, p_test.show_components),
     'source', app_private.test_source_dto(c.source_template_version_id),
     'resultCount', (select count(*) from app.test_results x
@@ -342,135 +339,6 @@ begin
   perform app_private.record_change('test', v_after.id, v_after.row_version,
     app_private.test_snapshot(v_before), app_private.test_snapshot(v_after), v_actor.id,
     'test.update', jsonb_build_object('class_id', v_class_id, 'test_id', v_after.id));
-  return app_private.test_dto(v_after);
-end
-$$;
-
--------------------------------------------------------------------------------
--- TEST-03: a new configuration once results exist. Refused while any result is
--- published. Scores are kept in history, then cleared: they must be entered
--- again on the new snapshot. Absent stays Absent. Nothing is published.
--------------------------------------------------------------------------------
-
-create or replace function api.change_test_config(
-  p_id uuid,
-  p_config jsonb,
-  p_source_template_version_id uuid,
-  p_expected_version bigint
-)
-returns jsonb
-language plpgsql
-volatile
-security definer
-set search_path = ''
-as $$
-declare
-  v_class_id uuid := (select t.class_id from app.tests t where t.id = p_id);
-  v_actor app.account_profiles;
-  v_config jsonb;
-  v_show boolean;
-  v_before app.tests;
-  v_current app.test_config_versions;
-  v_same_config boolean;
-  v_config_id uuid := gen_random_uuid();
-  v_after app.tests;
-  v_result app.test_results;
-  v_reset app.test_results;
-  v_results_before jsonb := '[]';
-  v_results_after jsonb := '[]';
-begin
-  if v_class_id is null then
-    perform app_private.raise_api_error(404, 'not_found');
-  end if;
-  v_actor := app_private.require_test_editor(v_class_id);
-  v_config := app_private.test_template_config(p_config);
-  v_show := app_private.config_has_details(v_config)
-    and coalesce((v_config ->> 'showComponents')::boolean, false);
-  v_before := app_private.lock_test(p_id, p_expected_version);
-  select * into v_current from app.test_config_versions c where c.id = v_before.current_config_id;
-
-  v_same_config := v_current.source_template_version_id is not distinct from p_source_template_version_id
-    and app_private.test_config_json(v_current.id, false) = app_private.test_template_config(
-          case when v_config ? 'showComponents'
-            then jsonb_set(v_config, '{showComponents}', 'false') else v_config end);
-  if v_same_config and v_show = v_before.show_components then
-    return app_private.test_dto(v_before);
-  end if;
-  if v_show <> v_before.show_components then
-    perform app_private.require_test_editor(v_class_id, p_display => true);
-  end if;
-  if p_source_template_version_id is not null
-    and p_source_template_version_id is distinct from v_current.source_template_version_id
-  then
-    perform app_private.lock_template_source(p_source_template_version_id);
-  end if;
-
-  if not v_same_config then
-    -- Results are written only under a shared lock of the test, so none can
-    -- appear or change once this command holds the test row.
-    if exists (select 1 from app.test_results x
-                where x.test_id = v_before.id and x.published_at is not null) then
-      perform app_private.raise_api_error(409, 'result_published');
-    end if;
-    perform app_private.insert_test_config(v_config_id, v_before.id, v_current.revision + 1,
-      v_config, p_source_template_version_id, v_actor.id);
-  end if;
-
-  update app.tests t
-     set current_config_id = case when v_same_config then t.current_config_id else v_config_id end,
-         show_components = v_show,
-         row_version = t.row_version + 1,
-         updated_at = now()
-   where t.id = v_before.id
-  returning * into v_after;
-
-  if not v_same_config then
-    for v_result in
-      select * from app.test_results x
-       where x.test_id = v_before.id and x.deleted_at is null
-       order by x.id
-         for update
-    loop
-      v_results_before := v_results_before || jsonb_build_array(
-        app_private.result_snapshot(v_result) || jsonb_build_object('result_id', v_result.id));
-      delete from app.component_results x where x.result_id = v_result.id;
-      update app.test_results x
-         set config_id = v_config_id,
-             numeric_score = null,
-             correct_answers = null,
-             letter_level_id = null,
-             deleted_at = case when x.result_kind = 'graded' then now() end,
-             deleted_by = case when x.result_kind = 'graded' then v_actor.id end,
-             row_version = x.row_version + 1,
-             updated_at = now(),
-             updated_by = v_actor.id
-       where x.id = v_result.id
-      returning * into v_reset;
-      perform app_private.record_version('test_result', v_reset.id, v_reset.row_version,
-        app_private.result_snapshot(v_reset), v_actor.id);
-      v_results_after := v_results_after || jsonb_build_array(
-        app_private.result_snapshot(v_reset) || jsonb_build_object('result_id', v_reset.id));
-    end loop;
-    -- Cleared rows also move to the new snapshot so every row follows the test.
-    update app.test_results x
-       set config_id = v_config_id
-     where x.test_id = v_before.id and x.deleted_at is not null and x.config_id <> v_config_id;
-  end if;
-
-  perform app_private.record_version('test', v_after.id, v_after.row_version,
-    app_private.test_snapshot(v_after), v_actor.id);
-  perform app_private.write_audit(v_actor.id, 'app',
-    case when v_same_config then 'test.set_show_components' else 'test.change_config' end,
-    jsonb_strip_nulls(jsonb_build_object('class_id', v_class_id, 'test_id', v_after.id,
-      'test_config_id', v_after.current_config_id,
-      'test_template_version_id', p_source_template_version_id)),
-    jsonb_build_object(
-      'before', app_private.test_snapshot(v_before)
-                || case when jsonb_array_length(v_results_before) > 0
-                     then jsonb_build_object('results', v_results_before) else '{}' end,
-      'after', app_private.test_snapshot(v_after)
-               || case when jsonb_array_length(v_results_after) > 0
-                    then jsonb_build_object('results', v_results_after) else '{}' end));
   return app_private.test_dto(v_after);
 end
 $$;
@@ -663,8 +531,8 @@ begin
     perform app_private.raise_api_error(404, 'not_found');
   end if;
   v_actor := app_private.require_test_editor(v_class_id);
-  -- Shared: results of one test may be saved together, while a configuration
-  -- change, a date change or (later) archiving the test waits.
+  -- Shared: results of one test may be saved together, while a date change or
+  -- (later) archiving the test waits.
   select * into v_test from app.tests t where t.id = p_test_id for share;
   if v_test.deleted_at is not null then
     perform app_private.raise_api_error(409, 'invalid_state');

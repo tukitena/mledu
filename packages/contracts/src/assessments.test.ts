@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ChangeTestConfigRequest,
   CreateTestRequest,
   CreateTestTemplateRequest,
   hasDetails,
+  roundBand,
   SaveTestResultsRequest,
   TestTemplateConfig,
   TestTemplateConfigInput,
@@ -148,14 +148,6 @@ describe('test requests (TEST-05)', () => {
         sourceTemplateVersionId: null,
       }).success,
     ).toBe(false)
-    expect(
-      ChangeTestConfigRequest.safeParse({
-        config,
-        sourceTemplateVersionId: null,
-        expectedVersion: 1,
-        showComponents: true,
-      }).success,
-    ).toBe(false)
   })
 
   it('knows when the display option has something to show', () => {
@@ -209,5 +201,35 @@ describe('test results (TEST-01/04)', () => {
     expect(save({ absent: true, score: 0 })).toBe(false)
     expect(save({ absent: false, score: 5, components: { c1: 5 } })).toBe(false)
     expect(save({ absent: false, components: { total: 5 } })).toBe(false)
+  })
+})
+
+describe('IELTS results (TEST-01)', () => {
+  const save = (skills: unknown) =>
+    SaveTestResultsRequest.safeParse({
+      configId: '00000000-0000-4000-8000-000000000001',
+      items: [
+        {
+          studentId: '00000000-0000-4000-8000-000000000002',
+          expectedVersion: null,
+          entry: { absent: false, skills },
+        },
+      ],
+    }).success
+
+  it('rounds bands with the 0.25 and 0.75 limits', () => {
+    expect(roundBand(6.125)).toBe(6)
+    expect(roundBand(6.25)).toBe(6.5)
+    expect(roundBand(6.75)).toBe(7)
+  })
+
+  it('accepts typed inputs by mode and refuses off-step bands or computed values', () => {
+    expect(save({ L: { correctAnswers: 30, band: 6.5 }, R: { band: 7 } })).toBe(true)
+    expect(save({ W: { criteria: { t1_ta: 6, t2_tr: null } }, S: null })).toBe(true)
+    expect(save({ R: { band: 6.3 } })).toBe(false)
+    expect(save({ R: { band: 9.5 } })).toBe(false)
+    expect(save({ X: { band: 6 } })).toBe(false)
+    expect(save({ W: { criteria: { t1_ta: 6 }, band: 6 } })).toBe(false)
+    expect(save({ L: { band: 6, overall: 6 } })).toBe(false)
   })
 })

@@ -12,12 +12,10 @@ import { formatScore } from './labels'
 
 // Grading configuration fields (TEST-01/02/04), used inside the `row g-3` grid
 // of the template and test dialogs (Metis "Add New Product" modal: plain labels,
-// repeated rows as input groups). showLocked keeps the display option read-only
-// for people who may not change it (assistants, TEST-04).
+// repeated rows as input groups).
 const props = defineProps<{
   grading: GradingForm
   attempted: boolean
-  showLocked?: boolean
   showHint?: string
 }>()
 const { t, locale } = useI18n()
@@ -162,7 +160,6 @@ function move<T>(list: T[], index: number, offset: number) {
         <input
           id="tt-show-components"
           v-model="form.showComponents"
-          :disabled="showLocked"
           class="form-check-input"
           type="checkbox"
           role="switch"
@@ -309,7 +306,7 @@ function move<T>(list: T[], index: number, offset: number) {
         class="form-check-input"
         type="checkbox"
         role="switch"
-        :disabled="!hasDetails || showLocked"
+        :disabled="!hasDetails"
       />
       <label class="form-check-label" for="tt-ielts-show">
         <strong>{{ t('testTemplates.showComponents') }}</strong>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  PublishTestResultsResponse,
   TestResults,
   type ClassTest,
   type ResultEntry,
@@ -12,8 +13,20 @@ import { describeError, type DescribedError } from '../../app/errors'
 import { apiRequest } from '../../app/session'
 import ErrorAlert from '../../components/ErrorAlert.vue'
 import ModalDialog from '../../components/ModalDialog.vue'
-import { formatIsoDate } from '../../lib/format'
+import { formatInstant, formatIsoDate } from '../../lib/format'
 import { parseNumber } from './gradingForm'
+import {
+  answersOf,
+  bandOf,
+  criteriaOf,
+  ieltsFields,
+  ieltsSkillsEntry,
+  overallPreview,
+  skillPreview,
+  typesAnswers,
+  type IeltsFields,
+  type SkillConfig,
+} from './ieltsEntry'
 import { configSummary, formatScore } from './labels'
 
 // Results of one test (TEST-01/04/05), entered on its current configuration,
@@ -28,6 +41,7 @@ interface Fields {
   value: string
   level: string
   parts: Record<string, string>
+  ielts: IeltsFields
 }
 interface Row extends Fields {
   student: TestResultRow
@@ -36,6 +50,7 @@ interface Row extends Fields {
 const data = ref<TestResults | null>(null)
 const rows = ref<Row[]>([])
 const error = ref<DescribedError | null>(null)
+const notice = ref<string | null>(null)
 const busy = ref(false)
 const attempted = ref(false)
 const config = computed(() => data.value?.test.config ?? props.test.config)
@@ -46,8 +61,17 @@ const components = computed(() =>
       : []
     : [],
 )
-const supported = computed(() => config.value.scaleKind !== 'ielts')
-const editable = computed(() => !!data.value?.canEdit && supported.value)
+const editable = computed(() => !!data.value?.canEdit)
+// ACAD-01: Admin or a current teacher; the API checks the right again.
+const canPublish = computed(() => !!data.value?.canPublish)
+const ieltsSkills = computed(() =>
+  config.value.scaleKind === 'ielts' ? config.value.skills : ([] as SkillConfig[]),
+)
+const valueColumns = computed(() =>
+  ieltsSkills.value.length
+    ? ieltsSkills.value.length + (ieltsSkills.value.length === 4 ? 1 : 0)
+    : components.value.length + 1,
+)
 
 const text = (value: number | null | undefined) =>
   value === null || value === undefined ? '' : formatScore(value, locale.value)
@@ -60,6 +84,7 @@ function fieldsOf(result: TestResult | null): Fields {
     parts: Object.fromEntries(
       components.value.map((part) => [part.code, text(result?.components[part.code])]),
     ),
+    ielts: ieltsFields(config.value, result, (value) => formatScore(value, locale.value)),
   }
 }
 
@@ -105,6 +130,10 @@ function entryOf(row: Fields): ResultEntry | null | undefined {
   if (row.absent) return { absent: true }
   const kind = config.value.scaleKind
   if (kind === 'letter') return row.level ? { absent: false, level: row.level } : null
+  if (kind === 'ielts') {
+    const skills = ieltsSkillsEntry(config.value, row.ielts)
+    return skills ? { absent: false, skills } : skills
+  }
   if (components.value.length) {
     const values: Record<string, number> = {}
     for (const part of components.value) {
@@ -132,6 +161,25 @@ const invalidPart = (row: Row, code: string) =>
   Number.isNaN(valueOf(row.parts[code] ?? '', partLimit(code)))
 const invalidValue = (row: Row) => Number.isNaN(valueOf(row.value, directLimit.value))
 const dirtyCount = computed(() => rows.value.filter(changed).length)
+
+// IELTS cells: Writing shows Task 1 / Task 2 rows of four criteria.
+const criteriaGroups = (skill: SkillConfig) =>
+  skill.code === 'W'
+    ? [
+        { label: 'T1', codes: criteriaOf(skill).filter((code) => code.startsWith('t1_')) },
+        { label: 'T2', codes: criteriaOf(skill).filter((code) => code.startsWith('t2_')) },
+      ]
+    : [{ label: '', codes: criteriaOf(skill) }]
+const band = (value: number | null) => (value === null ? '—' : formatScore(value, locale.value))
+function previewText(skill: SkillConfig, row: Row) {
+  const preview = skillPreview(skill, row.ielts[skill.code])
+  return skill.code === 'W'
+    ? `T1 ${band(preview.task1)} · T2 ${band(preview.task2)} → ${band(preview.band)}`
+    : `→ ${band(preview.band)}`
+}
+const invalidBand = (input: string | undefined) => Number.isNaN(bandOf(input ?? ''))
+const invalidAnswers = (input: string | undefined, skill: SkillConfig) =>
+  Number.isNaN(answersOf(input ?? '', skill.maxQuestions))
 
 // Total of the values typed so far; cents avoid binary rounding (1,25 + 2,10 = 3,35).
 function total(row: Row) {
@@ -166,9 +214,47 @@ const statusClass: Record<Status, string> = {
 }
 const locked = (row: Row) => !editable.value || busy.value || !!row.student.result?.published
 
+const anyPublished = computed(() => rows.value.some((row) => row.student.result?.published))
+const publishable = (row: Row) =>
+  !!row.student.result?.complete && !row.student.result.published && !changed(row)
+
+async function publish(studentId: string | null, value: boolean) {
+  error.value = null
+  notice.value = null
+  if (dirtyCount.value) {
+    notice.value = t('results.saveFirst')
+    return
+  }
+  busy.value = true
+  try {
+    const outcome = await apiRequest(`/v1/tests/${props.test.id}/results/publication`, {
+      method: 'POST',
+      schema: PublishTestResultsResponse,
+      body: { studentId, publish: value },
+    })
+    update(outcome)
+    const parts = [
+      t(value ? 'results.publishedSummary' : 'results.unpublishedSummary', { n: outcome.changed }),
+    ]
+    if (outcome.missing.length)
+      parts.push(
+        t('results.missingList', {
+          names: outcome.missing.map((student) => student.fullName).join(', '),
+        }),
+      )
+    notice.value = parts.join(' ')
+    emit('saved')
+  } catch (cause) {
+    error.value = describeError(cause)
+  } finally {
+    busy.value = false
+  }
+}
+
 async function save() {
   attempted.value = true
   error.value = null
+  notice.value = null
   if (!data.value || rows.value.some((row) => changed(row) && invalid(row))) return
   const items = rows.value.filter(changed).map((row) => ({
     studentId: row.student.studentId,
@@ -198,17 +284,25 @@ async function save() {
 <template>
   <ModalDialog :title="t('results.title', { name: test.name })" wide @close="emit('close')">
     <ErrorAlert :error="error" />
+    <div
+      v-if="notice"
+      class="alert alert-info small py-2"
+      role="status"
+      data-testid="results-notice"
+    >
+      {{ notice }}
+    </div>
     <p class="small text-body-secondary mb-2">
       {{ formatIsoDate(test.testOn) }} · {{ t(`testTemplates.scale.${config.scaleKind}`) }} ·
       {{ configSummary(config, t, locale) }}
     </p>
-    <div v-if="!supported" class="alert alert-info small" data-testid="results-ielts">
-      {{ t('results.ieltsLater') }}
-    </div>
-    <p v-else class="small text-body-secondary">{{ t('results.hint') }}</p>
+    <p class="small text-body-secondary mb-1">
+      {{ t(ieltsSkills.length ? 'results.ieltsHint' : 'results.hint') }}
+    </p>
+    <p v-if="canPublish" class="small text-body-secondary">{{ t('results.publishHint') }}</p>
 
     <p v-if="!data && !error" class="text-body-secondary">{{ t('common.loading') }}</p>
-    <div v-else-if="data && supported" class="table-responsive results-table-wrap">
+    <div v-else-if="data" class="table-responsive results-table-wrap">
       <table class="table align-middle mb-0 results-table" data-testid="results-table">
         <thead>
           <tr>
@@ -220,14 +314,24 @@ async function save() {
                 /{{ 'maxScore' in part ? formatScore(part.maxScore, locale) : part.totalQuestions }}
               </small>
             </th>
-            <th v-if="components.length" scope="col">{{ t('results.total') }}</th>
+            <template v-if="ieltsSkills.length">
+              <th v-for="skill in ieltsSkills" :key="skill.code" scope="col" class="text-nowrap">
+                {{ t(`testTemplates.skillName.${skill.code}`) }}
+                <small class="d-block text-body-secondary fw-normal">
+                  {{ t(`results.ieltsMode.${skill.inputMode}`) }}
+                </small>
+              </th>
+              <th v-if="ieltsSkills.length === 4" scope="col">{{ t('results.overall') }}</th>
+            </template>
+            <th v-else-if="components.length" scope="col">{{ t('results.total') }}</th>
             <th v-else scope="col">{{ t('results.result') }}</th>
             <th scope="col">{{ t('results.status') }}</th>
+            <th v-if="canPublish" scope="col" class="text-end">{{ t('results.publication') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!rows.length">
-            <td :colspan="4 + components.length" class="text-body-secondary">
+            <td :colspan="(canPublish ? 4 : 3) + valueColumns" class="text-body-secondary">
               {{ t('results.empty') }}
             </td>
           </tr>
@@ -257,7 +361,90 @@ async function save() {
                 :data-testid="`result-part-${part.code}`"
               />
             </td>
-            <td v-if="components.length" class="text-nowrap small" data-testid="result-total">
+            <template v-if="ieltsSkills.length">
+              <td
+                v-for="skill in ieltsSkills"
+                :key="skill.code"
+                class="ielts-cell"
+                :data-skill="skill.code"
+              >
+                <div v-if="criteriaOf(skill).length">
+                  <div
+                    v-for="group in criteriaGroups(skill)"
+                    :key="group.label"
+                    class="d-flex align-items-center gap-1 mb-1"
+                  >
+                    <span v-if="group.label" class="small text-body-secondary ielts-task">
+                      {{ group.label }}
+                    </span>
+                    <input
+                      v-for="code in group.codes"
+                      :key="code"
+                      v-model="row.ielts[skill.code]!.criteria[code]"
+                      class="form-control form-control-sm band-input"
+                      :class="{
+                        'is-invalid':
+                          attempted &&
+                          !row.absent &&
+                          invalidBand(row.ielts[skill.code]?.criteria[code]),
+                      }"
+                      inputmode="decimal"
+                      :placeholder="t(`results.criterion.${code}`)"
+                      :title="t(`results.criterionName.${code}`)"
+                      :aria-label="`${skill.code} ${t(`results.criterionName.${code}`)}: ${row.student.fullName}`"
+                      :disabled="locked(row) || row.absent"
+                      :data-testid="`ielts-${skill.code}-${code}`"
+                    />
+                  </div>
+                  <small class="text-body-secondary text-nowrap" data-testid="ielts-preview">
+                    {{ row.absent ? '' : previewText(skill, row) }}
+                  </small>
+                </div>
+                <div v-else class="d-flex align-items-center gap-1">
+                  <template v-if="typesAnswers(skill)">
+                    <input
+                      v-model="row.ielts[skill.code]!.answers"
+                      class="form-control form-control-sm band-input"
+                      :class="{
+                        'is-invalid':
+                          attempted &&
+                          !row.absent &&
+                          invalidAnswers(row.ielts[skill.code]?.answers, skill),
+                      }"
+                      inputmode="numeric"
+                      :placeholder="t('results.answersShort')"
+                      :aria-label="`${skill.code} ${t('results.correctAnswers')}: ${row.student.fullName}`"
+                      :disabled="locked(row) || row.absent"
+                      :data-testid="`ielts-${skill.code}-answers`"
+                    />
+                    <span class="small text-body-secondary text-nowrap"
+                      >/{{ skill.maxQuestions }}</span
+                    >
+                  </template>
+                  <input
+                    v-model="row.ielts[skill.code]!.band"
+                    class="form-control form-control-sm band-input"
+                    :class="{
+                      'is-invalid':
+                        attempted && !row.absent && invalidBand(row.ielts[skill.code]?.band),
+                    }"
+                    inputmode="decimal"
+                    placeholder="Band"
+                    :aria-label="`${skill.code} band: ${row.student.fullName}`"
+                    :disabled="locked(row) || row.absent"
+                    :data-testid="`ielts-${skill.code}-band`"
+                  />
+                </div>
+              </td>
+              <td
+                v-if="ieltsSkills.length === 4"
+                class="text-nowrap fw-medium"
+                data-testid="ielts-overall"
+              >
+                {{ row.absent ? '' : band(overallPreview(config, row.ielts)) }}
+              </td>
+            </template>
+            <td v-else-if="components.length" class="text-nowrap small" data-testid="result-total">
               {{ total(row) }}
             </td>
             <td v-else>
@@ -296,9 +483,43 @@ async function save() {
               </div>
             </td>
             <td>
-              <span class="badge" :class="statusClass[status(row)]" data-testid="result-status">
+              <span
+                class="badge"
+                :class="statusClass[status(row)]"
+                :title="
+                  row.student.result?.publishedAt
+                    ? t('results.publishedBy', {
+                        name: row.student.result.publishedByName,
+                        at: formatInstant(row.student.result.publishedAt),
+                      })
+                    : undefined
+                "
+                data-testid="result-status"
+              >
                 {{ t(`results.statusLabel.${status(row)}`) }}
               </span>
+            </td>
+            <td v-if="canPublish" class="text-end text-nowrap">
+              <button
+                v-if="row.student.result?.published"
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                :disabled="busy"
+                data-testid="result-unpublish"
+                @click="publish(row.student.studentId, false)"
+              >
+                {{ t('results.unpublish') }}
+              </button>
+              <button
+                v-else-if="publishable(row)"
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                :disabled="busy || dirtyCount > 0"
+                data-testid="result-publish"
+                @click="publish(row.student.studentId, true)"
+              >
+                {{ t('results.publish') }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -317,6 +538,26 @@ async function save() {
       </span>
       <button type="button" class="btn btn-outline-secondary" @click="emit('close')">
         {{ t('common.close') }}
+      </button>
+      <button
+        v-if="canPublish && anyPublished"
+        type="button"
+        class="btn btn-outline-secondary"
+        data-testid="results-unpublish-all"
+        :disabled="busy"
+        @click="publish(null, false)"
+      >
+        {{ t('results.unpublishAll') }}
+      </button>
+      <button
+        v-if="canPublish && rows.length"
+        type="button"
+        class="btn btn-outline-primary"
+        data-testid="results-publish-all"
+        :disabled="busy || dirtyCount > 0"
+        @click="publish(null, true)"
+      >
+        {{ t('results.publishAll') }}
       </button>
       <button
         v-if="editable"

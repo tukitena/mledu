@@ -1,6 +1,6 @@
 # Thiết kế database học vụ: template bài kiểm tra và snapshot
 
-Ngày thiết kế: **31/10/2026**. Phạm vi: **thiết kế ERD/schema**. Các bảng bên dưới là **đề xuất cho GĐ5**, trừ phần [thư viện template](#thư-viện-template) (`20261031100000_test_templates.sql`, [biên bản](decisions/gd5-test-templates.md)) [bài kiểm tra/snapshot](#bài-kiểm-tra-và-snapshot-quan-hệ) (`20261031110000_tests.sql`, [biên bản](decisions/gd5-tests.md)) và `test_results`/`component_results` (`20261031120000_test_results.sql`, [biên bản](decisions/gd5-test-results.md)) đã triển khai local cùng ngày; bảng IELTS kết quả vẫn là đề xuất; khi khác biệt, migration là nguồn đúng. [Schema hiện hành](schema.md) và SQL trong `supabase/migrations/` tiếp tục mô tả phần đã triển khai.
+Ngày thiết kế: **31/10/2026**. Phạm vi: **thiết kế ERD/schema**. Các bảng bên dưới là **đề xuất cho GĐ5**, trừ phần [thư viện template](#thư-viện-template) (`20261031100000_test_templates.sql`, [biên bản](decisions/gd5-test-templates.md)) [bài kiểm tra/snapshot](#bài-kiểm-tra-và-snapshot-quan-hệ) (`20261031110000_tests.sql`, [biên bản](decisions/gd5-tests.md)) và `test_results`/`component_results` (`20261031120000_test_results.sql`, [biên bản](decisions/gd5-test-results.md)) đã triển khai local cùng ngày; `ielts_skill_results`/`ielts_criterion_results` (`20261031140000_ielts_results.sql`), công bố, nhận xét và xóa bài ([biên bản](decisions/gd5-publication-ielts-comments.md)) cũng đã triển khai local; khi khác biệt, migration là nguồn đúng. [Schema hiện hành](schema.md) và SQL trong `supabase/migrations/` tiếp tục mô tả phần đã triển khai.
 
 Nguồn nghiệp vụ: [plans.md, C.8](plans.md#c8-bài-kiểm-tra-thang-điểm-và-điểm-thành-phần), TEST-01–06; ACAD-01, AUD-01 và XLS-06 cho các ranh giới liên quan. Nền tảng theo [techstack.md, 4.6](techstack.md#46-template-bài-kiểm-tra-và-ielts). ERD chỉnh sửa được: [architecture.drawio](../diagrams/architecture.drawio), các trang **03, 03a, 03b**.
 
@@ -32,7 +32,7 @@ flowchart LR
 
 - Tạo bài từ đầu: `source_template_version_id = NULL`. Chọn mẫu: lưu chính xác ID phiên bản nguồn rồi sao chép toàn bộ cấu hình; cho sửa bản sao theo quyền học vụ. ID nguồn chỉ là provenance, không bắt snapshot phải tiếp tục bằng template.
 - Sửa template: thêm phiên bản bất biến và đổi con trỏ hiện hành của template; không cập nhật bài đã dùng, kể cả bài chưa có điểm. Xóa mềm ngừng lựa chọn; khôi phục dùng lại ID và các phiên bản cũ. Không xóa vật lý phiên bản hoặc đặt nguồn thành NULL khi lưu trữ mẫu.
-- Chọn lại mẫu hoặc thay cấu trúc bài: tạo snapshot mới theo TEST-03; không liên kết bài với “phiên bản mới nhất” của template. Sửa cấu hình bài không được ghi ngược template.
+- Cấu hình bài chốt khi tạo (TEST-03): mỗi bài đúng một snapshot (`revision = 1`), không chọn lại mẫu hay thay cấu trúc sau đó; không liên kết bài với “phiên bản mới nhất” của template. Chỉnh bản sao khi tạo bài không ghi ngược template.
 - Mẫu chữ mặc định chứa Chưa đạt, Đạt, Tốt, Xuất sắc trong chính template chữ. Khi triển khai cần khởi tạo bằng thao tác hệ thống có provenance/lịch sử; không mở một thư viện mức chữ độc lập theo lớp.
 
 ## Quy ước cột
@@ -160,7 +160,7 @@ Chỉ cấu hình IELTS có 1–4 dòng với `skill IN ('L','R','W','S')`, `inp
 
 | Cột | Kiểu | Ý nghĩa/ràng buộc |
 | --- | --- | --- |
-| `id` | uuid PK | Giữ ID khi sửa, đổi cấu hình, xóa/khôi phục |
+| `id` | uuid PK | Giữ ID khi sửa, xóa/khôi phục |
 | `student_id` | uuid FK | → `students(id)` |
 | `test_id` | uuid FK | → `tests(id)`; UQ `(student_id, test_id)` kể cả xóa mềm; không FK hồ sơ lớp/lần tham gia |
 | `config_id` | uuid | FK ghép `(test_id, config_id)` → `test_config_versions(test_id, id)`; UQ `(id, config_id)` |
@@ -236,7 +236,7 @@ Excel tương lai dùng ID bài + `config_id`/revision và mã phần/kỹ năng
 | --- | --- | --- |
 | TEST-02 | Template toàn trung tâm, Admin-only, version bất biến, mức chữ trong JSON, xóa mềm | Hai lớp dùng cùng mẫu; sửa/xóa/khôi phục không thay bài cũ; User/Receptionist bị chặn ghi; audit lỗi rollback |
 | TEST-01, TEST-04 | Bốn loại cấu hình, input mode, phần/mức/kỹ năng và đầu vào có kiểu | Biên thập phân/band/câu đúng; 1/20 mức, 1/50 phần; thiếu khác 0; IELTS Task 1:2, biên 0,25/0,75 và không quy đổi L/R |
-| TEST-03 | Config bất biến, provenance tùy chọn, reset đầu vào/giữ Vắng, lịch sử đầy đủ | Publication lock; không tái dùng điểm/cấu hình cũ; audit lỗi; đồng thời đổi cấu hình và ghi điểm |
+| TEST-03 | Config chốt khi tạo bài, một snapshot mỗi bài, provenance tùy chọn | Không có lệnh đổi cấu hình; DB từ chối snapshot thứ hai |
 | TEST-05–06, ACAD-01 | Khóa học sinh/bài, ngày theo khoảng tham gia, công bố cấp kết quả, hiển thị độc lập, xóa/khôi phục | Thêm lại hồ sơ không nhân đôi điểm; ngày mới không loại học sinh đã có kết quả/nhận xét; quyền công bố; công bố cả lớp bỏ qua/trả danh sách thiếu và không tự công bố sau nhập bổ sung; khôi phục chưa công bố |
 | AUD-01, XLS-06 | History/outbox trong transaction; config ID cho Excel | Rollback khi history/audit/outbox lỗi; import dùng schema bài, không dùng template hiện hành |
 

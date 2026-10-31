@@ -45,7 +45,7 @@ select ok(not has_table_privilege('authenticated', 'app.tests', 'select')
        and not has_table_privilege('anon', 'app.test_ielts_skills', 'select'),
   'test tables are not exposed to clients');
 select ok(not has_function_privilege('anon', 'api.create_test(uuid, text, date, text, jsonb, uuid)', 'execute')
-       and not has_function_privilege('anon', 'api.list_class_tests(uuid)', 'execute')
+       and not has_function_privilege('anon', 'api.list_class_tests(uuid, boolean)', 'execute')
        and has_function_privilege('authenticated', 'api.create_test(uuid, text, date, text, jsonb, uuid)', 'execute'),
   'anon cannot call test RPCs');
 
@@ -73,9 +73,9 @@ select pg_temp.keep('t1', api.create_test(pg_temp.id('A'), '  Giữa kỳ  ', d,
       "components":[{"name":"Nghe","maxScore":1.25},{"name":"Viết","maxScore":2.10}]}', null))
   from day;
 select is((select api.get_test(pg_temp.id('t1')) - 'id' - 'classId' - 'configId' - 'createdAt'
-             - 'updatedAt' - 'testOn' - 'configVersions'),
-  '{"name":"Giữa kỳ","description":null,"showComponents":true,"configRevision":1,"source":null,
-    "deleted":false,"createdByName":"Quản trị Thử nghiệm","rowVersion":1,"resultCount":0,
+             - 'updatedAt' - 'testOn'),
+  '{"name":"Giữa kỳ","description":null,"showComponents":true,"source":null,
+    "deleted":false,"createdByName":"Quản trị Thử nghiệm","rowVersion":1,"resultCount":0,"publishedCount":0,"commentCount":0,"publishedCommentCount":0,"deletedAt":null,"deletedReason":null,
     "config":{"scaleKind":"numeric","inputMode":"components","maxScore":3.35,"showComponents":true,
       "components":[{"code":"c1","name":"Nghe","maxScore":1.25},{"code":"c2","name":"Viết","maxScore":2.1}]}}'::jsonb,
   'a test created from scratch stores a trimmed name, an empty description as NULL and a normalized snapshot');
@@ -126,9 +126,9 @@ select throws_ok($$select api.list_test_template_choices(pg_temp.id('A'))$$, 'PT
 
 select pg_temp.actor(3);
 select is((select api.list_class_tests(pg_temp.id('A')) - 'items'),
-  '{"canEdit":true,"canChangeDisplay":true}'::jsonb, 'a current teacher may edit and change display');
+  '{"canEdit":true,"canChangeDisplay":true,"canArchive":true}'::jsonb, 'a current teacher may edit and change display');
 select is((select api.list_class_tests(pg_temp.id('B')) - 'items'),
-  '{"canEdit":true,"canChangeDisplay":false}'::jsonb, 'a current assistant may edit but not change display');
+  '{"canEdit":true,"canChangeDisplay":false,"canArchive":false}'::jsonb, 'a current assistant may edit but not change display');
 select throws_ok($$select api.list_class_tests(pg_temp.id('C'))$$, 'PT404', 'not_found',
   'a User without an assignment does not see the class tests');
 select throws_ok($$select api.create_test(pg_temp.id('C'), 'Không phân công', d, null,
@@ -179,46 +179,28 @@ select throws_ok($$select api.create_test(pg_temp.id('A'), 'Không tồn tại',
   'PT404', 'not_found', 'an unknown template version is refused');
 
 -------------------------------------------------------------------------------
--- New configuration and display option.
+-- Fixed configuration and display option.
 -------------------------------------------------------------------------------
-select pg_temp.actor(3);
--- Keeping an archived template's provenance does not check the template again.
-select is((select api.change_test_config(pg_temp.id('t3'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":20}', pg_temp.id('tpl_v2'), 1)
-    -> 'configRevision'), '2'::jsonb, 'a teacher adjusts a test copied from an archived template');
-select pg_temp.keep('t3', api.get_test(pg_temp.id('t3')));
-select is((select api.change_test_config(pg_temp.id('t3'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":20}', pg_temp.id('tpl_v2'), pg_temp.ver('t3'))
-    -> 'rowVersion')::bigint, pg_temp.ver('t3'), 'an unchanged configuration creates no revision');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'api' and p.proname = 'change_test_config'), 0,
+  'there is no command to change the configuration of a test');
+select throws_ok($$insert into app.test_config_versions
+    (test_id, revision, scale_kind, input_mode, max_score, created_by)
+    values (pg_temp.id('t3'), 2, 'numeric', 'direct', 20, '00000000-0000-4000-8000-000000000001')$$,
+  '23514', null, 'a test cannot get a second snapshot');
 
-select pg_temp.keep('t2', api.change_test_config(pg_temp.id('t2'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null, pg_temp.ver('t2')));
-select is((select api.get_test(pg_temp.id('t2')) -> 'configVersions' -> 1 ->> 'scaleKind'), 'letter',
-  'the previous snapshot is kept in the history');
-select is((select api.get_test(pg_temp.id('t2')) -> 'source'), 'null'::jsonb,
-  'a custom configuration has no source');
-select is((select count(*)::int from app.test_letter_levels l join app.test_config_versions c on c.id = l.config_id
-            where c.test_id = pg_temp.id('t2')), 3, 'rows of the earlier snapshot are kept');
-select throws_ok($$select api.change_test_config(pg_temp.id('t2'),
-    '{"scaleKind":"numeric","inputMode":"components","showComponents":true,
-      "components":[{"name":"A","maxScore":5},{"name":"B","maxScore":5}]}', null, pg_temp.ver('t2'))$$,
-  'PT403', 'forbidden', 'an assistant cannot turn on the display option through a new configuration');
-select pg_temp.keep('t2', api.change_test_config(pg_temp.id('t2'),
+select pg_temp.actor(3);
+select pg_temp.keep('t4', api.create_test(pg_temp.id('B'), 'Thành phần', d, null,
     '{"scaleKind":"numeric","inputMode":"components","showComponents":false,
-      "components":[{"name":"A","maxScore":5},{"name":"B","maxScore":5}]}', null, pg_temp.ver('t2')));
-select is((select (api.get_test(pg_temp.id('t2')) ->> 'configRevision')::int), 3,
-  'an assistant may change the structure while keeping the display option');
-select throws_ok($$select api.set_test_show_components(pg_temp.id('t2'), true, pg_temp.ver('t2'))$$,
+      "components":[{"name":"A","maxScore":5},{"name":"B","maxScore":5}]}', null)) from day;
+select throws_ok($$select api.set_test_show_components(pg_temp.id('t4'), true, pg_temp.ver('t4'))$$,
   'PT403', 'forbidden', 'an assistant cannot change the display option');
-select throws_ok($$select api.change_test_config(pg_temp.id('t2'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null, pg_temp.ver('t2') - 1)$$,
-  'PT409', 'version_conflict', 'a stale configuration change is refused');
 
 select pg_temp.actor(1);
-select is((select api.set_test_show_components(pg_temp.id('t2'), true, pg_temp.ver('t2')) -> 'config' ->> 'showComponents'),
+select is((select api.set_test_show_components(pg_temp.id('t4'), true, pg_temp.ver('t4')) -> 'config' ->> 'showComponents'),
   'true', 'Admin turns on the display option without a new snapshot');
-select is((select (api.get_test(pg_temp.id('t2')) ->> 'configRevision')::int), 3,
-  'the display option adds no configuration revision');
+select is((select count(*)::int from app.test_config_versions where test_id = pg_temp.id('t4')), 1,
+  'the display option adds no snapshot');
 select throws_ok($$select api.set_test_show_components(pg_temp.id('t3'), true, pg_temp.ver('t3'))$$,
   'PT409', 'invalid_state', 'a direct configuration has no details to show');
 select is((select count(*)::int from app.audit_events where action = 'test.set_show_components'), 1,
@@ -230,7 +212,7 @@ select is((select count(*)::int from app.audit_events where action = 'test.set_s
 select pg_temp.actor(3);
 select pg_temp.keep('t1', api.update_test(pg_temp.id('t1'), 'Giữa kỳ I', d - 1, 'Mô tả', 1)) from day;
 select is((select api.get_test(pg_temp.id('t1')) ->> 'name'), 'Giữa kỳ I', 'a teacher renames the test');
-select is((select (api.get_test(pg_temp.id('t1')) ->> 'configRevision')::int), 1,
+select is((select api.get_test(pg_temp.id('t1')) #>> '{config,maxScore}'), '3.35',
   'editing information does not change the configuration');
 select throws_ok($$select api.update_test(pg_temp.id('t1'), 'Cũ', d, null, 1) from day$$,
   'PT409', 'version_conflict', 'a stale information edit is refused');
@@ -312,14 +294,9 @@ create trigger zz_test_fail_audit before insert on app.audit_events
 select throws_ok($$select api.create_test(pg_temp.id('A'), 'Lỗi audit', d, null,
     '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null) from day$$,
   'P0001', 'audit_failure', 'audit failure aborts the creation');
-select throws_ok($$select api.change_test_config(pg_temp.id('t1'),
-    '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null, pg_temp.ver('t1'))$$,
-  'P0001', 'audit_failure', 'audit failure aborts the configuration change');
 drop trigger zz_test_fail_audit on app.audit_events;
 select is((select count(*)::int from app.tests where name = 'Lỗi audit'), 0,
   'no test is left behind by the failed creation');
-select is((select count(*)::int from app.test_config_versions where test_id = pg_temp.id('t1')), 1,
-  'no snapshot is left behind by the failed change');
 
 select pg_temp.actor(1);
 select api.end_class_assignment(id, 'Thu hồi', row_version) from app.class_assignments
@@ -336,7 +313,7 @@ select throws_ok($$select api.create_test(pg_temp.id('C'), 'Lớp đã xóa', d,
     '{"scaleKind":"numeric","inputMode":"direct","maxScore":10}', null) from day$$,
   'PT409', 'invalid_state', 'no test is created in a deleted class');
 select is((select api.list_class_tests(pg_temp.id('C')) - 'items'),
-  '{"canEdit":false,"canChangeDisplay":false}'::jsonb, 'Admin reads a deleted class read-only');
+  '{"canEdit":false,"canChangeDisplay":false,"canArchive":false}'::jsonb, 'Admin reads a deleted class read-only');
 
 -- A former teacher whose account became a receptionist loses every academic right.
 update app.account_profiles set account_type = 'receptionist' where id = '00000000-0000-4000-8000-000000000003';

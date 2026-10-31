@@ -21,6 +21,15 @@ export const IELTS_SKILLS = IeltsSkill.options
 /** Fixed IELTS formula of TEST-01; attached by the backend, never chosen by a template. */
 export const IELTS_FORMULA_VERSION = 'mledu-ielts-v1'
 
+/** Fixed criteria of the formula (TEST-01): Writing Task 1/Task 2 and Speaking. */
+export const IELTS_CRITERIA = {
+  W: ['t1_ta', 't1_cc', 't1_lr', 't1_gra', 't2_tr', 't2_cc', 't2_lr', 't2_gra'],
+  S: ['fc', 'lr', 'gra', 'pronunciation'],
+} as const
+
+/** roundBand(x) = floor(2x + 0.5) / 2 (TEST-01). The backend is the authority; the UI only previews. */
+export const roundBand = (value: number) => Math.floor(2 * value + 0.5) / 2
+
 /** Limits from TEST-02/04. */
 export const MAX_COMPONENTS = 50
 export const MAX_LETTER_LEVELS = 20
@@ -292,17 +301,6 @@ export type CreateTestRequest = z.input<typeof CreateTestRequest>
 export const UpdateTestRequest = z.strictObject({ ...TestInfo, expectedVersion: RowVersion })
 export type UpdateTestRequest = z.input<typeof UpdateTestRequest>
 
-/**
- * New configuration of a test. Sending the current source keeps that provenance;
- * another template version is a new choice, checked like on creation.
- */
-export const ChangeTestConfigRequest = z.strictObject({
-  config: GradingConfigInput,
-  sourceTemplateVersionId: z.uuid().nullable(),
-  expectedVersion: RowVersion,
-})
-export type ChangeTestConfigRequest = z.input<typeof ChangeTestConfigRequest>
-
 export const SetShowComponentsRequest = z.strictObject({
   showComponents: z.boolean(),
   expectedVersion: RowVersion,
@@ -326,14 +324,21 @@ export const ClassTest = z.object({
   testOn: IsoDate,
   description: z.string().nullable(),
   showComponents: z.boolean(),
-  /** Snapshot used by results and Excel (XLS-06); grows with each configuration change. */
+  /** Snapshot used by results and Excel (XLS-06); fixed when the test is created. */
   configId: z.uuid(),
-  configRevision: z.number().int().min(1),
   config: GradingConfig,
   source: TestSource.nullable(),
-  /** Results in use (not cleared); a configuration change makes scores be entered again (TEST-03). */
+  /** Results in use (not cleared). */
   resultCount: z.number().int().min(0),
+  /** Results currently published (ACAD-01). */
+  publishedCount: z.number().int().min(0),
+  /** Comments with text on this test (COMMENT-01). */
+  commentCount: z.number().int().min(0),
+  publishedCommentCount: z.number().int().min(0),
+  /** TEST-06: archived with a reason; scores and comments are kept unpublished. */
   deleted: z.boolean(),
+  deletedAt: z.string().nullable(),
+  deletedReason: z.string().nullable(),
   createdAt: z.string(),
   createdByName: z.string(),
   updatedAt: z.string(),
@@ -347,21 +352,10 @@ export const ClassTestList = z.object({
   canEdit: z.boolean(),
   /** Admin or a current teacher (TEST-04); assistants cannot change the display option. */
   canChangeDisplay: z.boolean(),
+  /** Admin or a current teacher (TEST-06): archive and restore whole tests. */
+  canArchive: z.boolean(),
 })
 export type ClassTestList = z.infer<typeof ClassTestList>
-
-export const TestConfigVersion = z.object({
-  id: z.uuid(),
-  revision: z.number().int().min(1),
-  scaleKind: ScaleKind,
-  source: TestSource.nullable(),
-  createdAt: z.string(),
-  createdByName: z.string(),
-})
-export type TestConfigVersion = z.infer<typeof TestConfigVersion>
-
-export const ClassTestDetail = ClassTest.extend({ configVersions: z.array(TestConfigVersion) })
-export type ClassTestDetail = z.infer<typeof ClassTestDetail>
 
 /**
  * Results of a test per student (TEST-01/04/05). One result per student and
@@ -375,6 +369,25 @@ export const ScoreValue = z
   .min(0)
   .refine((value) => /^\d+(\.\d{1,2})?$/.test(value.toString()), { message: 'too_many_decimals' })
 export const AnswerCount = z.number().int().min(0).max(2_147_483_647)
+const AnswerCountInput = AnswerCount.nullable()
+
+/** IELTS band typed by a user: 0 to 9 in steps of 0.5, never corrected (TEST-01). */
+export const Band = z
+  .number()
+  .min(0)
+  .max(9)
+  .refine((value) => Number.isInteger(value * 2), { message: 'band_step' })
+
+/**
+ * Inputs of one IELTS skill, by the mode of the test: direct {band}; L/R in
+ * detail {correctAnswers, band}; W/S in detail {criteria}. Computed bands are
+ * never sent. null or a missing key is not entered.
+ */
+export const IeltsSkillEntry = z.union([
+  z.strictObject({ band: Band.nullable().optional(), correctAnswers: AnswerCountInput.optional() }),
+  z.strictObject({ criteria: z.record(z.string().regex(/^[a-z0-9_]{2,13}$/), Band.nullable()) }),
+])
+export type IeltsSkillEntry = z.infer<typeof IeltsSkillEntry>
 
 /** Values for one student; which keys apply depends on the test configuration. */
 export const ResultEntry = z.union([
@@ -389,6 +402,10 @@ export const ResultEntry = z.union([
       z.string().regex(/^c\d{1,2}$/),
       z.union([ScoreValue, AnswerCount]).nullable(),
     ),
+  }),
+  z.strictObject({
+    absent: z.literal(false),
+    skills: z.partialRecord(IeltsSkill, IeltsSkillEntry.nullable()),
   }),
 ])
 export type ResultEntry = z.infer<typeof ResultEntry>
@@ -411,6 +428,18 @@ export const SaveTestResultsRequest = z.strictObject({
 })
 export type SaveTestResultsRequest = z.input<typeof SaveTestResultsRequest>
 
+export const IeltsSkillResult = z.object({
+  correctAnswers: z.number().int().nullable(),
+  /** Band typed by the user (direct, or L/R in detail). */
+  inputBand: z.number().nullable(),
+  /** Band in use: typed, or computed from the criteria for W/S in detail. */
+  band: z.number().nullable(),
+  task1Band: z.number().nullable(),
+  task2Band: z.number().nullable(),
+  criteria: z.record(z.string(), z.number()),
+})
+export type IeltsSkillResult = z.infer<typeof IeltsSkillResult>
+
 export const TestResult = z.object({
   id: z.uuid(),
   absent: z.boolean(),
@@ -420,9 +449,16 @@ export const TestResult = z.object({
   correctAnswers: z.number().int().nullable(),
   level: z.string().nullable(),
   components: z.record(z.string(), z.number()),
+  /** IELTS inputs and computed bands per skill entered; null for other scales or Absent. */
+  ielts: z.partialRecord(IeltsSkill, IeltsSkillResult).nullable(),
+  /** Computed by the backend, only with four skills and four bands (TEST-01). */
+  overallBand: z.number().nullable(),
   /** Absent, or every value of the configuration entered. */
   complete: z.boolean(),
+  /** ACAD-01: a published result is locked until it is unpublished. */
   published: z.boolean(),
+  publishedAt: z.string().nullable(),
+  publishedByName: z.string().nullable(),
   rowVersion: RowVersion,
   updatedAt: z.string(),
   updatedByName: z.string(),
@@ -442,5 +478,25 @@ export const TestResults = z.object({
   /** Students whose participation meets the test day, or who hold a result. */
   students: z.array(TestResultRow),
   canEdit: z.boolean(),
+  /** Admin or a current teacher (ACAD-01); assistants enter results but never publish. */
+  canPublish: z.boolean(),
 })
 export type TestResults = z.infer<typeof TestResults>
+
+/**
+ * Publish or unpublish results of one test (ACAD-01): one student, or the whole
+ * class when studentId is null. Only complete results (or Absent) are published.
+ */
+export const PublishTestResultsRequest = z.strictObject({
+  studentId: z.uuid().nullable(),
+  publish: z.boolean(),
+})
+export type PublishTestResultsRequest = z.input<typeof PublishTestResultsRequest>
+
+export const PublishTestResultsResponse = TestResults.extend({
+  /** Results whose publication changed. */
+  changed: z.number().int().min(0),
+  /** Publishing the class: students skipped because their result is missing or incomplete. */
+  missing: z.array(z.object({ studentId: z.uuid(), fullName: z.string() })),
+})
+export type PublishTestResultsResponse = z.infer<typeof PublishTestResultsResponse>

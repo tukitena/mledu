@@ -20,7 +20,7 @@ async function createClass(admin: string) {
   return klass.body.id
 }
 
-test('Admin copies a template into a test, adjusts it and changes the configuration', async ({
+test('Admin copies a template into a test, adjusts it and edits only its information', async ({
   page,
 }) => {
   const admin = await accessToken('admin@example.com', FIXTURE_PASSWORD)
@@ -58,27 +58,17 @@ test('Admin copies a template into a test, adjusts it and changes the configurat
   const row = page.locator('tr[data-name="Đánh giá tháng"]')
   await expect(row.getByTestId('test-summary')).toContainText('Chưa đạt · Đạt · Giỏi')
   await expect(row.getByTestId('test-source')).toContainText(`Template ${templateName} · v1`)
-  await expect(row).toContainText('Cấu hình #1')
 
-  // A new configuration adds revision 2 and keeps revision 1 in the history.
+  // The configuration is fixed once created: only the information can be edited.
   await row.getByRole('button', { name: 'Thao tác: Đánh giá tháng' }).click()
-  await row.locator('[data-action="config"]').click()
-  await page.getByTestId('test-template').selectOption({ label: 'Cấu hình riêng' })
-  await page.getByTestId('tt-scale').selectOption('numeric')
-  await dialog.getByLabel('Điểm tối đa').fill('8,255')
+  await expect(row.locator('[data-action="config"]')).toHaveCount(0)
+  await expect(row.locator('[data-action="history"]')).toHaveCount(0)
+  await row.locator('[data-action="info"]').click()
+  await expect(page.getByTestId('test-template')).toHaveCount(0)
+  await page.getByTestId('test-name').fill('Đánh giá tháng 10')
   await page.getByTestId('test-submit').click()
-  await expect(dialog.getByText('tối đa hai chữ số thập phân')).toBeVisible()
-  await dialog.getByLabel('Điểm tối đa').fill('8,25')
-  await page.getByTestId('test-submit').click()
-  await expect(row.getByTestId('test-summary')).toContainText('Tối đa 8,25')
-  await expect(row.getByTestId('test-source')).toContainText('Cấu hình riêng')
-  await expect(row).toContainText('Cấu hình #2')
-
-  await row.getByRole('button', { name: 'Thao tác: Đánh giá tháng' }).click()
-  await row.locator('[data-action="history"]').click()
-  const history = page.getByTestId('test-history')
-  await expect(history.locator('tbody tr')).toHaveCount(2)
-  await expect(history).toContainText(`Template ${templateName} · v1`)
+  const renamed = page.locator('tr[data-name="Đánh giá tháng 10"]')
+  await expect(renamed.getByTestId('test-summary')).toContainText('Chưa đạt · Đạt · Giỏi')
 })
 
 test('an assistant creates a test but cannot change the display option', async ({ page }) => {
@@ -107,9 +97,6 @@ test('an assistant creates a test but cannot change the display option', async (
   const row = page.locator('tr[data-name="Bài theo phần"]')
   await expect(row.getByTestId('test-display')).toContainText('Ẩn chi tiết')
   await row.getByRole('button', { name: 'Thao tác: Bài theo phần' }).click()
-  // No display action for an assistant (TEST-04); the option is locked in the editor.
+  // No display action for an assistant (TEST-04).
   await expect(row.locator('[data-action="display"]')).toHaveCount(0)
-  await row.locator('[data-action="config"]').click()
-  await expect(dialog.getByRole('switch')).toBeDisabled()
-  await expect(dialog.getByText('Chỉ Admin hoặc giáo viên được đổi tùy chọn này.')).toBeVisible()
 })
