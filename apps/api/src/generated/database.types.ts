@@ -25,6 +25,10 @@ export type Database = {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
       }
+      archive_test_template: {
+        Args: { p_expected_version: number; p_id: string; p_reason: string }
+        Returns: Json
+      }
       auth_command_status: { Args: { p_command_id: string }; Returns: string }
       cancel_participation: {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
@@ -72,6 +76,10 @@ export type Database = {
           p_school?: string
           p_student_phones?: string[]
         }
+        Returns: Json
+      }
+      create_test_template: {
+        Args: { p_config: Json; p_description: string; p_name: string }
         Returns: Json
       }
       current_session: {
@@ -139,6 +147,8 @@ export type Database = {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
         Returns: Json
       }
+      list_test_template_versions: { Args: { p_id: string }; Returns: Json }
+      list_test_templates: { Args: { p_include_archived?: boolean }; Returns: Json }
       mark_avatar_verified: { Args: { p_path: string }; Returns: undefined }
       ops_prepare_account_create: {
         Args: { p_account_type: string; p_email: string; p_full_name: string; p_operator: string }
@@ -199,6 +209,7 @@ export type Database = {
         }
         Returns: Json
       }
+      restore_test_template: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       save_attendance: {
         Args: { p_fingerprint: string; p_session_id: string; p_students: Json }
         Returns: Json
@@ -318,6 +329,16 @@ export type Database = {
         }
         Returns: Json
       }
+      update_test_template: {
+        Args: {
+          p_config: Json
+          p_description: string
+          p_expected_version: number
+          p_id: string
+          p_name: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
@@ -330,7 +351,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'api'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends

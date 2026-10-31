@@ -7,6 +7,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import type { AppEnv } from './env'
 import { AppError, codeForStatus } from './lib/errors'
 import { accountRoutes } from './modules/accounts/routes'
+import { testTemplateRoutes } from './modules/assessments/routes'
 import { authRoutes } from './modules/auth/routes'
 import { catalogRoutes, roomRoutes, siteRoutes } from './modules/catalogs/routes'
 import { assignmentRoutes, classRoutes } from './modules/classes/routes'
@@ -78,6 +79,7 @@ export function createApp() {
   app.route(`/${API_VERSION}/classes`, schedulingClassRoutes)
   app.route(`/${API_VERSION}/holidays`, holidayRoutes)
   app.route(`/${API_VERSION}/sessions`, attendanceRoutes)
+  app.route(`/${API_VERSION}/test-templates`, testTemplateRoutes)
 
   app.notFound((c) => errorResponse(c, new AppError(404, 'not_found', 'not_found')))
   app.onError((error, c) => {

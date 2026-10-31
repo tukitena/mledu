@@ -1,6 +1,6 @@
 # ERD MLedu
 
-Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc diagrams.net. File chứa **51 thực thể logic**, một trang mục lục và **9 trang ERD chi tiết**. Bảng, thuộc tính, đường nối và ghi chú đều chỉnh sửa được; mục lục và bảng có phụ đề `THAM CHIẾU` liên kết tới trang tương ứng.
+Mở [architecture.drawio](architecture.drawio) bằng draw.io Desktop hoặc diagrams.net. File chứa **53 thực thể logic**, một trang mục lục và **11 trang ERD chi tiết**. Bảng, thuộc tính, đường nối và ghi chú đều chỉnh sửa được; mục lục và bảng có phụ đề `THAM CHIẾU` liên kết tới trang tương ứng.
 
 Đây là **thiết kế logic của toàn hệ thống**, không phải schema vật lý hiện hành. Database local hiện có **21 bảng `app`**, đã đối chiếu đủ 16 migration tới `20261030130000_class_school_year.sql`; bảng/cột/kiểu/NULL/default/PK/FK/index thật được ghi tại [schema PostgreSQL hiện tại](../developer/schema.md). Các tên bảng và FK trong thiết kế dưới đây có phần khác với triển khai; xem [bảng đối chiếu](../developer/schema.md#đối-chiếu-với-erd-thiết-kế), không dùng ERD để suy SQL.
 
@@ -13,7 +13,9 @@ Nguồn nghiệp vụ là [plans.md](../developer/plans.md); lựa chọn nền 
 | 00 | Mục lục, ký hiệu và phạm vi thiết kế | Tổng quan, C.1.1, tech stack mục 1/4 |
 | 01 | Auth, tài khoản, học sinh, liên hệ, lớp, phân công và lần tham gia | AUTH-01–08, STU-01–04, CLASS-01–05, CAT-01 |
 | 02 | Địa điểm, phòng, lịch tuần, ngày lễ, buổi thực tế và điểm danh | SCHED-01–06, ATT-01 |
-| 03 | Bài kiểm tra, mẫu chữ, cấu hình có phiên bản, kết quả và điểm thành phần | TEST-01–06, ACAD-01 |
+| 03 | Template chung toàn trung tâm, phiên bản nguồn và snapshot cấu hình riêng của bài | TEST-01–05 |
+| 03a | Kết quả theo học sinh/bài, điểm thành phần, công bố và lịch sử | TEST-01, TEST-03–06, ACAD-01 |
+| 03b | Kỹ năng IELTS, chế độ nhập, tiêu chí cố định và band do backend tính | TEST-01, TEST-04, ACAD-01 |
 | 04 | Nhận xét gắn bài/đợt, trang lớp và liên kết phụ huynh | COMMENT-01–03, ACAD-01, PORTAL-01–03 |
 | 05 | Hình thức thu, tháng/kỳ, mức gốc, nghĩa vụ và điều chỉnh học phí | FEE-01–04, FEE-07–10 |
 | 06 | Cấu hình ngoài học phí, lựa chọn học sinh theo thời gian và lần phát sinh | FEE-07, FEE-11 |
@@ -38,8 +40,8 @@ REPORT-01 và DASH-01 dùng dữ liệu buổi/điểm danh, nghĩa vụ và chi
 1. **Tách học sinh, hồ sơ lớp và lần tham gia.** Một học sinh có thể có nhiều hồ sơ lịch sử trong cùng lớp nhưng tối đa một hồ sơ chưa xóa. Học lại trong hồ sơ cũ thêm một khoảng tham gia; xóa rồi thêm lại tạo hồ sơ mới. Chuyển lớp cập nhật nguồn và đích trong cùng giao dịch, không chuyển tiền hoặc kết quả.
 2. **Học vụ giữ định danh theo học sinh.** Điểm danh duy nhất theo học sinh/buổi; điểm và nhận xét gắn bài duy nhất theo học sinh/bài; nhận xét đợt theo học sinh/đợt. Không FK các kết quả này tới lần tham gia để tránh nhân bản khi học lại. RPC kiểm tra hợp các khoảng tham gia của đúng lớp.
 3. **Lưu thời gian nghiệp vụ rõ ràng.** Dùng `Asia/Ho_Chi_Minh`; ngày vào bao gồm, ngày nghỉ loại trừ từ 00:00. Kết thúc do sự kiện giữa ngày có timestamp riêng. Khoảng đã kết thúc không tự hồi sinh khi lớp được gia hạn/khôi phục. Lịch sử khoảng lớp Mở/Đóng/Lưu trữ phục vụ chạy bù nghĩa vụ.
-4. **Mẫu chữ và cấu hình bài có phiên bản.** Mỗi bài chụp riêng bộ mức chữ. Các phần/kết quả/mức chữ phải cùng bài và phiên bản; cần FK ghép hoặc kiểm tra giao dịch ngoài các FK đơn được vẽ. `current_config_id` phải thuộc đúng bài; vòng tham chiếu bài/cấu hình cần ràng buộc trì hoãn trong giao dịch tạo. Các giá trị thuộc cấu hình cũ được lưu trong lịch sử, không tiếp tục làm kết quả hiện hành.
-5. **Công bố ở từng kết quả/nhận xét.** `published_at` và `published_by` đi cùng nhau. Nhận xét không phụ thuộc vào dòng điểm và có công bố độc lập. Điểm thành phần không có trạng thái công bố riêng; tổng là giá trị suy ra hoặc cache do backend quản lý. Vắng là loại kết quả riêng, không tạo điểm giả. Trước khi ép sang numeric, API/RPC phải từ chối đầu vào có hơn hai số lẻ để tránh PostgreSQL tự làm tròn.
+4. **Template chung và snapshot bài độc lập.** `test_templates` không thuộc lớp/cơ sở, chỉ Admin quản lý; phiên bản lưu cấu hình số/phân số/chữ/IELTS dạng JSONB có kiểu, gồm bộ mức chữ. Khi chọn mẫu, tạo snapshot đầy đủ trong `test_config_versions` và các bảng con của bài; `source_template_version_id` chỉ giữ provenance. Sửa/xóa mẫu không đổi bài cũ. Tạo bài không dùng mẫu vẫn hợp lệ. FK ghép giữ cùng bài/cấu hình cho mức/phần/kỹ năng/kết quả; con trỏ phiên bản hiện hành phải cùng gốc và được ràng buộc trì hoãn. Chi tiết cột, JSON, khóa và giao dịch tại [thiết kế schema học vụ](../developer/assessment-schema.md), chưa có migration triển khai.
+5. **Công bố ở từng kết quả/nhận xét.** `published_at` và `published_by` đi cùng nhau. Nhận xét không phụ thuộc dòng điểm và có công bố độc lập. Phần/kỹ năng/Task/tiêu chí không có công bố riêng. Vắng là loại kết quả riêng, không tạo điểm giả; thiếu đầu vào khác 0. Tổng theo phần và band IELTS tự tính do backend quản lý; L/R giữ band nhập tay, không tự quy đổi. Điểm số thường dùng `numeric` không typmod và validate ≤2 số lẻ để tránh làm tròn đầu vào; IELTS giữ độ chính xác tới đúng bước làm tròn TEST-01. `show_components` thuộc bài, bao gồm chi tiết IELTS; Admin/giáo viên được đổi khi đang công bố mà không đổi cấu trúc/kết quả, trợ giảng không đổi tùy chọn này.
 6. **Một mô hình tháng/kỳ cho học phí.** `billing_periods` phân biệt `monthly` và `term`, khớp hình thức thu của lớp. Tháng duy nhất theo lớp/ngày đầu tháng; kỳ nhiều tháng không giao ngày, dùng cả hai đầu. Kỳ đã có nghĩa vụ khóa tên/ngày. Phiên bản mức gốc chỉ áp dụng khoản tạo sau; nghĩa vụ học phí giữ mức đã chụp, kể cả sau gỡ thu.
 7. **Gộp nghĩa vụ, tách nguồn phát sinh.** `receivables` thuộc hồ sơ lớp. Học phí bắt buộc có kỳ và phiên bản mức, không có lần ngoài học phí; khoản ngoài bắt buộc có lần phát sinh, không có nguồn mức học phí. Nguồn và hồ sơ phải cùng lớp. Khóa chống trùng bao gồm cả dòng đã hủy để kích hoạt đúng khoản cũ hoặc ngăn tác vụ tự sinh lại.
 8. **Điều chỉnh không cộng dồn các phiên bản.** Giá trị học phí hiện hành dùng bản điều chỉnh mới nhất; bản gỡ đóng góp 0. Các bản cũ giữ nguyên. Khoản ngoài học phí chưa thu được sửa tên/số tiền theo FEE-11 với lý do và lịch sử, không áp khóa bất biến mức gốc học phí sang mọi khoản ngoài.
@@ -71,6 +73,8 @@ Cập nhật danh mục ngày 30/10/2026: kiểm tra XML đạt (0 lỗi; 28 c�
 
 Bổ sung năm học của lớp ngày 30/10/2026 (CLASS-03): `classes.school_year_start` là integer 1000–9998 hoặc NULL; hiển thị hai năm liên tiếp, NULL là không thuộc năm học, độc lập ngày mở/kết thúc lớp. Nguồn bổ sung: migration `20261030130000_class_school_year.sql`; xem [triển khai và bằng chứng](../developer/decisions/class-school-year.md). Thêm hàng thuộc tính tại trang 01, cập nhật metadata lớp trên 9 trang và giữ điểm nối FK hiện có; đã xem bản render bảng lớp. Validate vẫn 0 lỗi, 28 cảnh báo giao đường cũ, 0 xuyên/chồng bảng.
 
+Thiết kế lại học vụ ngày **31/10/2026** theo TEST-01–06: thay họ mẫu chữ theo lớp bằng template chung, tách snapshot/kết quả/IELTS thành trang 03/03a/03b và đồng bộ metadata bài ở trang nhận xét/Excel. Đã kiểm tra **12 trang, 53 thực thể**, ID/đường nối/liên kết trang, 11 định nghĩa học vụ và các bản tham chiếu; đã render và xem trang mục lục cùng ba trang học vụ bằng draw.io Desktop. Validate đạt **0 lỗi, 24 cảnh báo giao đường có sẵn ngoài các trang học vụ, 0 đường xuyên bảng, 0 chồng bảng**; đã đối chiếu cảnh báo với bản diagram trong Git. Đây là kiểm chứng tài liệu/diagram, không phải kiểm thử DB hoặc nghiệm thu GĐ5. Ảnh kiểm tra là tệp tạm dưới `tmp/assessment-*.png`.
+
 Danh mục FK bên dưới liệt kê cả các quan hệ không lặp lại trên mọi trang. FK ghép `notifications(event_id, recipient_id)` tới `outbox_deliveries` được ghi riêng ở cuối.
 
 ## Danh mục tham chiếu thiết kế
@@ -96,15 +100,17 @@ Danh mục FK bên dưới liệt kê cả các quan hệ không lặp lại tr�
 | `holidays` | schedule | — |
 | `class_sessions` | schedule | `class_id` → `classes`; `weekly_schedule_id` → `weekly_schedules`; `room_id` → `rooms`; `holiday_id` → `holidays`; `makeup_for_session_id` → `class_sessions` |
 | `attendance_results` | schedule | `student_id` → `students`; `session_id` → `class_sessions`; `updated_by` → `account_profiles` |
-| `letter_templates` | academic | `class_id` → `classes` |
-| `letter_template_versions` | academic | `template_id` → `letter_templates` |
-| `letter_template_levels` | academic | `template_version_id` → `letter_template_versions` |
-| `tests` | academic | `class_id` → `classes`; `current_config_id` → `test_config_versions` |
-| `test_config_versions` | academic | `test_id` → `tests`; `source_template_version_id` → `letter_template_versions` |
+| `test_templates` | academic | `(id, current_version_id)` → `test_template_versions(template_id, id)`; actor → `account_profiles` |
+| `test_template_versions` | academic | `template_id` → `test_templates`; `created_by` → `account_profiles` |
+| `tests` | academic | `class_id` → `classes`; `(id, current_config_id)` → `test_config_versions(test_id, id)`; actor → `account_profiles` |
+| `test_config_versions` | academic | `test_id` → `tests`; `source_template_version_id` → `test_template_versions`; `created_by` → `account_profiles` |
 | `test_letter_levels` | academic | `config_id` → `test_config_versions` |
 | `test_components` | academic | `config_id` → `test_config_versions` |
-| `test_results` | academic | `student_id` → `students`; `test_id` → `tests`; `config_id` → `test_config_versions`; `letter_level_id` → `test_letter_levels`; `published_by` → `account_profiles` |
-| `component_results` | academic | `result_id` → `test_results`; `component_id` → `test_components` |
+| `test_ielts_skills` | academic-ielts | `config_id` → `test_config_versions`; PK `(config_id, skill)` |
+| `test_results` | academic-results | `student_id` → `students`; `test_id` → `tests`; `(test_id, config_id)` → `test_config_versions(test_id, id)`; `(config_id, letter_level_id)` → `test_letter_levels(config_id, id)`; actor → `account_profiles` |
+| `component_results` | academic-results | `(result_id, config_id)` → `test_results(id, config_id)`; `(config_id, component_id)` → `test_components(config_id, id)` |
+| `ielts_skill_results` | academic-ielts | `(result_id, config_id)` → `test_results(id, config_id)`; `(config_id, skill)` → `test_ielts_skills(config_id, skill)` |
+| `ielts_criterion_results` | academic-ielts | `(result_id, config_id, skill)` → `ielts_skill_results(result_id, config_id, skill)` |
 | `test_comments` | comments | `student_id` → `students`; `test_id` → `tests`; `published_by` → `account_profiles` |
 | `comment_rounds` | comments | `class_id` → `classes` |
 | `round_comments` | comments | `student_id` → `students`; `round_id` → `comment_rounds`; `published_by` → `account_profiles` |

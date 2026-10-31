@@ -81,6 +81,12 @@ export const router = createRouter({
           meta: { navParent: 'classes' },
         },
         {
+          path: 'admin/test-templates',
+          name: 'test-templates',
+          component: () => import('../features/assessments/TestTemplatesPage.vue'),
+          meta: { workspaces: ['admin'] },
+        },
+        {
           path: 'catalogs',
           name: 'catalogs',
           component: () => import('../features/catalogs/CatalogsPage.vue'),

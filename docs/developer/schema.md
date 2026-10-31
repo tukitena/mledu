@@ -1,12 +1,12 @@
 # Schema PostgreSQL hiện tại của MLedu
 
-Tài liệu tham chiếu schema vật lý, đối chiếu metadata `mledu-dev` với **16 migration** tới `20261030130000_class_school_year.sql` ngày **30/10/2026**. SQL trong [supabase/migrations](../../supabase/migrations/) là nguồn triển khai; tài liệu này không phải DDL thứ hai hoặc bằng chứng CI/staging/production. [plans.md](plans.md) vẫn quyết định nghiệp vụ.
+Tài liệu tham chiếu schema vật lý, đối chiếu metadata `mledu-dev` với **20 migration** tới `20261031100000_test_templates.sql` ngày **31/10/2026**. SQL trong [supabase/migrations](../../supabase/migrations/) là nguồn triển khai; tài liệu này không phải DDL thứ hai hoặc bằng chứng CI/staging/production. [plans.md](plans.md) vẫn quyết định nghiệp vụ.
 
 ## Ranh giới schema
 
 | Schema | Nội dung hiện tại | Truy cập |
 | --- | --- | --- |
-| `app` | 21 bảng ứng dụng bên dưới; enum `account_type`; sequence `student_code_seq`, `weekly_schedules_revision_seq` | Không expose qua Data API; tất cả bảng bật RLS, không cấp quyền đọc/ghi trực tiếp cho `anon`/`authenticated` |
+| `app` | 23 bảng ứng dụng bên dưới; enum `account_type`; sequence `student_code_seq`, `weekly_schedules_revision_seq` | Không expose qua Data API; tất cả bảng bật RLS, không cấp quyền đọc/ghi trực tiếp cho `anon`/`authenticated` |
 | `api` | RPC truy vấn/lệnh nghiệp vụ; không có bảng | Schema duy nhất expose theo `supabase/config.toml`; từng RPC có grant và kiểm tra actor/scope |
 | `app_private` | Helper quyền, chuẩn hóa, transaction/history và composite type `student_input`; không có bảng | Không expose qua Data API |
 | `auth`, `storage` | Supabase quản lý | Không liệt kê lại cấu trúc nội bộ; avatar dùng bucket private `avatars` và Storage API |
@@ -29,6 +29,7 @@ Luồng nghiệp vụ: Vue → Workers/Hono → RPC. Service-side function khôn
 | Danh mục và học sinh | [`app.catalog_entries`](#appcatalog_entries), [`app.sites`](#appsites), [`app.rooms`](#approoms), [`app.students`](#appstudents), [`app.student_contacts`](#appstudent_contacts) |
 | Lớp, phân công và lần tham gia | [`app.classes`](#appclasses), [`app.class_assignments`](#appclass_assignments), [`app.class_students`](#appclass_students), [`app.participations`](#appparticipations), [`app.class_lifecycle_events`](#appclass_lifecycle_events) |
 | Lịch và chuyên cần | [`app.weekly_schedules`](#appweekly_schedules), [`app.class_sessions`](#appclass_sessions), [`app.holidays`](#appholidays), [`app.attendance`](#appattendance) |
+| Học vụ (GĐ5, đang triển khai) | [`app.test_templates`](#apptest_templates), [`app.test_template_versions`](#apptest_template_versions) |
 | Audit, lịch sử và outbox | [`app.audit_events`](#appaudit_events), [`app.business_entity_versions`](#appbusiness_entity_versions), [`app.outbox_events`](#appoutbox_events), [`app.outbox_deliveries`](#appoutbox_deliveries) |
 
 ## Tài khoản và avatar
@@ -499,6 +500,59 @@ Khóa và tham chiếu:
 - `FOREIGN KEY (student_id) REFERENCES app.students(id)`.
 - `FOREIGN KEY (updated_by) REFERENCES app.account_profiles(id)`.
 
+## Học vụ
+
+Feature đầu tiên của GĐ5 (TEST-02): thư viện template bài kiểm tra dùng chung toàn trung tâm. Bài kiểm tra, snapshot cấu hình, kết quả và nhận xét **chưa có migration**; xem [thiết kế học vụ](assessment-schema.md).
+
+### app.test_templates
+
+Gốc ổn định của một template; không có FK lớp/địa điểm. Chỉ Admin hiện hành ghi qua RPC `api.*_test_template`. Xóa mềm chỉ ngừng chọn cho bài mới; trigger chặn `DELETE`.
+
+Nguồn: [20261031100000_test_templates.sql](../../supabase/migrations/20261031100000_test_templates.sql).
+
+| Cột | Kiểu | NULL | Mặc định |
+| --- | --- | --- | --- |
+| `id` | `uuid` | Không | `gen_random_uuid()` |
+| `current_version_id` | `uuid` | Không | — |
+| `row_version` | `bigint` | Không | `1` |
+| `created_at` | `timestamptz` | Không | `now()` |
+| `created_by` | `uuid` | Không | — |
+| `updated_at` | `timestamptz` | Không | `now()` |
+| `deleted_at` | `timestamptz` | Có | — |
+| `deleted_by` | `uuid` | Có | — |
+| `deleted_reason` | `text` | Có | — |
+
+Khóa và tham chiếu:
+
+- `PRIMARY KEY (id)`.
+- `FOREIGN KEY (id, current_version_id) REFERENCES app.test_template_versions(template_id, id) DEFERRABLE INITIALLY DEFERRED` — gốc và phiên bản đầu tạo trong cùng transaction.
+- `FOREIGN KEY (created_by)`, `FOREIGN KEY (deleted_by) REFERENCES app.account_profiles(id)`.
+- CHECK đồng bộ ba cột `deleted_*` (lý do 1–1.000 ký tự).
+
+### app.test_template_versions
+
+Phiên bản bất biến: trigger `reject_change` chặn `UPDATE`/`DELETE`/`TRUNCATE`. Tên/mô tả lưu theo phiên bản để bài cũ giữ đúng nguồn. `config` là JSONB có kiểu (số/phân số/chữ/IELTS), CHECK bắt buộc ở dạng đã chuẩn hóa bởi `app_private.test_template_config`; `config_schema_version = 1`. IELTS có `formulaVersion = mledu-ielts-v1` do backend gắn.
+
+| Cột | Kiểu | NULL | Mặc định |
+| --- | --- | --- | --- |
+| `id` | `uuid` | Không | `gen_random_uuid()` |
+| `template_id` | `uuid` | Không | — |
+| `revision` | `bigint` | Không | — |
+| `name` | `text` | Không | — |
+| `description` | `text` | Có | — |
+| `config_schema_version` | `smallint` | Không | — |
+| `config` | `jsonb` | Không | — |
+| `created_at` | `timestamptz` | Không | `now()` |
+| `created_by` | `uuid` | Không | — |
+
+Khóa và tham chiếu:
+
+- `PRIMARY KEY (id)`.
+- `UNIQUE (template_id, revision)`; `UNIQUE (template_id, id)` phục vụ FK con trỏ.
+- `FOREIGN KEY (template_id) REFERENCES app.test_templates(id)`.
+- `FOREIGN KEY (created_by) REFERENCES app.account_profiles(id)`.
+- CHECK tên 1–200 ký tự, mô tả NULL hoặc 1–5.000 ký tự (đã trim/NFC).
+
 ## Audit, lịch sử và outbox
 
 ### app.audit_events
@@ -609,7 +663,11 @@ Khóa và tham chiếu:
 | `outbox_events.class_id` | `subject_kind` + `subject_id` là tham chiếu logic |
 | `audit_events.job_id`, `import_id` | Không có; định danh liên quan nằm trong `entity_refs` |
 
-`auth_commands` và `avatar_uploads` là bảng hiện có dù chưa vẽ trong ERD logic. Các bảng học vụ, phụ huynh, học phí, thanh toán, Excel, `notifications`, `background_jobs` và `job_attempts` chưa có migration tạo bảng; không coi chúng là schema đã chạy. Hợp đồng `api` được sinh tại [database.types.ts](../../apps/api/src/generated/database.types.ts), không chứa toàn bộ bảng private `app`.
+`auth_commands` và `avatar_uploads` là bảng hiện có dù chưa vẽ trong ERD logic. Ngoài hai bảng template ở trên, các bảng học vụ (bài, snapshot, kết quả, nhận xét), phụ huynh, học phí, thanh toán, Excel, `notifications`, `background_jobs` và `job_attempts` chưa có migration tạo bảng; không coi chúng là schema đã chạy. Hợp đồng `api` được sinh tại [database.types.ts](../../apps/api/src/generated/database.types.ts), không chứa toàn bộ bảng private `app`.
+
+### Thiết kế học vụ còn lại
+
+[Thiết kế schema template và snapshot bài kiểm tra](assessment-schema.md) ngày **31/10/2026** mô tả TEST-01–06. Phần thư viện template (`test_templates`, `test_template_versions`) đã có migration ngày 31/10/2026 như mục [Học vụ](#học-vụ). `tests`, `test_config_versions`, các bảng mức/phần/kỹ năng của bài, kết quả và IELTS vẫn là đề xuất; migration tương lai là nguồn DDL duy nhất.
 
 ## Cập nhật tài liệu
 

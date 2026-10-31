@@ -85,6 +85,9 @@ const navItems = computed(() => [
   ...(workspace.value === 'admin' || workspace.value === 'receptionist'
     ? [{ name: 'catalogs', icon: 'bi-collection', label: t('nav.catalogs') }]
     : []),
+  ...(workspace.value === 'admin'
+    ? [{ name: 'test-templates', icon: 'bi-ui-checks-grid', label: t('nav.testTemplates') }]
+    : []),
   { name: 'profile', icon: 'bi-person-circle', label: t('nav.profile') },
 ])
 
