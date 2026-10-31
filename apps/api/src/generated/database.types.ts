@@ -34,6 +34,15 @@ export type Database = {
         Args: { p_expected_version: number; p_id: string; p_reason: string }
         Returns: Json
       }
+      change_test_config: {
+        Args: {
+          p_config: Json
+          p_expected_version: number
+          p_id: string
+          p_source_template_version_id: string
+        }
+        Returns: Json
+      }
       class_lifecycle_impact: { Args: { p_id: string }; Returns: Json }
       clear_my_avatar: { Args: { p_expected_version: number }; Returns: Json }
       close_class: {
@@ -78,6 +87,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_test: {
+        Args: {
+          p_class_id: string
+          p_config: Json
+          p_description: string
+          p_name: string
+          p_source_template_version_id: string
+          p_test_on: string
+        }
+        Returns: Json
+      }
       create_test_template: {
         Args: { p_config: Json; p_description: string; p_name: string }
         Returns: Json
@@ -111,6 +131,7 @@ export type Database = {
       get_class_schedule: { Args: { p_class_id: string }; Returns: Json }
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       get_student: { Args: { p_id: string }; Returns: Json }
+      get_test: { Args: { p_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
       list_accounts: {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
@@ -126,6 +147,7 @@ export type Database = {
         Args: { p_class_id: string; p_include_deleted?: boolean }
         Returns: Json
       }
+      list_class_tests: { Args: { p_class_id: string }; Returns: Json }
       list_classes: {
         Args: {
           p_deleted?: boolean
@@ -147,6 +169,7 @@ export type Database = {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
         Returns: Json
       }
+      list_test_template_choices: { Args: { p_class_id: string }; Returns: Json }
       list_test_template_versions: { Args: { p_id: string }; Returns: Json }
       list_test_templates: { Args: { p_include_archived?: boolean }; Returns: Json }
       mark_avatar_verified: { Args: { p_path: string }; Returns: undefined }
@@ -229,6 +252,10 @@ export type Database = {
       }
       set_participation_note: {
         Args: { p_expected_version: number; p_id: string; p_note: string }
+        Returns: Json
+      }
+      set_test_show_components: {
+        Args: { p_expected_version: number; p_id: string; p_show: boolean }
         Returns: Json
       }
       soft_delete_account: {
@@ -326,6 +353,16 @@ export type Database = {
           p_parent_phones: string[]
           p_school: string
           p_student_phones: string[]
+        }
+        Returns: Json
+      }
+      update_test: {
+        Args: {
+          p_description: string
+          p_expected_version: number
+          p_id: string
+          p_name: string
+          p_test_on: string
         }
         Returns: Json
       }

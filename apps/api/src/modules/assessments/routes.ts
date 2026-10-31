@@ -1,5 +1,12 @@
 import {
+  ChangeTestConfigRequest,
+  ClassTest,
+  ClassTestDetail,
+  ClassTestList,
+  CreateTestRequest,
   CreateTestTemplateRequest,
+  SetShowComponentsRequest,
+  UpdateTestRequest,
   TestTemplate,
   TestTemplateVersion,
   UpdateTestTemplateRequest,
@@ -92,6 +99,105 @@ export const testTemplateRoutes = new Hono<AppEnv>()
         await c.get('db').rpc('restore_test_template', {
           p_id: uuidParam(c, 'id'),
           p_expected_version: expectedVersion,
+        }),
+      ),
+    )
+  })
+
+/**
+ * Tests of a class (TEST-05). Every RPC re-checks the current account, the
+ * class and the caller's assignment (Admin, teacher or assistant; display
+ * option Admin or teacher). Receptionists have no academic access.
+ */
+export const classTestRoutes = new Hono<AppEnv>()
+  .use(requireSession())
+
+  .get('/:classId/tests', async (c) =>
+    c.json(
+      rpcResult(
+        ClassTestList,
+        await c.get('db').rpc('list_class_tests', { p_class_id: uuidParam(c, 'classId') }),
+      ),
+    ),
+  )
+
+  // Templates that may be copied into a test of this class (not archived).
+  .get('/:classId/test-templates', async (c) =>
+    c.json(
+      rpcResult(
+        z.array(TestTemplate),
+        await c
+          .get('db')
+          .rpc('list_test_template_choices', { p_class_id: uuidParam(c, 'classId') }),
+      ),
+    ),
+  )
+
+  .post('/:classId/tests', async (c) => {
+    const body = await parseJson(c, CreateTestRequest)
+    const test = rpcResult(
+      ClassTest,
+      await c.get('db').rpc('create_test', {
+        p_class_id: uuidParam(c, 'classId'),
+        p_name: body.name,
+        p_test_on: body.testOn,
+        p_description: nullable(body.description),
+        p_config: body.config,
+        p_source_template_version_id: nullable(body.sourceTemplateVersionId),
+      }),
+    )
+    return c.json(test, 201)
+  })
+
+export const testRoutes = new Hono<AppEnv>()
+  .use(requireSession())
+
+  .get('/:id', async (c) =>
+    c.json(
+      rpcResult(ClassTestDetail, await c.get('db').rpc('get_test', { p_id: uuidParam(c, 'id') })),
+    ),
+  )
+
+  .put('/:id', async (c) => {
+    const body = await parseJson(c, UpdateTestRequest)
+    return c.json(
+      rpcResult(
+        ClassTest,
+        await c.get('db').rpc('update_test', {
+          p_id: uuidParam(c, 'id'),
+          p_name: body.name,
+          p_test_on: body.testOn,
+          p_description: nullable(body.description),
+          p_expected_version: body.expectedVersion,
+        }),
+      ),
+    )
+  })
+
+  .put('/:id/config', async (c) => {
+    const body = await parseJson(c, ChangeTestConfigRequest)
+    return c.json(
+      rpcResult(
+        ClassTest,
+        await c.get('db').rpc('change_test_config', {
+          p_id: uuidParam(c, 'id'),
+          p_config: body.config,
+          p_source_template_version_id: nullable(body.sourceTemplateVersionId),
+          p_expected_version: body.expectedVersion,
+        }),
+      ),
+    )
+  })
+
+  .put('/:id/show-components', async (c) => {
+    const body = await parseJson(c, SetShowComponentsRequest)
+    return c.json(
+      rpcResult(
+        ClassTest,
+        await c.get('db').rpc('set_test_show_components', {
+          p_id: uuidParam(c, 'id'),
+          p_show: body.showComponents,
+          p_expected_version: body.expectedVersion,
         }),
       ),
     )

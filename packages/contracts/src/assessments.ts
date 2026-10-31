@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { RowVersion } from './common'
+import { IsoDate, RowVersion } from './common'
 import { nameKey } from './normalize'
 
 /**
@@ -256,3 +256,107 @@ export const TestTemplateVersion = z.object({
   createdByName: z.string(),
 })
 export type TestTemplateVersion = z.infer<typeof TestTemplateVersion>
+
+/**
+ * Tests of a class (TEST-05). The grading configuration is a snapshot of the
+ * test: written from scratch or copied from one exact template version and
+ * adjusted. It has the same shape as a template configuration; showComponents
+ * is the test's display option (TEST-04), kept outside the snapshot.
+ */
+export const GradingConfigInput = TestTemplateConfigInput
+export type GradingConfigInput = TestTemplateConfigInput
+export const GradingConfig = TestTemplateConfig
+export type GradingConfig = TestTemplateConfig
+
+/** True when the display option has something to show (components or a detailed IELTS skill). */
+export const hasDetails = (config: GradingConfigInput) =>
+  ('inputMode' in config && config.inputMode === 'components') ||
+  (config.scaleKind === 'ielts' && config.skills.some((skill) => skill.inputMode === 'detailed'))
+
+const TestName = z.string().trim().min(1).max(200)
+
+const TestInfo = {
+  name: TestName,
+  testOn: IsoDate,
+  description: Description,
+}
+
+export const CreateTestRequest = z.strictObject({
+  ...TestInfo,
+  config: GradingConfigInput,
+  /** Template version that was copied, or null for a configuration from scratch. */
+  sourceTemplateVersionId: z.uuid().nullable(),
+})
+export type CreateTestRequest = z.input<typeof CreateTestRequest>
+
+export const UpdateTestRequest = z.strictObject({ ...TestInfo, expectedVersion: RowVersion })
+export type UpdateTestRequest = z.input<typeof UpdateTestRequest>
+
+/**
+ * New configuration of a test. Sending the current source keeps that provenance;
+ * another template version is a new choice, checked like on creation.
+ */
+export const ChangeTestConfigRequest = z.strictObject({
+  config: GradingConfigInput,
+  sourceTemplateVersionId: z.uuid().nullable(),
+  expectedVersion: RowVersion,
+})
+export type ChangeTestConfigRequest = z.input<typeof ChangeTestConfigRequest>
+
+export const SetShowComponentsRequest = z.strictObject({
+  showComponents: z.boolean(),
+  expectedVersion: RowVersion,
+})
+export type SetShowComponentsRequest = z.input<typeof SetShowComponentsRequest>
+
+/** Template version a snapshot was copied from (provenance only). */
+export const TestSource = z.object({
+  templateId: z.uuid(),
+  templateVersionId: z.uuid(),
+  revision: z.number().int().min(1),
+  name: z.string(),
+  templateArchived: z.boolean(),
+})
+export type TestSource = z.infer<typeof TestSource>
+
+export const ClassTest = z.object({
+  id: z.uuid(),
+  classId: z.uuid(),
+  name: z.string(),
+  testOn: IsoDate,
+  description: z.string().nullable(),
+  showComponents: z.boolean(),
+  /** Snapshot used by results and Excel (XLS-06); grows with each configuration change. */
+  configId: z.uuid(),
+  configRevision: z.number().int().min(1),
+  config: GradingConfig,
+  source: TestSource.nullable(),
+  deleted: z.boolean(),
+  createdAt: z.string(),
+  createdByName: z.string(),
+  updatedAt: z.string(),
+  rowVersion: RowVersion,
+})
+export type ClassTest = z.infer<typeof ClassTest>
+
+export const ClassTestList = z.object({
+  items: z.array(ClassTest),
+  /** Admin or a current teacher/assistant, in a class that is not deleted. */
+  canEdit: z.boolean(),
+  /** Admin or a current teacher (TEST-04); assistants cannot change the display option. */
+  canChangeDisplay: z.boolean(),
+})
+export type ClassTestList = z.infer<typeof ClassTestList>
+
+export const TestConfigVersion = z.object({
+  id: z.uuid(),
+  revision: z.number().int().min(1),
+  scaleKind: ScaleKind,
+  source: TestSource.nullable(),
+  createdAt: z.string(),
+  createdByName: z.string(),
+})
+export type TestConfigVersion = z.infer<typeof TestConfigVersion>
+
+export const ClassTestDetail = ClassTest.extend({ configVersions: z.array(TestConfigVersion) })
+export type ClassTestDetail = z.infer<typeof ClassTestDetail>

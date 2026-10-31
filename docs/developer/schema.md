@@ -1,6 +1,6 @@
 # Schema PostgreSQL hiện tại của MLedu
 
-Tài liệu tham chiếu schema vật lý, đối chiếu metadata `mledu-dev` với **20 migration** tới `20261031100000_test_templates.sql` ngày **31/10/2026**. SQL trong [supabase/migrations](../../supabase/migrations/) là nguồn triển khai; tài liệu này không phải DDL thứ hai hoặc bằng chứng CI/staging/production. [plans.md](plans.md) vẫn quyết định nghiệp vụ.
+Tài liệu tham chiếu schema vật lý, đối chiếu metadata `mledu-dev` với **21 migration** tới `20261031110000_tests.sql` ngày **31/10/2026**. SQL trong [supabase/migrations](../../supabase/migrations/) là nguồn triển khai; tài liệu này không phải DDL thứ hai hoặc bằng chứng CI/staging/production. [plans.md](plans.md) vẫn quyết định nghiệp vụ.
 
 ## Ranh giới schema
 
@@ -29,7 +29,7 @@ Luồng nghiệp vụ: Vue → Workers/Hono → RPC. Service-side function khôn
 | Danh mục và học sinh | [`app.catalog_entries`](#appcatalog_entries), [`app.sites`](#appsites), [`app.rooms`](#approoms), [`app.students`](#appstudents), [`app.student_contacts`](#appstudent_contacts) |
 | Lớp, phân công và lần tham gia | [`app.classes`](#appclasses), [`app.class_assignments`](#appclass_assignments), [`app.class_students`](#appclass_students), [`app.participations`](#appparticipations), [`app.class_lifecycle_events`](#appclass_lifecycle_events) |
 | Lịch và chuyên cần | [`app.weekly_schedules`](#appweekly_schedules), [`app.class_sessions`](#appclass_sessions), [`app.holidays`](#appholidays), [`app.attendance`](#appattendance) |
-| Học vụ (GĐ5, đang triển khai) | [`app.test_templates`](#apptest_templates), [`app.test_template_versions`](#apptest_template_versions) |
+| Học vụ (GĐ5, đang triển khai) | [`app.test_templates`](#apptest_templates), [`app.test_template_versions`](#apptest_template_versions), [`app.tests`](#apptests), [`app.test_config_versions`](#apptest_config_versions), [mức/phần/kỹ năng của bài](#mức-phần-và-kỹ-năng-của-bài) |
 | Audit, lịch sử và outbox | [`app.audit_events`](#appaudit_events), [`app.business_entity_versions`](#appbusiness_entity_versions), [`app.outbox_events`](#appoutbox_events), [`app.outbox_deliveries`](#appoutbox_deliveries) |
 
 ## Tài khoản và avatar
@@ -502,7 +502,7 @@ Khóa và tham chiếu:
 
 ## Học vụ
 
-Feature đầu tiên của GĐ5 (TEST-02): thư viện template bài kiểm tra dùng chung toàn trung tâm. Bài kiểm tra, snapshot cấu hình, kết quả và nhận xét **chưa có migration**; xem [thiết kế học vụ](assessment-schema.md).
+GĐ5 đã có hai feature: thư viện template dùng chung (TEST-02) và bài kiểm tra trong lớp với snapshot cấu hình (TEST-05). Kết quả, IELTS tính điểm, công bố và nhận xét **chưa có migration**; xem [thiết kế học vụ](assessment-schema.md).
 
 ### app.test_templates
 
@@ -552,6 +552,68 @@ Khóa và tham chiếu:
 - `FOREIGN KEY (template_id) REFERENCES app.test_templates(id)`.
 - `FOREIGN KEY (created_by) REFERENCES app.account_profiles(id)`.
 - CHECK tên 1–200 ký tự, mô tả NULL hoặc 1–5.000 ký tự (đã trim/NFC).
+
+### app.tests
+
+Bài kiểm tra thuộc một lớp (TEST-05). Cho trùng tên trong lớp. `show_components` là tùy chọn hiển thị toàn bài (TEST-04), nằm ngoài snapshot bất biến; RPC đặt `false` khi cấu hình không có chi tiết. Ghi qua `api.create_test`, `update_test` (tên/ngày/mô tả), `change_test_config`, `set_test_show_components`; trigger chặn `DELETE`/`TRUNCATE`. Cột `deleted_*` dành cho TEST-06, chưa có lệnh xóa/khôi phục.
+
+Nguồn: [20261031110000_tests.sql](../../supabase/migrations/20261031110000_tests.sql).
+
+| Cột | Kiểu | NULL | Mặc định |
+| --- | --- | --- | --- |
+| `id` | `uuid` | Không | `gen_random_uuid()` |
+| `class_id` | `uuid` | Không | — |
+| `name` | `text` | Không | — |
+| `name_key` | `text` | Không | — |
+| `test_on` | `date` | Không | — |
+| `description` | `text` | Có | — |
+| `current_config_id` | `uuid` | Không | — |
+| `show_components` | `boolean` | Không | `false` |
+| `row_version` | `bigint` | Không | `1` |
+| `created_at`, `updated_at` | `timestamptz` | Không | `now()` |
+| `created_by` | `uuid` | Không | — |
+| `deleted_at`, `deleted_by`, `deleted_reason` | | Có | — |
+
+Khóa và tham chiếu:
+
+- `PRIMARY KEY (id)`; index `(class_id, test_on DESC)`, `(current_config_id)`.
+- `FOREIGN KEY (class_id) REFERENCES app.classes(id)`; actor → `app.account_profiles(id)`.
+- `FOREIGN KEY (id, current_config_id) REFERENCES app.test_config_versions(test_id, id) DEFERRABLE INITIALLY DEFERRED`.
+- CHECK tên 1–200 ký tự, `name_key = name_key(name)`, mô tả NULL hoặc 1–5.000 ký tự, đồng bộ `deleted_*`.
+
+### app.test_config_versions
+
+Snapshot cấu hình bất biến của bài; mỗi lần đổi cấu hình thêm `revision`. `source_template_version_id` chỉ là provenance (NULL khi cấu hình riêng). Trigger `reject_change` chặn `UPDATE`/`DELETE`/`TRUNCATE`.
+
+| Cột | Kiểu | NULL | Mặc định |
+| --- | --- | --- | --- |
+| `id` | `uuid` | Không | `gen_random_uuid()` |
+| `test_id` | `uuid` | Không | — |
+| `revision` | `bigint` | Không | — |
+| `scale_kind` | `text` | Không | — |
+| `input_mode` | `text` | Có | — |
+| `max_score` | `numeric` | Có | — |
+| `total_questions` | `integer` | Có | — |
+| `formula_version` | `text` | Có | — |
+| `source_template_version_id` | `uuid` | Có | — |
+| `created_at` | `timestamptz` | Không | `now()` |
+| `created_by` | `uuid` | Không | — |
+
+Khóa và tham chiếu:
+
+- `PRIMARY KEY (id)`; `UNIQUE (test_id, revision)`, `UNIQUE (test_id, id)`; index `(source_template_version_id)`.
+- `FOREIGN KEY (test_id) REFERENCES app.tests(id)`; `FOREIGN KEY (source_template_version_id) REFERENCES app.test_template_versions(id)`.
+- CHECK hình dạng theo loại: số (`direct/components`, `max_score > 0`, ≤2 số lẻ), phân số (`total_questions ≥ 1`), chữ (`direct`), IELTS (`input_mode` NULL, có `formula_version`).
+
+### Mức, phần và kỹ năng của bài
+
+- `app.test_letter_levels(id, config_id, code, label, label_key, sort_order)`: UQ `(config_id, id)`, `(config_id, label_key)`, `(config_id, sort_order)`; `code = 'l' || sort_order`, 1–20 mức, nhãn 1–100 ký tự.
+- `app.test_components(id, config_id, code, name, name_key, max_score, total_questions, sort_order)`: UQ tương tự; `code = 'c' || sort_order`, 1–50 phần, đúng một loại giới hạn.
+- `app.test_ielts_skills(config_id, skill, input_mode, max_questions)`: PK `(config_id, skill)`; `max_questions` chỉ có với L/R `detailed`.
+
+Cả ba bảng chặn `UPDATE`/`DELETE`/`TRUNCATE`. Constraint trigger trì hoãn `app_private.check_test_config` (SECURITY DEFINER, chạy lúc commit) dựng lại cấu hình từ các dòng và bắt buộc nó hợp lệ, đã chuẩn hóa theo cùng validator template; phát hiện số dòng/tổng/mã sai mà CHECK một dòng không chứng minh được.
+
+RLS bật trên mọi bảng; không grant cho `anon`/`authenticated`.
 
 ## Audit, lịch sử và outbox
 
@@ -663,11 +725,11 @@ Khóa và tham chiếu:
 | `outbox_events.class_id` | `subject_kind` + `subject_id` là tham chiếu logic |
 | `audit_events.job_id`, `import_id` | Không có; định danh liên quan nằm trong `entity_refs` |
 
-`auth_commands` và `avatar_uploads` là bảng hiện có dù chưa vẽ trong ERD logic. Ngoài hai bảng template ở trên, các bảng học vụ (bài, snapshot, kết quả, nhận xét), phụ huynh, học phí, thanh toán, Excel, `notifications`, `background_jobs` và `job_attempts` chưa có migration tạo bảng; không coi chúng là schema đã chạy. Hợp đồng `api` được sinh tại [database.types.ts](../../apps/api/src/generated/database.types.ts), không chứa toàn bộ bảng private `app`.
+`auth_commands` và `avatar_uploads` là bảng hiện có dù chưa vẽ trong ERD logic. Ngoài các bảng template/bài/snapshot ở trên, các bảng học vụ còn lại (kết quả, IELTS, nhận xét), phụ huynh, học phí, thanh toán, Excel, `notifications`, `background_jobs` và `job_attempts` chưa có migration tạo bảng; không coi chúng là schema đã chạy. Hợp đồng `api` được sinh tại [database.types.ts](../../apps/api/src/generated/database.types.ts), không chứa toàn bộ bảng private `app`.
 
 ### Thiết kế học vụ còn lại
 
-[Thiết kế schema template và snapshot bài kiểm tra](assessment-schema.md) ngày **31/10/2026** mô tả TEST-01–06. Phần thư viện template (`test_templates`, `test_template_versions`) đã có migration ngày 31/10/2026 như mục [Học vụ](#học-vụ). `tests`, `test_config_versions`, các bảng mức/phần/kỹ năng của bài, kết quả và IELTS vẫn là đề xuất; migration tương lai là nguồn DDL duy nhất.
+[Thiết kế schema template và snapshot bài kiểm tra](assessment-schema.md) ngày **31/10/2026** mô tả TEST-01–06. Thư viện template và bài/snapshot cấu hình (`tests`, `test_config_versions`, mức/phần/kỹ năng; thêm cột `code` theo vị trí cho mức/phần) đã có migration ngày 31/10/2026 như mục [Học vụ](#học-vụ). Kết quả và IELTS vẫn là đề xuất; migration tương lai là nguồn DDL duy nhất.
 
 ## Cập nhật tài liệu
 

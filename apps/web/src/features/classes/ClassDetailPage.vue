@@ -14,6 +14,7 @@ import EnrollmentsPanel from './EnrollmentsPanel.vue'
 import ClassLifecycleActions from './ClassLifecycleActions.vue'
 import { periodBadge } from './labels'
 import SchedulePanel from '../scheduling/SchedulePanel.vue'
+import TestsPanel from '../assessments/TestsPanel.vue'
 import StaffWarnings from '../scheduling/StaffWarnings.vue'
 import { ClassSchedule } from '@mledu/contracts/scheduling'
 
@@ -23,7 +24,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const TABS = ['staff', 'students', 'schedule'] as const
+const TABS = ['staff', 'students', 'schedule', 'tests'] as const
 type Tab = (typeof TABS)[number]
 
 const klass = ref<ClassDetail | null>(null)
@@ -32,8 +33,14 @@ const notice = ref<string | null>(null)
 const editing = ref(false)
 const scheduleWarnings = ref<ClassSchedule['warnings']>([])
 const canManage = computed(() => workspace.value === 'admin' || workspace.value === 'receptionist')
+// Academic tabs (TEST-05): Admin workspace, or a User with a current role in
+// the class. Receptionists have no academic access; the API refuses them too.
+const academic = computed(
+  () => workspace.value === 'admin' || (workspace.value === 'user' && !!klass.value?.myRole),
+)
+const tabs = computed(() => TABS.filter((item) => item !== 'tests' || academic.value))
 const tab = computed<Tab>({
-  get: () => (TABS.find((item) => item === route.query.tab) as Tab | undefined) ?? 'staff',
+  get: () => (tabs.value.find((item) => item === route.query.tab) as Tab | undefined) ?? 'staff',
   set: (value) => void router.replace({ query: { ...route.query, tab: value } }),
 })
 
@@ -139,7 +146,7 @@ const date = (value: string) => formatIsoDate(value)
       <div class="card data-card">
         <div class="card-header data-card-header">
           <div class="btn-group btn-group-sm" role="group" :aria-label="klass.name">
-            <template v-for="item in TABS" :key="item">
+            <template v-for="item in tabs" :key="item">
               <input
                 :id="`class-tab-${item}`"
                 v-model="tab"
@@ -169,6 +176,7 @@ const date = (value: string) => formatIsoDate(value)
             :can-manage="canManage"
           />
           <SchedulePanel v-if="tab === 'schedule'" :key="klass.id" :klass="klass" />
+          <TestsPanel v-if="tab === 'tests'" :key="klass.id" :klass="klass" />
         </div>
       </div>
     </template>

@@ -89,6 +89,8 @@ export const ErrorCode = z.enum([
   'session_started',
   'holiday_conflict',
   'attendance_not_started',
+  /** TEST-02: the chosen template was archived or edited since it was shown; pick it again. */
+  'template_unavailable',
   'not_found',
   'method_not_allowed',
   'version_conflict',

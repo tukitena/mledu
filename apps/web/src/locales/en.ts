@@ -345,6 +345,49 @@ export const en: typeof vi = {
       'Shown only this once. Give it to {email} through your usual channel; it is not stored readable.',
     updated: '{name} updated.',
   },
+  tests: {
+    subtitle:
+      'Each test keeps its own copy of the configuration. Editing a template does not change existing tests; changing a test configuration adds a configuration revision.',
+    create: 'Create test',
+    editInfoTitle: 'Edit details: {name}',
+    configTitle: 'Change configuration: {name}',
+    configHint:
+      'Saving adds a configuration revision to this test; earlier revisions stay in its history. Library templates are not changed.',
+    name: 'Test name',
+    nameRequired: 'Enter a test name (up to 200 characters).',
+    testOn: 'Test date',
+    dateHint: 'The test date must lie within the class dates.',
+    description: 'Description',
+    template: 'Start from template',
+    ownConfig: 'Own configuration',
+    keepSource: 'Keep current source: {name} · v{revision}',
+    templateHint:
+      'Optional. Pick a template to copy its configuration, then adjust it for this test.',
+    templateCopied: 'Copied: {summary}. You can adjust it below.',
+    showHint: 'Setting of this test only.',
+    showLocked: 'Only an Admin or the teacher can change this option.',
+    source: 'Configuration source',
+    fromTemplate: 'Template {name} · v{revision}',
+    configRevision: 'Configuration #{n}',
+    detailsVisible: 'Details shown',
+    detailsHiddenBadge: 'Details hidden',
+    empty: 'This class has no tests yet.',
+    total: '{n} tests',
+    created: 'Test {name} created.',
+    saved: 'Details of {name} saved.',
+    configSaved: 'Configuration #{revision} saved for {name}.',
+    detailsShown: 'Details are now shown for {name}.',
+    detailsHidden: 'Details are now hidden for {name}.',
+    historyTitle: 'Configuration history: {name}',
+    historyHint: 'Every configuration revision is kept without limit and never edited.',
+    actions: {
+      info: 'Edit details',
+      config: 'Change configuration',
+      showDetails: 'Show details to parents',
+      hideDetails: 'Hide details from parents',
+      history: 'Configuration history',
+    },
+  },
   testTemplates: {
     title: 'Test templates',
     subtitle:
@@ -515,7 +558,12 @@ export const en: typeof vi = {
     },
     period: { upcoming: 'Not started', running: 'Running', ended: 'Ended' },
     closed: 'Closed',
-    tabs: { staff: 'Staff', students: 'Students', schedule: 'Schedule / Attendance' },
+    tabs: {
+      staff: 'Staff',
+      students: 'Students',
+      schedule: 'Schedule / Attendance',
+      tests: 'Tests',
+    },
     actions: { open: 'Open', edit: 'Edit' },
     myRole: 'You: {role}',
     backToList: 'All classes',
@@ -626,6 +674,8 @@ export const en: typeof vi = {
       'Another student has the same name (accents ignored). Add at least one parent phone that differs.',
     class_dates_locked:
       'The class has activity: its opening date is locked and its end date must be today or later.',
+    template_unavailable:
+      'The template was edited or archived after you picked it. Pick the template again.',
     outside_class_dates:
       'Join dates or assignment dates must lie within the class opening and end dates.',
     participation_overlap: 'This participation overlaps an existing interval in the class record.',

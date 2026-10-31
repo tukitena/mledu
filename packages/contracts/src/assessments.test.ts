@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ChangeTestConfigRequest,
+  CreateTestRequest,
   CreateTestTemplateRequest,
+  hasDetails,
   TestTemplateConfig,
   TestTemplateConfigInput,
   UpdateTestTemplateRequest,
@@ -112,5 +115,71 @@ describe('template requests', () => {
     expect(
       UpdateTestTemplateRequest.safeParse({ name: 'A', description: null, config }).success,
     ).toBe(false)
+  })
+})
+
+describe('test requests (TEST-05)', () => {
+  const config = { scaleKind: 'numeric', inputMode: 'direct', maxScore: 10 }
+  const base = { name: 'Giữa kỳ', testOn: '2026-10-31', description: null, config }
+  it('requires name, date and configuration; the template is optional', () => {
+    expect(CreateTestRequest.safeParse({ ...base, sourceTemplateVersionId: null }).success).toBe(
+      true,
+    )
+    for (const missing of ['name', 'testOn', 'config'] as const) {
+      const body: Record<string, unknown> = { ...base, sourceTemplateVersionId: null }
+      delete body[missing]
+      expect(CreateTestRequest.safeParse(body).success).toBe(false)
+    }
+    expect(
+      CreateTestRequest.safeParse({ ...base, name: '  ', sourceTemplateVersionId: null }).success,
+    ).toBe(false)
+    expect(
+      CreateTestRequest.safeParse({ ...base, testOn: '31/10/2026', sourceTemplateVersionId: null })
+        .success,
+    ).toBe(false)
+  })
+
+  it('validates the configuration like a template and refuses extra fields', () => {
+    expect(
+      CreateTestRequest.safeParse({
+        ...base,
+        config: { ...config, maxScore: 8.255 },
+        sourceTemplateVersionId: null,
+      }).success,
+    ).toBe(false)
+    expect(
+      ChangeTestConfigRequest.safeParse({
+        config,
+        sourceTemplateVersionId: null,
+        expectedVersion: 1,
+        showComponents: true,
+      }).success,
+    ).toBe(false)
+  })
+
+  it('knows when the display option has something to show', () => {
+    expect(hasDetails({ scaleKind: 'numeric', inputMode: 'direct', maxScore: 10 })).toBe(false)
+    expect(
+      hasDetails({
+        scaleKind: 'fraction',
+        inputMode: 'components',
+        showComponents: false,
+        components: [{ name: 'A', totalQuestions: 1 }],
+      }),
+    ).toBe(true)
+    expect(
+      hasDetails({
+        scaleKind: 'ielts',
+        showComponents: false,
+        skills: [{ code: 'S', inputMode: 'direct' }],
+      }),
+    ).toBe(false)
+    expect(
+      hasDetails({
+        scaleKind: 'ielts',
+        showComponents: false,
+        skills: [{ code: 'W', inputMode: 'detailed' }],
+      }),
+    ).toBe(true)
   })
 })
