@@ -5,7 +5,9 @@ import {
   ClassTestList,
   CreateTestRequest,
   CreateTestTemplateRequest,
+  SaveTestResultsRequest,
   SetShowComponentsRequest,
+  TestResults,
   UpdateTestRequest,
   TestTemplate,
   TestTemplateVersion,
@@ -198,6 +200,31 @@ export const testRoutes = new Hono<AppEnv>()
           p_id: uuidParam(c, 'id'),
           p_show: body.showComponents,
           p_expected_version: body.expectedVersion,
+        }),
+      ),
+    )
+  })
+
+  // Entry grid of one test (TEST-01/04/05).
+  .get('/:id/results', async (c) =>
+    c.json(
+      rpcResult(
+        TestResults,
+        await c.get('db').rpc('get_test_results', { p_test_id: uuidParam(c, 'id') }),
+      ),
+    ),
+  )
+
+  // Changed rows only; one transaction and one audit for the whole save.
+  .put('/:id/results', async (c) => {
+    const body = await parseJson(c, SaveTestResultsRequest)
+    return c.json(
+      rpcResult(
+        TestResults,
+        await c.get('db').rpc('save_test_results', {
+          p_test_id: uuidParam(c, 'id'),
+          p_config_id: body.configId,
+          p_items: body.items,
         }),
       ),
     )

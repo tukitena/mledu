@@ -169,6 +169,16 @@ export const en: typeof vi = {
     },
   },
   app: { name: 'MLedu', tagline: 'Havent think about English slogan yet' },
+  footer: {
+    copyright: '© {year} Miss Lien Edu',
+    guide: 'User guide',
+    comingSoon: 'Coming soon',
+    support: 'Support',
+    designedBy: 'Designed by',
+    contact: 'Contact:',
+    phone: 'Call',
+    logoAlt: 'Miss Lien tutoring centre',
+  },
   common: {
     save: 'Save',
     cancel: 'Cancel',
@@ -346,8 +356,6 @@ export const en: typeof vi = {
     updated: '{name} updated.',
   },
   tests: {
-    subtitle:
-      'Each test keeps its own copy of the configuration. Editing a template does not change existing tests; changing a test configuration adds a configuration revision.',
     create: 'Create test',
     editInfoTitle: 'Edit details: {name}',
     configTitle: 'Change configuration: {name}',
@@ -380,12 +388,42 @@ export const en: typeof vi = {
     detailsHidden: 'Details are now hidden for {name}.',
     historyTitle: 'Configuration history: {name}',
     historyHint: 'Every configuration revision is kept without limit and never edited.',
+    results: 'Results',
+    resultCount: '{n} results',
+    reentryWarning:
+      'This test has {n} results. A new configuration clears the current scores so they are entered again (old scores stay in the history); Absent stays.',
     actions: {
+      enterResults: 'Enter results',
+      viewResults: 'View results',
       info: 'Edit details',
       config: 'Change configuration',
       showDetails: 'Show details to parents',
       hideDetails: 'Hide details from parents',
       history: 'Configuration history',
+    },
+  },
+  results: {
+    title: 'Results: {name}',
+    hint: 'Absent is its own state, not a 0. An empty cell is not entered; by component, the total adds the parts entered. Clear every value and save to remove a result.',
+    ieltsLater:
+      'Entering IELTS results comes in a later step. Only the configuration can be viewed for this test.',
+    student: 'Student',
+    absent: 'Absent',
+    result: 'Result',
+    total: 'Total',
+    status: 'Status',
+    empty: 'No student attends the class on the test date.',
+    invalid:
+      'Some values are invalid: scores from 0 to the maximum with at most two decimals; answers are whole numbers.',
+    unsavedCount: '{n} unsaved rows',
+    save: 'Save results',
+    statusLabel: {
+      published: 'Published',
+      unsaved: 'Unsaved',
+      absent: 'Absent',
+      complete: 'Complete',
+      incomplete: 'Incomplete',
+      empty: 'Not entered',
     },
   },
   testTemplates: {
@@ -674,6 +712,10 @@ export const en: typeof vi = {
       'Another student has the same name (accents ignored). Add at least one parent phone that differs.',
     class_dates_locked:
       'The class has activity: its opening date is locked and its end date must be today or later.',
+    result_published:
+      'A published result is locked. Unpublish it before changing, clearing it or changing the test configuration.',
+    test_date_excludes_results:
+      'The new date is outside the participation of students who have a result. Keep the date or clear the results of:',
     template_unavailable:
       'The template was edited or archived after you picked it. Pick the template again.',
     outside_class_dates:

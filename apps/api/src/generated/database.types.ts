@@ -132,6 +132,7 @@ export type Database = {
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json }
       get_student: { Args: { p_id: string }; Returns: Json }
       get_test: { Args: { p_id: string }; Returns: Json }
+      get_test_results: { Args: { p_test_id: string }; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
       list_accounts: {
         Args: { p_limit?: number; p_offset?: number; p_search?: string; p_status?: string }
@@ -235,6 +236,10 @@ export type Database = {
       restore_test_template: { Args: { p_expected_version: number; p_id: string }; Returns: Json }
       save_attendance: {
         Args: { p_fingerprint: string; p_session_id: string; p_students: Json }
+        Returns: Json
+      }
+      save_test_results: {
+        Args: { p_config_id: string; p_items: Json; p_test_id: string }
         Returns: Json
       }
       set_account_enabled: {

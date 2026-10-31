@@ -75,7 +75,7 @@ select pg_temp.keep('t1', api.create_test(pg_temp.id('A'), '  Giữa kỳ  ', d,
 select is((select api.get_test(pg_temp.id('t1')) - 'id' - 'classId' - 'configId' - 'createdAt'
              - 'updatedAt' - 'testOn' - 'configVersions'),
   '{"name":"Giữa kỳ","description":null,"showComponents":true,"configRevision":1,"source":null,
-    "deleted":false,"createdByName":"Quản trị Thử nghiệm","rowVersion":1,
+    "deleted":false,"createdByName":"Quản trị Thử nghiệm","rowVersion":1,"resultCount":0,
     "config":{"scaleKind":"numeric","inputMode":"components","maxScore":3.35,"showComponents":true,
       "components":[{"code":"c1","name":"Nghe","maxScore":1.25},{"code":"c2","name":"Viết","maxScore":2.1}]}}'::jsonb,
   'a test created from scratch stores a trimmed name, an empty description as NULL and a normalized snapshot');

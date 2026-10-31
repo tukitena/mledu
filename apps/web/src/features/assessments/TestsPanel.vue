@@ -17,6 +17,7 @@ import ModalDialog from '../../components/ModalDialog.vue'
 import RowActionMenu, { type RowAction } from '../../components/RowActionMenu.vue'
 import { formatInstant, formatIsoDate } from '../../lib/format'
 import TestFormDialog from './TestFormDialog.vue'
+import TestResultsDialog from './TestResultsDialog.vue'
 import { configSummary } from './labels'
 
 // Tests of a class (TEST-05), as the class page's "Tests" tab. Table + row menu
@@ -31,6 +32,7 @@ const error = ref<DescribedError | null>(null)
 const notice = ref<string | null>(null)
 const editing = ref<{ mode: 'create' | 'info' | 'config'; test: ClassTest | null } | null>(null)
 const history = ref<{ test: ClassTest; detail: ClassTestDetail | null } | null>(null)
+const results = ref<ClassTest | null>(null)
 const busy = ref(false)
 
 async function load() {
@@ -55,7 +57,12 @@ const sourceLabel = (source: TestSource | null) =>
     : t('tests.ownConfig')
 
 function actionsFor(test: ClassTest): RowAction[] {
-  const items: RowAction[] = []
+  const items: RowAction[] = [
+    {
+      key: 'results',
+      label: t(list.value?.canEdit ? 'tests.actions.enterResults' : 'tests.actions.viewResults'),
+    },
+  ]
   if (list.value?.canEdit) {
     items.push({ key: 'info', label: t('tests.actions.info') })
     items.push({ key: 'config', label: t('tests.actions.config') })
@@ -72,6 +79,7 @@ function actionsFor(test: ClassTest): RowAction[] {
 async function onAction(test: ClassTest, key: string) {
   notice.value = null
   error.value = null
+  if (key === 'results') results.value = test
   if (key === 'info' || key === 'config') editing.value = { mode: key, test }
   if (key === 'display') await toggleDisplay(test)
   if (key === 'history') {
@@ -118,10 +126,8 @@ async function onSaved(saved: ClassTest) {
 
 <template>
   <div class="tests-panel">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-      <p class="small text-body-secondary mb-0">{{ t('tests.subtitle') }}</p>
+    <div v-if="list?.canEdit" class="table-controls d-flex justify-content-end">
       <button
-        v-if="list?.canEdit"
         type="button"
         class="btn btn-primary btn-sm"
         data-testid="test-create"
@@ -152,15 +158,16 @@ async function onSaved(saved: ClassTest) {
             <th scope="col">{{ t('testTemplates.scaleKind') }}</th>
             <th scope="col">{{ t('testTemplates.configuration') }}</th>
             <th scope="col">{{ t('tests.source') }}</th>
+            <th scope="col">{{ t('tests.results') }}</th>
             <th scope="col" class="text-end">{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading && !list">
-            <td colspan="6" class="text-body-secondary">{{ t('common.loading') }}</td>
+            <td colspan="7" class="text-body-secondary">{{ t('common.loading') }}</td>
           </tr>
           <tr v-else-if="list && !list.items.length">
-            <td colspan="6" class="text-body-secondary">{{ t('tests.empty') }}</td>
+            <td colspan="7" class="text-body-secondary">{{ t('tests.empty') }}</td>
           </tr>
           <tr v-for="test in list?.items ?? []" :key="test.id" :data-name="test.name">
             <td>
@@ -194,6 +201,9 @@ async function onSaved(saved: ClassTest) {
                 {{ t('tests.configRevision', { n: test.configRevision }) }}
               </span>
             </td>
+            <td class="small text-nowrap" data-testid="test-result-count">
+              {{ t('tests.resultCount', { n: test.resultCount }) }}
+            </td>
             <td class="text-end">
               <RowActionMenu
                 :id="test.id"
@@ -219,6 +229,8 @@ async function onSaved(saved: ClassTest) {
       @close="editing = null"
       @saved="onSaved"
     />
+
+    <TestResultsDialog v-if="results" :test="results" @close="results = null" @saved="load" />
 
     <ModalDialog
       v-if="history"

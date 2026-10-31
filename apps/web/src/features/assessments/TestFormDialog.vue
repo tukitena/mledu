@@ -140,6 +140,13 @@ async function submit() {
   <ModalDialog :wide="mode !== 'info'" :title="title" @close="emit('close')">
     <ErrorAlert :error="error" />
     <p v-if="mode === 'config'" class="small text-body-secondary">{{ t('tests.configHint') }}</p>
+    <div
+      v-if="mode === 'config' && test && test.resultCount > 0"
+      class="alert alert-warning small"
+      data-testid="test-config-reentry"
+    >
+      {{ t('tests.reentryWarning', { n: test.resultCount }) }}
+    </div>
     <form id="test-form" novalidate @submit.prevent="submit">
       <div class="row g-3">
         <template v-if="mode !== 'config'">

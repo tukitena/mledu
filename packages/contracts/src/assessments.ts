@@ -331,6 +331,8 @@ export const ClassTest = z.object({
   configRevision: z.number().int().min(1),
   config: GradingConfig,
   source: TestSource.nullable(),
+  /** Results in use (not cleared); a configuration change makes scores be entered again (TEST-03). */
+  resultCount: z.number().int().min(0),
   deleted: z.boolean(),
   createdAt: z.string(),
   createdByName: z.string(),
@@ -360,3 +362,85 @@ export type TestConfigVersion = z.infer<typeof TestConfigVersion>
 
 export const ClassTestDetail = ClassTest.extend({ configVersions: z.array(TestConfigVersion) })
 export type ClassTestDetail = z.infer<typeof ClassTestDetail>
+
+/**
+ * Results of a test per student (TEST-01/04/05). One result per student and
+ * test. Absent is its own state. By component, the total is computed by the
+ * database from the values entered; a missing component is not 0.
+ */
+
+/** Score of the test or a component: 0 or more, at most two decimals (TEST-01). */
+export const ScoreValue = z
+  .number()
+  .min(0)
+  .refine((value) => /^\d+(\.\d{1,2})?$/.test(value.toString()), { message: 'too_many_decimals' })
+export const AnswerCount = z.number().int().min(0).max(2_147_483_647)
+
+/** Values for one student; which keys apply depends on the test configuration. */
+export const ResultEntry = z.union([
+  z.strictObject({ absent: z.literal(true) }),
+  z.strictObject({ absent: z.literal(false), score: ScoreValue }),
+  z.strictObject({ absent: z.literal(false), correctAnswers: AnswerCount }),
+  z.strictObject({ absent: z.literal(false), level: z.string().regex(/^l\d{1,2}$/) }),
+  z.strictObject({
+    absent: z.literal(false),
+    /** Component code (c1…) → value; a missing or null code is not entered. */
+    components: z.record(
+      z.string().regex(/^c\d{1,2}$/),
+      z.union([ScoreValue, AnswerCount]).nullable(),
+    ),
+  }),
+])
+export type ResultEntry = z.infer<typeof ResultEntry>
+
+export const SaveTestResultsRequest = z.strictObject({
+  /** Snapshot the values were entered on; another one is a version conflict. */
+  configId: z.uuid(),
+  items: z
+    .array(
+      z.strictObject({
+        studentId: z.uuid(),
+        /** null when the student has no result in use (none yet, or cleared). */
+        expectedVersion: RowVersion.nullable(),
+        /** null clears the result. */
+        entry: ResultEntry.nullable(),
+      }),
+    )
+    .min(1)
+    .max(1000),
+})
+export type SaveTestResultsRequest = z.input<typeof SaveTestResultsRequest>
+
+export const TestResult = z.object({
+  id: z.uuid(),
+  absent: z.boolean(),
+  /** Numeric: direct score, or total of the components entered so far. */
+  score: z.number().nullable(),
+  /** Fraction: direct answers, or sum of the components entered so far. */
+  correctAnswers: z.number().int().nullable(),
+  level: z.string().nullable(),
+  components: z.record(z.string(), z.number()),
+  /** Absent, or every value of the configuration entered. */
+  complete: z.boolean(),
+  published: z.boolean(),
+  rowVersion: RowVersion,
+  updatedAt: z.string(),
+  updatedByName: z.string(),
+})
+export type TestResult = z.infer<typeof TestResult>
+
+export const TestResultRow = z.object({
+  studentId: z.uuid(),
+  code: z.string(),
+  fullName: z.string(),
+  result: TestResult.nullable(),
+})
+export type TestResultRow = z.infer<typeof TestResultRow>
+
+export const TestResults = z.object({
+  test: ClassTest,
+  /** Students whose participation meets the test day, or who hold a result. */
+  students: z.array(TestResultRow),
+  canEdit: z.boolean(),
+})
+export type TestResults = z.infer<typeof TestResults>

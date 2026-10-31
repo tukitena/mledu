@@ -137,3 +137,57 @@ test('an assistant whose assignment ends while waiting cannot create a test', as
     await Promise.all([setup.end(), ending.end(), assistant.end()])
   }
 })
+
+test('results saved while the configuration changes wait and are refused (TEST-03)', async () => {
+  const [setup, changing, saving] = await Promise.all([
+    connect(ADMIN),
+    connect(ADMIN),
+    connect(ADMIN),
+  ])
+  try {
+    const classId = await createClass(setup)
+    const student = (
+      await setup.query("select (api.create_student($1)->>'id') as id", [
+        `Đồng thời ${randomUUID()}`,
+      ])
+    ).rows[0].id as string
+    await setup.query('select api.enroll_student($1,$2,app_private.business_date(now())-3)', [
+      classId,
+      student,
+    ])
+    const created = (
+      await setup.query(
+        "select api.create_test($1,'Đổi cấu hình',app_private.business_date(now()),null,$2::jsonb,null) as data",
+        [classId, DIRECT],
+      )
+    ).rows[0].data
+    await changing.query('begin')
+    await changing.query(
+      `select api.change_test_config($1,'{"scaleKind":"fraction","inputMode":"direct","totalQuestions":20}'::jsonb,null,$2)`,
+      [created.id, created.rowVersion],
+    )
+    const pid = await backendPid(saving)
+    const pending = settle(
+      saving.query('select api.save_test_results($1,$2,$3::jsonb)', [
+        created.id,
+        created.configId,
+        JSON.stringify([
+          { studentId: student, expectedVersion: null, entry: { absent: false, score: 7 } },
+        ]),
+      ]),
+    )
+    await waitUntilBlocked(setup, pid)
+    await changing.query('commit')
+    const result = await pending
+    assert.equal(result.code, 'PT409')
+    assert.equal(result.message, 'version_conflict')
+    const count = (
+      await setup.query('select count(*)::int as n from app.test_results where test_id = $1', [
+        created.id,
+      ])
+    ).rows[0].n
+    assert.equal(count, 0)
+  } finally {
+    await Promise.all([setup.end(), changing.end(), saving.end()])
+  }
+})

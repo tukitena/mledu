@@ -163,6 +163,16 @@ export const vi = {
     },
   },
   app: { name: 'MLedu', tagline: 'Vững kiến thức Sáng tương lai' },
+  footer: {
+    copyright: '© {year} Miss Lien Edu',
+    guide: 'Hướng dẫn sử dụng',
+    comingSoon: 'Sắp có',
+    support: 'Hỗ trợ',
+    designedBy: 'Thiết kế bởi',
+    contact: 'Liên hệ:',
+    phone: 'Gọi',
+    logoAlt: 'Trung tâm dạy thêm Cô Liên',
+  },
   common: {
     save: 'Lưu',
     cancel: 'Hủy',
@@ -340,8 +350,6 @@ export const vi = {
     updated: 'Đã cập nhật {name}.',
   },
   tests: {
-    subtitle:
-      'Mỗi bài giữ bản sao cấu hình riêng. Sửa template không đổi bài đã tạo; đổi cấu hình bài tạo phiên bản cấu hình mới.',
     create: 'Tạo bài kiểm tra',
     editInfoTitle: 'Sửa thông tin: {name}',
     configTitle: 'Đổi cấu hình: {name}',
@@ -373,12 +381,41 @@ export const vi = {
     detailsHidden: 'Đã tắt hiện chi tiết cho bài {name}.',
     historyTitle: 'Lịch sử cấu hình: {name}',
     historyHint: 'Mỗi phiên bản cấu hình được giữ không thời hạn và không bị sửa.',
+    results: 'Kết quả',
+    resultCount: '{n} kết quả',
+    reentryWarning:
+      'Bài đã có {n} kết quả. Đổi cấu hình sẽ xóa điểm hiện hành để nhập lại theo cấu hình mới (điểm cũ vẫn giữ trong lịch sử); học sinh Vắng giữ nguyên.',
     actions: {
+      enterResults: 'Nhập kết quả',
+      viewResults: 'Xem kết quả',
       info: 'Sửa thông tin',
       config: 'Đổi cấu hình',
       showDetails: 'Hiện chi tiết cho phụ huynh',
       hideDetails: 'Ẩn chi tiết với phụ huynh',
       history: 'Lịch sử cấu hình',
+    },
+  },
+  results: {
+    title: 'Kết quả: {name}',
+    hint: 'Vắng là trạng thái riêng, không phải điểm 0. Ô để trống là chưa nhập; theo phần thì tổng do hệ thống cộng từ các phần đã nhập. Xóa hết giá trị rồi lưu để xóa kết quả.',
+    ieltsLater: 'Nhập kết quả IELTS sẽ có ở bước sau. Bài này hiện chỉ xem được cấu hình.',
+    student: 'Học sinh',
+    absent: 'Vắng',
+    result: 'Kết quả',
+    total: 'Tổng',
+    status: 'Trạng thái',
+    empty: 'Không có học sinh tham gia lớp vào ngày kiểm tra.',
+    invalid:
+      'Có giá trị không hợp lệ: điểm từ 0 tới tối đa, tối đa hai chữ số thập phân; số câu là số nguyên.',
+    unsavedCount: '{n} dòng chưa lưu',
+    save: 'Lưu kết quả',
+    statusLabel: {
+      published: 'Đã công bố',
+      unsaved: 'Chưa lưu',
+      absent: 'Vắng',
+      complete: 'Hoàn tất',
+      incomplete: 'Chưa hoàn tất',
+      empty: 'Chưa nhập',
     },
   },
   testTemplates: {
@@ -689,6 +726,10 @@ export const vi = {
       'Đã có học sinh cùng họ tên (không phân biệt dấu). Cần ít nhất một số phụ huynh không trùng.',
     class_dates_locked:
       'Lớp đã có hoạt động: không đổi ngày mở, ngày kết thúc chỉ được đặt từ hôm nay trở đi.',
+    result_published:
+      'Kết quả đã công bố bị khóa. Hãy hủy công bố trước khi sửa, xóa hoặc đổi cấu hình bài.',
+    test_date_excludes_results:
+      'Ngày mới nằm ngoài thời gian tham gia của học sinh đã có kết quả. Giữ ngày cũ hoặc xóa kết quả của các học sinh sau:',
     template_unavailable:
       'Template đã được sửa hoặc lưu trữ sau khi bạn chọn. Hãy chọn lại template.',
     outside_class_dates:

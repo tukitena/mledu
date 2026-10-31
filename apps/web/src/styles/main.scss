@@ -480,9 +480,153 @@ body {
   margin-left: var(--sidebar-width);
   min-height: calc(100vh - var(--header-height));
   overflow-x: clip;
+  display: flex;
+  flex-direction: column;
 
   @include media-breakpoint-down(lg) {
     margin-left: 0;
+  }
+}
+
+.app-content {
+  flex: 1 0 auto;
+  min-width: 0;
+}
+
+// Metis `.admin-footer`: 16px block padding, top border, body background, 14px muted text.
+// Footer: primary logo, a divider, then two rows of links laid over the wave
+// background, kept just tall enough for the logo. Container queries follow the space left beside the sidebar.
+.app-footer {
+  --footer-bg: #fbfdfe;
+  container-type: inline-size;
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid var(--bs-border-color);
+  background: var(--footer-bg) url('/background.png') center bottom / 100% 20rem no-repeat;
+  font-size: 0.8125rem;
+
+  a {
+    color: var(--bs-primary-text-emphasis);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+
+    &:hover,
+    &:focus {
+      color: var(--bs-primary);
+    }
+  }
+
+  // Not built yet: shown so users know it is coming, but not clickable.
+  .footer-soon {
+    color: var(--bs-primary-text-emphasis);
+    cursor: not-allowed;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+  }
+}
+
+[data-bs-theme='dark'] .app-footer {
+  --footer-bg: #0a111a;
+  background-image: url('/background-dark.png');
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 82rem;
+  margin: 0 auto;
+}
+
+// The logo file has wide transparent margins: crop to the drawn area.
+.footer-brand {
+  width: 11rem;
+  aspect-ratio: 1371 / 752;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 119.62%;
+    max-width: none;
+    height: auto;
+    margin: -6.13% 0 0 -10.28%;
+  }
+}
+
+.footer-links {
+  width: 100%;
+  max-width: 24rem;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.footer-row {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0.375rem 0;
+    text-align: center;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+  }
+
+  a,
+  .footer-soon {
+    overflow-wrap: anywhere;
+  }
+}
+
+.footer-row:last-child li:last-child {
+  border-bottom: 0;
+}
+
+@container (min-width: 52rem) {
+  .footer-inner {
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .footer-brand {
+    flex: none;
+    width: 12rem;
+  }
+
+  .footer-links {
+    flex: 1;
+    max-width: none;
+    margin-left: 1.5rem;
+    padding-left: 1.5rem;
+    border-top: 0;
+    border-left: 1px solid var(--bs-border-color);
+  }
+
+  .footer-row {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+
+    li {
+      padding: 0 1.25rem;
+      border-bottom: 0;
+      white-space: nowrap;
+    }
+
+    li:first-child {
+      padding-left: 0;
+    }
+
+    li + li {
+      border-left: 1px solid var(--bs-border-color);
+    }
+
+    &:first-child {
+      padding-bottom: 0.625rem;
+      border-bottom: 1px solid var(--bs-border-color-translucent);
+    }
+
+    &:last-child {
+      padding-top: 0.625rem;
+    }
   }
 }
 
@@ -1291,4 +1435,21 @@ body {
 }
 .students-table th:first-child {
   width: 28%;
+}
+
+// Results entry grid (TEST-01/04): compact inputs; the student column keeps a
+// readable width and the table scrolls inside the dialog on narrow screens.
+.results-table {
+  th:first-child,
+  td:first-child {
+    min-width: 10rem;
+  }
+
+  .result-input {
+    width: 5.5rem;
+  }
+
+  .result-select {
+    min-width: 8rem;
+  }
 }

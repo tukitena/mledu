@@ -4,6 +4,7 @@ import {
   CreateTestRequest,
   CreateTestTemplateRequest,
   hasDetails,
+  SaveTestResultsRequest,
   TestTemplateConfig,
   TestTemplateConfigInput,
   UpdateTestTemplateRequest,
@@ -181,5 +182,32 @@ describe('test requests (TEST-05)', () => {
         skills: [{ code: 'W', inputMode: 'detailed' }],
       }),
     ).toBe(true)
+  })
+})
+
+describe('test results (TEST-01/04)', () => {
+  const save = (entry: unknown) =>
+    SaveTestResultsRequest.safeParse({
+      configId: '00000000-0000-4000-8000-000000000001',
+      items: [{ studentId: '00000000-0000-4000-8000-000000000002', expectedVersion: null, entry }],
+    }).success
+
+  it('accepts one kind of value per entry', () => {
+    expect(save({ absent: true })).toBe(true)
+    expect(save({ absent: false, score: 8.25 })).toBe(true)
+    expect(save({ absent: false, score: 0 })).toBe(true)
+    expect(save({ absent: false, correctAnswers: 30 })).toBe(true)
+    expect(save({ absent: false, level: 'l2' })).toBe(true)
+    expect(save({ absent: false, components: { c1: 1.25, c2: null } })).toBe(true)
+    expect(save(null)).toBe(true)
+  })
+
+  it('refuses rounding, negatives, Absent with values and mixed entries', () => {
+    expect(save({ absent: false, score: 8.255 })).toBe(false)
+    expect(save({ absent: false, score: -1 })).toBe(false)
+    expect(save({ absent: false, correctAnswers: 1.5 })).toBe(false)
+    expect(save({ absent: true, score: 0 })).toBe(false)
+    expect(save({ absent: false, score: 5, components: { c1: 5 } })).toBe(false)
+    expect(save({ absent: false, components: { total: 5 } })).toBe(false)
   })
 })

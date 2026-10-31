@@ -91,6 +91,13 @@ export const ErrorCode = z.enum([
   'attendance_not_started',
   /** TEST-02: the chosen template was archived or edited since it was shown; pick it again. */
   'template_unavailable',
+  /** ACAD-01/TEST-03: a published result is locked; unpublish it first. */
+  'result_published',
+  /**
+   * TEST-05: the new test date is outside every participation of students with a
+   * result. `details` lists them ({path: 'studentName', message: full name}).
+   */
+  'test_date_excludes_results',
   'not_found',
   'method_not_allowed',
   'version_conflict',

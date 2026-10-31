@@ -1,6 +1,6 @@
 # Schema PostgreSQL hiện tại của MLedu
 
-Tài liệu tham chiếu schema vật lý, đối chiếu metadata `mledu-dev` với **21 migration** tới `20261031110000_tests.sql` ngày **31/10/2026**. SQL trong [supabase/migrations](../../supabase/migrations/) là nguồn triển khai; tài liệu này không phải DDL thứ hai hoặc bằng chứng CI/staging/production. [plans.md](plans.md) vẫn quyết định nghiệp vụ.
+Tài liệu tham chiếu schema vật lý, đối chiếu metadata `mledu-dev` với **22 migration** tới `20261031120000_test_results.sql` ngày **31/10/2026**. SQL trong [supabase/migrations](../../supabase/migrations/) là nguồn triển khai; tài liệu này không phải DDL thứ hai hoặc bằng chứng CI/staging/production. [plans.md](plans.md) vẫn quyết định nghiệp vụ.
 
 ## Ranh giới schema
 
@@ -29,7 +29,7 @@ Luồng nghiệp vụ: Vue → Workers/Hono → RPC. Service-side function khôn
 | Danh mục và học sinh | [`app.catalog_entries`](#appcatalog_entries), [`app.sites`](#appsites), [`app.rooms`](#approoms), [`app.students`](#appstudents), [`app.student_contacts`](#appstudent_contacts) |
 | Lớp, phân công và lần tham gia | [`app.classes`](#appclasses), [`app.class_assignments`](#appclass_assignments), [`app.class_students`](#appclass_students), [`app.participations`](#appparticipations), [`app.class_lifecycle_events`](#appclass_lifecycle_events) |
 | Lịch và chuyên cần | [`app.weekly_schedules`](#appweekly_schedules), [`app.class_sessions`](#appclass_sessions), [`app.holidays`](#appholidays), [`app.attendance`](#appattendance) |
-| Học vụ (GĐ5, đang triển khai) | [`app.test_templates`](#apptest_templates), [`app.test_template_versions`](#apptest_template_versions), [`app.tests`](#apptests), [`app.test_config_versions`](#apptest_config_versions), [mức/phần/kỹ năng của bài](#mức-phần-và-kỹ-năng-của-bài) |
+| Học vụ (GĐ5, đang triển khai) | [`app.test_templates`](#apptest_templates), [`app.test_template_versions`](#apptest_template_versions), [`app.tests`](#apptests), [`app.test_config_versions`](#apptest_config_versions), [mức/phần/kỹ năng của bài](#mức-phần-và-kỹ-năng-của-bài), [`app.test_results`](#apptest_results), [`app.component_results`](#appcomponent_results) |
 | Audit, lịch sử và outbox | [`app.audit_events`](#appaudit_events), [`app.business_entity_versions`](#appbusiness_entity_versions), [`app.outbox_events`](#appoutbox_events), [`app.outbox_deliveries`](#appoutbox_deliveries) |
 
 ## Tài khoản và avatar
@@ -612,6 +612,36 @@ Khóa và tham chiếu:
 - `app.test_ielts_skills(config_id, skill, input_mode, max_questions)`: PK `(config_id, skill)`; `max_questions` chỉ có với L/R `detailed`.
 
 Cả ba bảng chặn `UPDATE`/`DELETE`/`TRUNCATE`. Constraint trigger trì hoãn `app_private.check_test_config` (SECURITY DEFINER, chạy lúc commit) dựng lại cấu hình từ các dòng và bắt buộc nó hợp lệ, đã chuẩn hóa theo cùng validator template; phát hiện số dòng/tổng/mã sai mà CHECK một dòng không chứng minh được.
+
+### app.test_results
+
+Kết quả của một học sinh trong một bài (TEST-01/04/05), không gắn hồ sơ lớp/lần tham gia. `result_kind = graded | absent`; Vắng không có điểm/mức/dòng phần. Theo phần, `numeric_score`/`correct_answers` là tổng (tạm) do RPC tính từ `component_results`; mẫu số phân số luôn là tổng câu của cấu hình. Xóa kết quả đặt `deleted_at/by` và xóa giá trị; nhập lại dùng lại cùng `id`. `published_*` có sẵn cho ACAD-01 (chưa có lệnh công bố) và đã khóa sửa/xóa/đổi cấu hình. Ghi qua `api.save_test_results` và `api.change_test_config` (TEST-03); trigger chặn `DELETE`/`TRUNCATE`.
+
+Nguồn: [20261031120000_test_results.sql](../../supabase/migrations/20261031120000_test_results.sql).
+
+| Cột | Kiểu | NULL | Mặc định |
+| --- | --- | --- | --- |
+| `id` | `uuid` | Không | `gen_random_uuid()` |
+| `student_id`, `test_id`, `config_id` | `uuid` | Không | — |
+| `result_kind` | `text` | Không | — |
+| `numeric_score` | `numeric` | Có | — |
+| `correct_answers` | `integer` | Có | — |
+| `letter_level_id` | `uuid` | Có | — |
+| `published_at`, `published_by` | | Có | — |
+| `row_version` | `bigint` | Không | `1` |
+| `created_at`, `updated_at` | `timestamptz` | Không | `now()` |
+| `created_by`, `updated_by` | `uuid` | Không | — |
+| `deleted_at`, `deleted_by` | | Có | — |
+
+Khóa và tham chiếu:
+
+- `PRIMARY KEY (id)`; `UNIQUE (student_id, test_id)` kể cả dòng đã xóa; `UNIQUE (id, config_id)`; index `(test_id)`.
+- `FOREIGN KEY (test_id, config_id) REFERENCES app.test_config_versions(test_id, id)`; `FOREIGN KEY (config_id, letter_level_id) REFERENCES app.test_letter_levels(config_id, id)`; học sinh/actor → bảng tương ứng.
+- CHECK: Vắng không có giá trị; tối đa một loại giá trị, điểm ≥ 0 và ≤ 2 số lẻ, câu đúng ≥ 0; `published_*` và `deleted_*` đồng bộ; dòng đã xóa không còn giá trị hoặc công bố.
+
+### app.component_results
+
+`(result_id, config_id, component_id, numeric_value, correct_answers)`, PK `(result_id, component_id)`. FK `(result_id, config_id)` → `test_results(id, config_id)` và `(config_id, component_id)` → `test_components(config_id, id)`, không cascade: không thể chuyển kết quả sang cấu hình khác khi còn giá trị phần. Mỗi dòng đúng một giá trị ≥ 0 (điểm ≤ 2 số lẻ); thiếu dòng là chưa nhập, 0 là đã nhập. Trigger chặn `TRUNCATE`; dòng cũ chỉ bị bỏ khỏi bảng hiện hành sau khi snapshot kết quả đã vào `business_entity_versions` trong cùng transaction.
 
 RLS bật trên mọi bảng; không grant cho `anon`/`authenticated`.
 

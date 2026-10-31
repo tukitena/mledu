@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import AppFooter from '../components/AppFooter.vue'
 import MyAvatar from '../components/MyAvatar.vue'
 import PreferenceControls from '../components/PreferenceControls.vue'
 import { appliedTheme, themeChoice } from './theme'
@@ -283,7 +284,10 @@ async function onSignOut() {
     <div v-if="sidebarOpen" class="sidebar-backdrop d-lg-none" @click="sidebarOpen = false"></div>
 
     <main class="app-main">
-      <RouterView />
+      <div class="app-content">
+        <RouterView />
+      </div>
+      <AppFooter />
     </main>
     <div v-if="menuOpen" class="menu-dismiss" @click="menuOpen = false"></div>
   </div>

@@ -82,6 +82,8 @@ migration.
 
 ## Feature kế tiếp
 
+**Đã triển khai 31/10/2026:** [kết quả theo học sinh/bài](gd5-test-results.md), kèm TEST-03 cho `change_test_config` và kiểm tra ngày bài theo học sinh đã có kết quả.
+
 Nhập kết quả theo học sinh/bài (TEST-01/04, `test_results` + `component_results`): Vắng riêng, phần chưa nhập
 khác 0, tổng do backend tính, danh sách học sinh theo ngày bài giao khoảng tham gia; bổ sung TEST-03 vào
 `change_test_config` và kiểm tra ngày bài theo học sinh đã có kết quả. IELTS chi tiết/công bố đi sau.
